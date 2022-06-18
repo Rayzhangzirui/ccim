@@ -11,7 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "grid.h"
 #include "matrix.h"
+
+#include "input.h"
 
 // using namespace std;
 using std::ofstream;
@@ -23,34 +26,8 @@ static int iminarg1,iminarg2;
 #define IMIN(a,b) (iminarg1=(a),iminarg2=(b),(iminarg1) < (iminarg2) ?\
 (iminarg1) : (iminarg2))
 
-struct GridData
-{
-   static const int dim = 3;
-   int nx[dim];
-   double a[dim], dx[dim];
-   double dt, mindx, t, radius, maxvn, tfinal, radius0;
-   double tol;
-};
 
-struct PBData
-{
-   double epsilonp, epsilonm;
-   double gamma0;
-   double ***psi;
 
-   double **x;
-   int N;
-   double *Q;
-   double beta;
-   double *c;
-   double *epsilone;
-   int dim;
-
-   double rho0;
-   double *epsilonlj;
-   double *sigmalj;
-   double ***LJ;
-};
 
 struct SparseElt2
 {
@@ -230,9 +207,6 @@ void cim1(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsiz
           GridData &grid);
 void cim1again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
-int sub2ind(int *index, const int *n, int dim);
-void ind2sub(int *index, int i, const int *n, int dim);
-void sub2coord(double *x, int *index, GridData &grid);
 void sparse2(int *rindex, int *cindex, SparseElt2**** &A, double value, GridData &grid);
 void sparse2(int *cindex, SparseElt2* &A, double value, GridData &grid);
 void sparse2(int *index, SparseElt2* &R, SparseElt2**** &A, GridData &grid);
@@ -509,37 +483,8 @@ void getRHSexactvn(double ***rhs, double ***u, PBData &pb, MarchStruct &march,
 void getRHScurv(double ***rhs, double ***u, TempStruct &tmp, GridData &grid);
 void advanceheat(double ***u, TempStruct &tmp, GridData &grid);
 void advanceheat(double ***u, double finaltime, TempStruct &tmp, GridData &grid);
-double getf(double *x, int thesign, PBData &pb, GridData &grid);
-double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData &pb, 
-            GridData &grid);
-double getu(double *x, int thesign, GridData &grid);
-double getu(int *index, int rstar, int sstar, double alpha, int thesign, GridData &grid);
-double getDu(double *x, int s, int thesign, GridData &grid);
-double getDu(int *index, int s, int rstar, int sstar, double alpha, int thesign, 
-             GridData &grid);
-double getD2u(double *x, int r, int s, int thesign, GridData &grid);
-double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, 
-              int thesign, GridData &grid);
-//double getf(double ***f, int index, int rstar, int sstar, double alpha, int thesign, 
-//GridData &grid);
-double geta(double *x, double thesign, PBData& pb, GridData& grid);
-void geta(double ***a, double ***u, double ***S, PBData &pb, GridData &grid);
-double gettau(double *x, PBData &pb, GridData &grid);
-void gettau(double &tau, int *index, int rstar, int sstar, double alpha, 
-            GridData &grid);
-void getDtau(double *Dtau, double *x, PBData &pb, GridData &grid);
-void getDtau(double *Dtau, int *index, int rstar, int sstar, double alpha, 
-             GridData &grid);
-void getD2tau(double **D2tau, double *x, PBData &pb, GridData &grid);
-void getD2tau(double **D2tau, int *index, int rstar, int sstar, double alpha, 
-              GridData &grid);
-double getsigma(double *x, double *normal, PBData &pb, GridData &grid);
-void getsigma(double &sigma, int *index, int rstar, int sstar, double alpha, 
-              double *normal, PBData &pb, GridData &grid);
-void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBData &pb, 
-               GridData &grid);
-void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha, 
-              double *normal, double **Dnormal, PBData &pb, GridData &grid);
+
+
 double getpsivac(double *x, PBData &pb);
 void getDpsivac(double *Dpsi, double *x, PBData &pb);
 double getDpsivacn(int *index, double ***S, PBData &pb, GridData &grid);
