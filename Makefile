@@ -20,7 +20,7 @@ endif
 
 
 
-cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o input.o
+cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o input.o solver.o sparse.o
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 cim.o: cim.cpp

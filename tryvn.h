@@ -15,6 +15,7 @@
 #include "matrix.h"
 
 #include "input.h"
+#include "solver.h"
 
 // using namespace std;
 using std::ofstream;
@@ -29,12 +30,6 @@ static int iminarg1,iminarg2;
 
 
 
-struct SparseElt2
-{
-   double val;
-   SparseElt2 *next;
-   int *cindex;
-};
 
 struct SparseElt
 {
@@ -70,16 +65,7 @@ struct SparseAMGList
    int *PLR, *PLC;
 };
 
-struct TempStruct
-{
-   double ****fourd;
-   char *fdstatus;
-   int Nfd;
-   SparseElt2 ****A;
-   SparseElt2 ****M;
-//   SparseElt2 ****B;
-   double ***b;
-};
+
 
 struct HeapElt
 {
@@ -147,17 +133,6 @@ struct ZLHeapStruct
 };
 
 
-SparseElt2 ****sparseelt2ptrmatrix(int row, int col, int fr);
-inline SparseElt2 *evalarray(SparseElt2**** &A, int *index);
-inline void setvalarray(SparseElt2**** &A, int *index, SparseElt2 *value);
-inline SparseElt2 *evalarray(SparseElt2**** &A, int *index)
-{
-   return A[index[0]][index[1]][index[2]];
-}
-inline void setvalarray(SparseElt2**** &A, int *index, SparseElt2 *value)
-{
-   A[index[0]][index[1]][index[2]] = value;
-}
 
 
 void output(ofstream& outfile, double ***phi, int *nx);
@@ -207,20 +182,7 @@ void cim1(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsiz
           GridData &grid);
 void cim1again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
-void sparse2(int *rindex, int *cindex, SparseElt2**** &A, double value, GridData &grid);
-void sparse2(int *cindex, SparseElt2* &A, double value, GridData &grid);
-void sparse2(int *index, SparseElt2* &R, SparseElt2**** &A, GridData &grid);
-void sparseorder(int *rindex, int *cindex, SparseElt2**** &A, double value, 
-                 GridData &grid);
-void sparseorder(int *cindex, SparseElt2* &A, double value, GridData &grid);
-void multsparserow2(SparseElt2 ****A, int *index, double value);
-void multsparserow2(SparseElt2 *A, double value);
-void clearsparse(SparseElt2* &A);
-void clearsparse(SparseElt2**** &A, GridData &grid);
 
-void outputsparserow2(SparseElt2 *R, GridData &grid);
-void outputsparsesmall(ofstream& outfile, SparseElt2 ****A, double ***S, PBData &pb, 
-                       GridData &grid);
 void outputAMGmx(ofstream& outfile, SparseAMGMx A);
 void perturb(double ***S, double tol, GridData &grid);
 void perturb(double ***S, double tol, PBData &pb, GridData &grid);
@@ -228,40 +190,9 @@ void perturbstatus(double ***S, double tol, int maxsteps, PBData &pb, GridData &
 void perturbelt(double ***S, int *index, double tol);
 void perturbelt(double ***S, int *index, double tol, PBData &pb);
 char perturbstatuselt(double ***S, int *index, double tol, PBData &pb, GridData &grid);
-void gaussseidelsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                      int numsteps, double ***S, PBData &pb);
-void gaussseidelsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                      int numsteps, double ***a, double ***S, PBData &pb);
-void BICGSTAB(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-              int numsteps, double tol, TempStruct &tmp);
-void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                   int numsteps, double tol, double ***S, PBData &pb, TempStruct &tmp);
-void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                   int numsteps, double tol, double ***a, double ***S, PBData &pb, 
-                   TempStruct &tmp);
-void prerightBICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, 
-                           SparseElt2**** &M, GridData &grid, int numsteps, double tol, 
-                           double ***S, PBData &pb, TempStruct &tmp);
-void prerightBICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, 
-                           SparseElt2**** &M, GridData &grid, int numsteps, double tol, 
-                           double ***a, double ***S, PBData &pb, TempStruct &tmp);
-void preBICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, SparseElt2**** M, 
-                      GridData &grid, int numsteps, double tol, double ***S, 
-                      PBData &pb, TempStruct &tmp);
-void leftmultmxsmall(double ***y, SparseElt2 ****A, double ***x, GridData &grid,
-                     double ***S, PBData &pb);
-void ILU(SparseElt2**** &M, SparseElt2**** &A, GridData &grid);
-void Atransposesmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***S,
-                     PBData &pb);
-void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***S,
-                   PBData &pb);
-void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***a, 
-                   double ***S, PBData &pb);
-void ILUsmall(SparseElt2**** &M, SparseElt2**** &A, GridData &grid, double ***S, 
-              PBData &pb);
-void ILUsmall(SparseElt2**** &M, SparseElt2**** &A, GridData &grid, double ***a, 
-              double ***S, PBData &pb);
-void leftmultILUinv(double ***y, SparseElt2**** &M, double ***x, GridData &grid);
+
+
+
 double getpsivn(double ***u, double ***S, int *index, int rstar, PBData &pb, 
                 GridData grid);
 double getpsivn2(double ***u, double ***S, int *index, int rstar, PBData &pb, 
@@ -612,9 +543,8 @@ void checkcim12Du(double ***u, double ***S, PBData &pb, GridData &grid);
 double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,
                       GridData &grid);
 void checkwithexact(double ***S, double radius, GridData &grid);
-double ***setfourd(double ****fourd, char *fdstatus, int Nfd, GridData &grid);
-void removefourd(double ***r, double ****fourd, char *fdstatus, int Nfd);
-void clearfourd(double**** &fourd, char* &fdstatus, int Nfd, GridData &grid);
+
+
 double getexactresidual(double ***r, SparseElt2 ****A, double ***b, GridData &grid,
                         double ***S, PBData &pb);
 double getexactnormal(int *index, int r, int rstar, int sstar, double alpha, 
