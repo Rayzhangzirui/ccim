@@ -26,7 +26,7 @@ cim: cim.o tryvn.o helper.o icim.o amgsolver.o
 cim.o: cim.cpp
 	$(CC) $(OPT) -c $<
 
-tryvn.o: tryvn.C extratest.h
+tryvn.o: tryvn.c extratest.h
 	$(CC) $(OPT) -c $<
 
 test: test.o tests_main.o tryvn.o helper.o icim.o
