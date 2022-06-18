@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <random>
+
 using std::array;
 using Index = std::array<int,3>;
 using Vector3d = std::array<double,3>;

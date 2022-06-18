@@ -20,7 +20,7 @@ endif
 
 
 
-cim: cim.o tryvn.o helper.o icim.o amgsolver.o
+cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 cim.o: cim.cpp
@@ -33,9 +33,6 @@ test: test.o tests_main.o tryvn.o helper.o icim.o
 	$(CC) $(OPT) -o $@ $^ 
 
 test.o: test.cpp
-	$(CC) $(OPT) -c $< 
-
-helper.o: helper.cpp helper.h
 	$(CC) $(OPT) -c $< 
 
 tests_main.o : tests_main.cpp
@@ -56,6 +53,10 @@ icim: icimmain.o tryvn.o helper.o icim.o
 
 amgsolver.o: amgsolver.cpp
 	$(CC) $(OPT) $(CFLAGS) -c $<
+
+
+%.o: %.cpp %.h
+	$(CC) $(OPT) -c $< 
 
 
 .PHONY: clean
