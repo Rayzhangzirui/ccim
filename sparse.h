@@ -6,6 +6,13 @@
 #include "matrix.h"
 #include <iostream>
 
+struct SparseElt
+{
+   double val;
+   SparseElt *next;
+   int cindex;
+};
+
 struct SparseElt2
 {
    double val;
@@ -59,5 +66,10 @@ void outputsparsesmall(std::ofstream& outfile, SparseElt2 ****A, double ***S, PB
 double ***setfourd(double ****fourd, char *fdstatus, int Nfd, GridData &grid);
 void removefourd(double ***r, double ****fourd, char *fdstatus, int Nfd);
 void clearfourd(double**** &fourd, char* &fdstatus, int Nfd, GridData &grid);
+
+
+//SparseElt
+void sparseorder(int row, int col, SparseElt** &A, double value);
+void sparseorder(int roc, SparseElt* &A, double value);
 
 #endif

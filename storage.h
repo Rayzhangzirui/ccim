@@ -24,4 +24,5 @@ void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
                      StorageStruct *Dusmall, int smallsize, double ***u, double ***S, 
                      PBData &pb, GridData &grid);
 
+void clearstorage(StorageStruct* &Dusmall, int &smallsize);
 #endif

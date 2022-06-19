@@ -1,5 +1,8 @@
 #include "tryvn.h"
 #include "helper.h"
+#include "advance.h"
+
+
 
 using namespace std;
 
@@ -33,6 +36,7 @@ extern ofstream outfile_uerr;
 extern ofstream outfile_Duerr;
 
 extern double RADIUS;
+
 
 int main(int argc, char* argv[])
 {

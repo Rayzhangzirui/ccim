@@ -29,8 +29,7 @@ void init_TempStruct(TempStruct &tmp, GridData &grid);
 // initialize PBdata
 void init_PBData(PBData &pb, GridData &grid, double epsp = 80.0, double epsm = 1.0);
 
-// initialize marching structure, S is surface
-void init_march(MarchStruct &march, double*** S, PBData &pb, GridData&grid);
+
 
 // subscript to coordinate
 inline array<double,3> sub2coord(array<int,3> index, GridData& grid){
@@ -295,7 +294,6 @@ inline bool SameSide(double*** S, Index a, Index b){
 	return SameSign(evalarray(S,a),evalarray(S,b));
 }
 
-void OutputAmgMxByRow(std::string filename, SparseAMGMx A);
-void OutputAmgMxByCol(std::string filename, SparseAMGMx A);
+
 void OutputVector(std::string filename, double *x, int n);
 #endif

@@ -139,23 +139,6 @@ void init_PBData(PBData &pb, GridData &grid, double epsp, double epsm){
 
 }
 
-// initialize marching structure, S is surface
-void init_march(MarchStruct &march, double*** S, PBData &pb, GridData&grid){
-   march.dist = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
-   march.status = cmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
-   march.extend = new double ***[1];
-   march.extend[0] = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
-   march.nval = 1;
-   march.dorig = S;
-   march.eorig = new double***[1];
-   march.eorig[0] = pb.psi;
-   march.tol = 1.0e-14;
-   (march.heap).head = NULL;
-   (march.heap).tail = NULL;
-   (march.heap).loc = heapmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
-   (march.heap).dim = grid.dim;
-   march.pb = pb;
-}
 
 
 // create sphere surface
@@ -1264,33 +1247,33 @@ void init_surf_protein_paper(double ***S, GridData& grid){
 }
 
 
-void init_surf_protein_dist(double ***S, GridData &grid, int n){
-   vector< vector<double> > p;
-   read_protein(S,grid,p);
-   #pragma omp parallel for collapse(3)
-   for(int i = 0; i <= grid.nx[0]; i++){
-      for(int j = 0; j <= grid.nx[1]; j++){
-         for(int k = 0; k <= grid.nx[2]; k++){
-            array<double,3> x = sub2coord(array<int,3> {i,j,k}, grid);
-            S[i][j][k] = sqrt(3.0) * 2 * fabs(grid.a[0]);
+// void init_surf_protein_dist(double ***S, GridData &grid, int n){
+//    vector< vector<double> > p;
+//    read_protein(S,grid,p);
+//    #pragma omp parallel for collapse(3)
+//    for(int i = 0; i <= grid.nx[0]; i++){
+//       for(int j = 0; j <= grid.nx[1]; j++){
+//          for(int k = 0; k <= grid.nx[2]; k++){
+//             array<double,3> x = sub2coord(array<int,3> {i,j,k}, grid);
+//             S[i][j][k] = sqrt(3.0) * 2 * fabs(grid.a[0]);
 
-            for(int n = 0; n < p.size(); n++){
-               array<double,3> px = {p[n][0],p[n][1],p[n][2]};//px is coordinate
-               double d =  dist(x,px) - p[n][3];
-               S[i][j][k] = min(S[i][j][k],d);
-            }
+//             for(int n = 0; n < p.size(); n++){
+//                array<double,3> px = {p[n][0],p[n][1],p[n][2]};//px is coordinate
+//                double d =  dist(x,px) - p[n][3];
+//                S[i][j][k] = min(S[i][j][k],d);
+//             }
             
-         }
-      }
-   }
+//          }
+//       }
+//    }
 
-   TempStruct tmp;
-   init_TempStruct(tmp, grid);
+//    TempStruct tmp;
+//    init_TempStruct(tmp, grid);
 
-   for(int i = 0; i<n; i++){
-      advanceheat(S, tmp, grid);
-   }
-}
+//    for(int i = 0; i<n; i++){
+//       advanceheat(S, tmp, grid);
+//    }
+// }
 
 // get status of point index: 0 = boundary, 1 = interior, 2 = cim3, 3 = cim5, 4 = cim4, 5 = cim1
 int getstatus5debug(double ***S, int *index, GridData &grid)
@@ -2387,16 +2370,7 @@ char yescim5D2All(vector<double***> &D2ucoefvec, vector<double*> &D2uxcoefvec, v
 
 
 
-void OutputAmgMxByRow(string filename, SparseAMGMx A)
-{
-   int i, r;
-   ofstream outfile(filename);
-   outfile.precision(16);
-   for (i = 0; i < A.n; i++)
-      for (r = 0; r < A.nc[i]; r++)
-         outfile << i << " " << (A.row[i][r]).roc << " " << scientific 
-                 << (A.row[i][r]).val[0] << endl;
-}
+
 
 void OutputVector(string filename, double *x, int n)
 {
@@ -2409,13 +2383,3 @@ void OutputVector(string filename, double *x, int n)
          
 }
 
-void OutputAmgMxByCol(string filename, SparseAMGMx A)
-{
-   int i, r;
-   ofstream outfile(filename);
-   outfile.precision(16);
-   for (i = 0; i < A.m; i++)
-      for (r = 0; r < A.nr[i]; r++)
-         outfile << i << " " << (A.col[i][r]).roc << " " << scientific 
-                 << (A.col[i][r]).val[0] << endl;
-}

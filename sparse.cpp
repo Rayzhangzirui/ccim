@@ -351,3 +351,77 @@ void clearfourd(double**** &fourd, char* &fdstatus, int Nfd, GridData &grid)
    delete [] fourd;
    delete [] fdstatus;
 }
+
+
+
+void sparseorder(int row, int col, SparseElt** &A, double value)
+{
+   int r;
+   SparseElt *current, *prev;
+
+   for (prev = NULL,current = A[row]; current != NULL && (*current).cindex <= col;
+        prev = current,current = (*current).next);
+   if (prev == NULL || (*prev).cindex != col)
+   {
+      SparseElt *temp;
+      temp = new SparseElt;
+      (*temp).cindex = col;
+      (*temp).val = value;
+      (*temp).next = current;
+      if (prev != NULL)
+         (*prev).next = temp;
+      else
+         A[row] = temp;
+   }
+   else
+      (*prev).val += value;
+}
+
+// used in AMGsmall
+// A is the left most node for a row corresponding to A[tindex]
+// roc is column index,
+void sparseorder(int roc, SparseElt* &A, double value)
+{
+   int r;
+   SparseElt *current, *prev;
+   // start at A, stop if current is NULL or current.cindex > roc
+   // prev = NULL and current = NULL : first time create diagonal node
+
+   for (prev = NULL,current = A; current != NULL && (*current).cindex <= roc;
+        prev = current,current = (*current).next);
+   if (prev == NULL || (*prev).cindex != roc)
+   {
+      SparseElt *temp;
+      temp = new SparseElt;
+      (*temp).cindex = roc;
+      (*temp).val = value;
+      (*temp).next = current;
+      if (prev != NULL)
+         (*prev).next = temp; // prev!=Null, prev.cindex!= roc, current = NULL or current.cindex > roc : append 
+      else
+         A = temp; // prev==NULL, current = NULL or current.cindex > roc : prepend
+   }
+   else
+      (*prev).val += value; // prev !=NULL and prev.cindex != roc: increment value
+}
+
+void removeelt(SparseElt* &current, SparseElt* &head)
+{
+   SparseElt *current2;
+
+   if (current != NULL)
+   {
+      if (current != head)
+      {
+         for (current2 = head; (*current2).next != NULL && (*current2).next != current; 
+              current2 = (*current2).next);
+         if ((*current2).next == current)
+            (*current2).next = (*current).next;
+      }
+      else
+         head = (*current).next;
+
+      delete current;
+      current = NULL;
+   }
+}

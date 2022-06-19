@@ -23,7 +23,7 @@ struct PBData
    double ***LJ;
 };
 
-
+double DBC(double *x, int thedim, double thetime);
 double getf(double *x, int thesign, PBData &pb, GridData &grid);
 double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData &pb, 
             GridData &grid);

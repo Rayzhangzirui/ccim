@@ -16,6 +16,10 @@
 
 #include "input.h"
 #include "solver.h"
+#include "amg.h"
+#include "march.h"
+#include "storage.h"
+#include "numerics.h"
 
 // using namespace std;
 using std::ofstream;
@@ -31,89 +35,8 @@ static int iminarg1,iminarg2;
 
 
 
-struct SparseElt
-{
-   double val;
-   SparseElt *next;
-   int cindex;
-};
-
-struct SparseAMGElt
-{
-   int roc;
-   double *val;
-   char *strong;
-};
-
-struct SparseAMGMx
-{
-   int *nr;
-   SparseAMGElt **row;
-   int *nc;
-   SparseAMGElt **col;
-   int n;
-   int m;
-};
-
-struct SparseAMGList
-{
-   SparseAMGMx A;
-   SparseAMGMx P;
-   SparseAMGList *next;
-   SparseAMGList *prev;
-   double **B;
-   int *PLR, *PLC;
-};
 
 
-
-struct HeapElt
-{
-   int index[3];
-   HeapElt* child[3];
-   HeapElt* parent;
-   int num;
-};
-
-struct HeapStruct
-{
-   HeapElt *head;
-   HeapElt *tail;
-   HeapElt ****loc;
-   int dim;
-};
-
-struct StorageStruct
-{
-   int *info;
-   SparseElt *head;
-   int N;
-   int mid;
-};
-
-struct MarchStruct
-{
-   double ***dist;
-   char ***status;
-   double ****extend;
-   int nval;
-   double ***dorig;
-   double ****eorig;
-   HeapStruct heap;
-   double tol;
-   PBData pb;
-
-   StorageStruct *Dusmall;
-   int smallsize;
-};
-
-struct StrHeapStruct
-{
-   int *value;
-   int *index;
-   int *loc;
-   int num;
-};
 
 struct ZLHeapElt
 {
@@ -141,18 +64,16 @@ void output(ofstream& outfile, double **phi, char **tube, int *nx);
 void output(ofstream& outfile, double **u, double **S, int *nx);
 void outputneighbors(double ***S, int *index, GridData &grid);
 
-void getinit(double*** &S, PBData &pb, MarchStruct &march, TempStruct &tmp, 
-             GridData &grid);
-double DBC(double *x, int thedim, double thetime);
-void weno(double& dfp, double& dfn, double* fi, const long i,
-          const double dx, const int order);
+// void getinit(double*** &S, PBData &pb, MarchStruct &march, TempStruct &tmp, 
+//              GridData &grid);
+
 void reinitfull(double ***u, int numsteps, double ***rhs, double ***der, double ***tmp,
                 GridData &grid);
 void getReRHSfull(double ***rhs, double ***u, double ***u0, GridData &grid);
 
-int gecp0(double **U, int PLR[], int PLC[], double **A, int n, int m);
-void forwardbacksub0(double *x, double *b, double **U, int *PLR, int *PLC, int n);
+
 void project(double *w, double *normal, double *v, int dim);
+
 char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***S,
                       int *index, int rstar, int sstar, GridData &grid);
 char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***S,
@@ -183,7 +104,7 @@ void cim1(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsiz
 void cim1again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
 
-void outputAMGmx(ofstream& outfile, SparseAMGMx A);
+
 void perturb(double ***S, double tol, GridData &grid);
 void perturb(double ***S, double tol, PBData &pb, GridData &grid);
 void perturbstatus(double ***S, double tol, int maxsteps, PBData &pb, GridData &grid);
@@ -211,26 +132,7 @@ double getexactvn(int *index, int r, int s, double ***S, GridData &grid);
 double formvn(double *Dup, double *Dum, double *normal, GridData &grid);
 double LJwater(int *index, PBData &pb, GridData &grid);
 
-void fmarch(MarchStruct &march, double phitube, GridData &grid);
-void fmarchstep(MarchStruct &march, int *index, GridData &grid);
-char fmarchdistance(MarchStruct &march, char *yes, double *xvalue, double **xvalvalue,
-                    double *thedx, int *index, GridData &grid);
-void fmarchdirection(char *yes, double *value, double **valvalue, double *thedx,
-                     MarchStruct &march, int *index, GridData &grid);
-void addtoheap(HeapStruct &heap, int *index, double ***phi);
-void fixheapeltup(HeapStruct &heap, HeapElt *fix, double ***phi);
-HeapElt* fixheapeltempty(HeapStruct &heap, HeapElt *fix, double ***phi);
-void fixheapeltdelete(HeapStruct &heap, HeapElt *del, double ***phi);
-void fixheapeltreplace(HeapStruct &heap, int *index, double ***phi);
-HeapElt* heapgoto(HeapStruct &heap, int num);
-HeapElt* evalarray(HeapElt ***A, int *index);
-HeapElt* evalarray(HeapElt ****A, int *index);
-void setvalarray(HeapElt ***A, int *index, HeapElt *value);
-void setvalarray(HeapElt ****A, int *index, HeapElt *value);
-HeapElt ***heapmatrix(int row, int col);
-HeapElt ****heapmatrix(int row, int col, int frb);
-char checkcompat(HeapStruct heap);
-void outputheap(HeapStruct heap, double ***value, double ***ovalue);
+
 void outputstatus(ofstream& outfile, double ***phi, GridData &grid);
 void cim2again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
@@ -382,27 +284,9 @@ char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
                int *index, int mid, double ***S, GridData &grid);
 int getstatus5(double ***S, int *index, GridData &grid);
 char checkcimstatus(double ***S, GridData &grid);
-double newtonweno(double ***u, int *index, int rstar, int sstar, double alpha, 
-                  GridData &grid);
-double newtonweno(double *u, double x0, double a, double dx, double nx);
-double weno6interp(double ***u, int *index, int rstar, int sstar, double alpha, 
-                   GridData &grid);
-void dweno6interp1d(double &val, double &dval, double x, double *u, double a,
-                    double dx, int nx);
-double weno6interp1d(double x, double *u, double a, double dx, int nx);
-double regulafalsiweno(double ***u, int *index, int rstar, int sstar, GridData &grid);
-double regulafalsiweno(double *u, int i, int j, double a, double dx, double nx);
-double lagrangeinterp1d(double x, double *u, double a, double dx, int nx);
-double regulafalsi(double ***u, int *index, int rstar, int sstar, GridData &grid);
-double regulafalsi(double *u, int i, int j, double a, double dx, double nx);
-double regulafalsiexact(int *index, int rstar, int sstar, GridData &grid);
-double bisection(double ***u, int *index, int rstar, int sstar, GridData &grid);
-double bisection(double *u, int i, int j, double a, double dx, double nx);
 
-void advance(double ***u, PBData &pb, MarchStruct &march, TempStruct &tmp, 
-             GridData &grid);
-void advance(double ***u, double ***a, PBData &pb, MarchStruct &march, TempStruct &tmp, 
-             GridData &grid);
+
+
 void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStruct &tmp, 
             GridData &grid);
 void getRHS(double ***rhs, double ***u, double ***a, PBData &pb, MarchStruct &march, 
@@ -412,8 +296,6 @@ void getRHShyp(double ***rhs, double ***u, PBData &pb, MarchStruct &march,
 void getRHSexactvn(double ***rhs, double ***u, PBData &pb, MarchStruct &march, 
                    TempStruct &tmp, GridData &grid);
 void getRHScurv(double ***rhs, double ***u, TempStruct &tmp, GridData &grid);
-void advanceheat(double ***u, TempStruct &tmp, GridData &grid);
-void advanceheat(double ***u, double finaltime, TempStruct &tmp, GridData &grid);
 
 
 double getpsivac(double *x, PBData &pb);
@@ -458,81 +340,9 @@ void getinterfaceDu(double &uint, double *Du, int *index, int rstar, int sstar,
                     double ***u, double ***S, PBData &pb, GridData &grid);
 void cimexact(SparseElt2**** &A, double ***b, int *index, double ***S, PBData &pb, 
               GridData &grid);
-void startamg(int *strength, SparseAMGMx &A, double theta);
-void startamg(int *strength, int &strhead, int* &strnext, int* &strprev, 
-              SparseAMGMx &A, double theta);
-void startamg(int *strength, StrHeapStruct &heap, SparseAMGMx &A, double theta);
-void amgfirstpass(int *coarse, int *strength, SparseAMGMx &A);
-void amgfirstpass(int *coarse, int *strength, int &strhead, int* &strnext, 
-                  int* &strprev, SparseAMGMx &A);
-void amgfirstpass(int *coarse, int *strength, StrHeapStruct &heap, SparseAMGMx &A);
-void amgsecondpass(int *coarse, SparseAMGMx &A);
-void makecoarsemx(int *coarse, int *strength, SparseAMGMx &A);
-void makecoarsemx(int *coarse, int *strength, int &strhead, int *strnext, int *strprev, 
-                  SparseAMGMx &A);
-void makecoarsemx(int *coarse, int *strength, StrHeapStruct &heap, SparseAMGMx &A);
-char yesinfluencedby(int i, int j, SparseAMGMx &A);
-void sparseorder(int row, int col, SparseElt** &A, double value);
-void sparseorder(int roc, SparseElt* &A, double value);
-void removeelt(SparseElt* &current, SparseElt* &head);
-SparseAMGMx createP(int *coarse, SparseAMGMx &A);
-double getdotprod(SparseAMGElt *v, int numv, SparseAMGElt *w, int numw);
-double getdotprod(SparseAMGElt *v, int numv, SparseElt *w);
-double getdotprod(SparseAMGElt *v, int numv, double *w);
-SparseAMGMx multPtP(SparseAMGMx &A, SparseAMGMx &P);
-SparseAMGMx multPtP2(SparseAMGMx &A, SparseAMGMx &P);
-void clearsparse(SparseAMGMx &A);
-void mxvecmult(double *a, SparseAMGMx A, double *b);
-void mxtvecmult(double *a, SparseAMGMx A, double *b);
-void interpolate(SparseAMGMx &B, double* &c, SparseAMGMx &P, int *coarse, 
-                 SparseAMGMx &A, double *b);
-void interpolate(SparseAMGMx &B, SparseAMGMx &P, int *coarse, SparseAMGMx &A);
-void gaussseidel(double *x, SparseAMGMx &A, double *b, double *x0, int nu);
-double Vcycle(double *x, SparseAMGMx &A, double *b, double *x0, int nu1, int nu2, 
-              int small);
-double Vcycle(double *x, SparseAMGList* &L, double *b, double *x0, int nu1, int nu2, 
-              int small);
-double getresidual(SparseAMGMx &A, double *x, double *b);
-double getresidualinf(SparseAMGMx &A, double *x, double *b);
-double getrelresidual(SparseAMGMx &A, double *x, double *b);
-double getrelresidualinf(SparseAMGMx &A, double *x, double *b);
-void Vcycleloop(double *x, SparseAMGMx &A, double *b, double *x0, int nu1, int nu2, 
-                int small, int numsteps, double tol);
-void Vcycleloop(double *x, SparseAMGList* &L, double *b, double *x0, int nu1, int nu2, 
-                int small, int numsteps, double tol);
-void AMGsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, int nu1, 
-              int nu2, int small, int numsteps, double tol, double ***S, PBData &pb);
-void AMGsmall2(double ***x, SparseElt2**** &A, double ***b, GridData &grid, int nu1, 
-               int nu2, int small, int numsteps, double tol, double ***S, PBData &pb);
-void AMGsmall3(double ***x, SparseElt2**** &A, double ***b, GridData &grid, int nu1, 
-               int nu2, int small, int numsteps, double tol, double ***S, PBData &pb);
-void AMGsmall3(double ***x, SparseElt2**** &A, double ***b, GridData &grid, int nu1, 
-               int nu2, int small, int numsteps, double tol, double ***a, double ***S, 
-               PBData &pb);
-void checkmx(SparseAMGMx A);
-void peekmx(SparseAMGMx A);
-void getpoisson(SparseAMGMx &A, double *b, int *nx, double *dx, int thedim);
 
-char closertohead(StrHeapStruct &heap, int r, int s);
-void fixheap(StrHeapStruct &heap, int num);
-void fixheapdown(StrHeapStruct &heap, int num);
-void fixheapup(StrHeapStruct &heap, int num);
-void addtoheap(StrHeapStruct &heap, int index);
-void popfromheap(StrHeapStruct &heap, int num);
-void switchheapelt(StrHeapStruct &heap, int r, int s);
-void sortfromheap(StrHeapStruct &heap);
-char checkheap(StrHeapStruct &heap);
 
-void newstorage(StorageStruct &Dusmall);
-int getstoragesize(double ***S, GridData &grid);
-int findinstorage(int *info, StorageStruct *Dusmall, int smallsize);
-void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
-                     int mid, StorageStruct *Dusmall, int smallsize, double ***u, 
-                     double ***S, PBData &pb, GridData &grid);
-void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
-                     StorageStruct *Dusmall, int smallsize, double ***u, double ***S, 
-                     PBData &pb, GridData &grid);
-void clearstorage(StorageStruct* &Dusmall, int &smallsize);
+
 void getcim1Du(double &uint, double *Du, int *index, int rstar, int sstar, double ***u,
                int gamma[][2], double ***S, PBData &pb, GridData &grid);
 void getcim2Du(double &uint, double *Du, int *index, int rstar, int sstar, double ***u,
