@@ -20,14 +20,10 @@ void cmdLine(int argc, char *argv[]);
 //initialize grid
 void init_grid(GridData &grid, int nx, double a);
 
-//initialize pb data
-void init_pb(PBData &pb, GridData &grid);
-
 // Initialize sparse matrix solver
 void init_TempStruct(TempStruct &tmp, GridData &grid);
 
-// initialize PBdata
-void init_PBData(PBData &pb, GridData &grid, double epsp = 80.0, double epsm = 1.0);
+
 
 
 

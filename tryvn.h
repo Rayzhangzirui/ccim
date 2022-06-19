@@ -23,7 +23,6 @@
 
 // using namespace std;
 using std::ofstream;
-#define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 static double dmaxarg1,dmaxarg2;
 #define DMAX(a,b) (dmaxarg1=(a),dmaxarg2=(b),(dmaxarg1) > (dmaxarg2) ?\
 (dmaxarg1) : (dmaxarg2))
@@ -38,25 +37,6 @@ static int iminarg1,iminarg2;
 
 
 
-struct ZLHeapElt
-{
-   int index[3];
-   ZLHeapElt* child[2];
-   ZLHeapElt* parent;
-   int num;
-   double val;
-};
-
-struct ZLHeapStruct
-{
-   ZLHeapElt *head;
-   ZLHeapElt *tail;
-   char ***mark;
-   int dim;
-};
-
-
-
 
 void output(ofstream& outfile, double ***phi, int *nx);
 void output(ofstream& outfile, double **phi, int *nx);
@@ -68,22 +48,6 @@ void outputneighbors(double ***S, int *index, GridData &grid);
 //              GridData &grid);
 
 
-void project(double *w, double *normal, double *v, int dim);
-
-char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***S,
-                      int *index, int rstar, int sstar, GridData &grid);
-char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***S,
-                      int *index1, int *index2, GridData &grid);
-char getinterfaceinfo(double &alpha, double *tangent1, double *tangent2, double *normal, 
-                      double &sigma, double **Dn, double *Dsigma, double &jumpfe, 
-                      double ***S, int *index1, int *index2, PBData &pb, GridData &grid);
-void getinterfaceinfo(double *tangent1, double *tangent2, double &sigma, double **Dn,
-                      double *Dsigma, double &jumpfe, int *index, int rstar, int sstar,
-                      double alpha, double ***S, PBData &pb, GridData &grid);
-void getinterfaceinfo(double *tangent1, double *tangent2, double &tau, double &sigma, 
-                      double **Dn, double *Dsigma, double &jumpfe, double &aehere,
-                      double &aethere, int *index, int rstar, int sstar, double alpha, 
-                      double ***a, double ***S, PBData &pb, GridData &grid);
 void interiorpt2(SparseElt2**** &A, double ***b, int *index, double ***S, PBData &pb, 
                  GridData &grid);
 void interiordirection2(SparseElt2**** &A, double ***b, int *index, int r, double ***S, 
@@ -301,10 +265,7 @@ void getD2psivac(double **D2psi, double *x, PBData &pb);
 double Bval(double s, PBData &pb);
 double Bprime(double s, PBData &pb);
 double B2prime(double s, PBData &pb);
-double getdotprod(double *v, double *w, int thedim);
-void normalize(double *v, double *w, int thedim);
-void getcrossprod(double *v, double *w, double *z);
-void getunitcrossprod(double *v, double *w, double *z);
+
 void checkanswer(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkDanswer(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkDanswer(double *uxerr, int *index, int gamma[][2], double ***u, double ***S, 
@@ -358,92 +319,9 @@ double getexactnormal(int *index, int r, int rstar, int sstar, double alpha,
 double getexactDnormal(int *index, int r, int s, int rstar, int sstar, double alpha, 
                        GridData &grid);
 void checkexact(double ***S, double radius, PBData &pb, GridData &grid);
-void getinterfaceinfo(double *normal, double *tangent1, double *tangent2, double **Dn,
-                      double &tau, double *Dtau, double **D2tau, double &sigma, 
-                      double *Dsigma, double &jumpfe, double *x, double ***S,
-                      PBData &pb, GridData &grid);
-void getiimjumps(double &up0, double &upum, double *uxp0, double **uxpuxm, 
-                 double **uxxp0, double ***uxxpuxm, double ****uxxpuxxm,
-                 int *index, int rstar, int sk, double alpha, int thesign, 
-                 double *normal, double ***S, PBData &pb, GridData &grid);
-void getiimjumps(double &up0, double &upum, double *uxp0, double **uxpuxm, 
-                 double **uxxp0, double ***uxxpuxm, double ****uxxpuxxm,
-                 double *x, int thesign, double ***S, PBData &pb, GridData &grid);
-void getiimstencilmx(double **A, int M, int N, double *x, int thesign, int **index, 
-                     double up0, double upum, double *uxp0, double **uxpuxm, 
-                     double **uxxp0, double ***uxxpuxm, double ****uxxpuxxm, 
-                     double ***S, PBData &pb, GridData &grid);
-void getiimstencilmx(double **A, int M, int N, double *x, int thesign, int **index, 
-                     char yesC, double up0, double upum, double *uxp0, 
-                     double **uxpuxm, double **uxxp0, double ***uxxpuxm, 
-                     double ****uxxpuxxm, double ***S, PBData &pb, GridData &grid);
-void getiimCstencilmx(double **A, int M, int N, double *x, int thesign, int **index, 
-                      double up0, double upum, double *uxp0, double **uxpuxm, 
-                      double **uxxp0, double ***uxxpuxm, double ****uxxpuxxm, 
-                      double ***S, PBData &pb, GridData &grid);
-void getiimgridstencilmx(double **A, int M, int N, double *x, int *gindex, int thesign, 
-                         int **index, char yesC, double up0, double upum, double *uxp0, 
-                         double **uxpuxm, double **uxxp0, double ***uxxpuxm, 
-                         double ****uxxpuxxm, double ***S, PBData &pb, GridData &grid);
-void iim(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S,
-         PBData &pb, GridData &grid);
-void iim(SparseElt2**** &A, double ***b, int *index, int add, double ***S, 
-         char ***tube, PBData &pb, GridData &grid);
-void iim(SparseElt2**** &A, double ***b, int *index, char yesC, int add, double ***S, 
-         char ***tube, PBData &pb, GridData &grid);
-void iimghost(SparseElt2**** &A, double ***b, int *index, char yesC, int add, 
-              double ***S, char ***tube, PBData &pb, GridData &grid);
-void iimC(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S,
-          PBData &pb, GridData &grid);
-void iimC(SparseElt2**** &A, double ***b, int *index, int add, double ***S, 
-          char ***tube, PBData &pb, GridData &grid);
-void addtoheap(ZLHeapStruct &heap, int *index, double val);
-void fixheapeltup(ZLHeapStruct &heap, ZLHeapElt *fix);
-ZLHeapElt* fixheapeltempty(ZLHeapStruct &heap, ZLHeapElt *fix);
-void fixheapeltdelete(ZLHeapStruct &heap, ZLHeapElt *del);
-ZLHeapElt* heapgoto(ZLHeapStruct &heap, int num);
-void readZLHeap(ZLHeapStruct heap);
-void getnearestgrid(int **index, int &N, double *x, int maxpts, double maxdist, 
-                    char ***tube, GridData &grid);
-double getdist(double *z, double *x, int thedim);
-double bilinearinterp(double *x, double ***u, GridData &grid);
-double weno6interpdirect(double *x, double ***u, GridData &grid);
-void getallgrad(double ****grad, double ***S, GridData &grid);
-int newtondir(double *x, double *x0, double *grad, double tol, double ***S, 
-               double ****allgrad, GridData &grid);
-int regulafalsidir(double *x, double *x0, double *grad, double tol, double ***S, 
-                   GridData &grid);
-void getnearestinterface(double *x, int *index, double ***S, GridData &grid) ;
 
-double pythag(double a, double b);
-void svdcmp(double **a, int m, int n, double w[], double **v);
-double svbksb(double **u, double w[], double **v, int m, int n, double b[], double x[],
-              double thresh);
 
-char GSarnoldismall(double**** &Vcol, double** &Hcol, int &k, int maxk, double ***x0, 
-                    SparseElt2**** &A, double ***b, double ***S, PBData &pb, 
-                    GridData &grid);
-char GSarnoldipreleftsmall(double**** &Vcol, double** &Hcol, int &k, int maxk, 
-                           double ***x0, SparseElt2**** &A, double ***b, 
-                           SparseElt2**** &M, double ***S, PBData &pb, GridData &grid);
-char GMRESsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                int numsteps, double tol, double ***S, PBData &pb, TempStruct &tmp);
-char GMRESpreleftsmall(double ***x, SparseElt2**** &A, double ***b, SparseElt2 &M, 
-                       GridData &grid, int numsteps, double tol, double ***S, 
-                       PBData &pb, TempStruct &tmp);
-char GMRESpreleftsmall2(double ***x, SparseElt2**** &A, double ***b, SparseElt2**** &M, 
-                        GridData &grid, int numsteps, double tol, double ***S, 
-                        PBData &pb, TempStruct &tmp);
-void GMRESrestartsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                       int numsteps, double tol, double ***S, PBData &pb, 
-                       TempStruct &tmp);
-void GMRESpreleftrestartsmall(double ***x, SparseElt2**** &A, double ***b, 
-                              SparseElt2**** &M, GridData &grid, int numsteps, 
-                              double tol, double ***S, PBData &pb, TempStruct &tmp);
-void testZL(char yesC, int add, double ***S, char ***tube, PBData &pb, 
-            GridData &grid);
-void testZLatx(double *theerr, double *x, double thesign, char yesC, int add, 
-               double ***S, char ***tube, PBData &pb, GridData &grid);
+
 
 
 

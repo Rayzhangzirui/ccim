@@ -1,7 +1,10 @@
 #include "iim.h"
 #include "numerics.h"
+#include "interface.h"
 
 #include <iostream>
+#include <cmath>
+extern int globdebug;
 using namespace std;
 
 void getiimjumps(double &up0, double &upum, double *uxp0, double **uxpuxm, 
@@ -3575,4 +3578,174 @@ void testZLatx(double *theerr, double *x, double thesign, char yesC, int add,
    delete [] w;
 
 //   getchar();
+}
+
+
+void getinterfaceinfo(double *normal, double *tangent1, double *tangent2, double **Dn,
+                      double &tau, double *Dtau, double **D2tau, double &sigma, 
+                      double *Dsigma, double &jumpfe, double *x, double ***S,
+                      PBData &pb, GridData &grid)
+{
+   int i, r, s, t, m, n; 
+   int index[grid.dim], tindex[grid.dim], rindex[grid.dim], sindex[grid.dim];
+   double grad, length, tol = 1.0e-14, val, tempx[grid.dim];
+   double Dn2[grid.dim][grid.dim];
+   double ***temp = matrix(1,1,1);
+   GridData tempgrid;
+
+   for (r = 0; r < grid.dim; r++)
+   {
+      index[r] = (x[r]-grid.a[r])/grid.dx[r];
+      if (index[r] >= grid.nx[r])
+         index[r] = grid.nx[r]-1;
+      else if (index[r] < 0)
+         index[r] = 0;
+      tempgrid.nx[r] = 1;
+      tempgrid.a[r] = 0.0;
+      tempgrid.dx[r] = grid.dx[r];
+   }
+   sub2coord(tempx,index,grid);
+   for (r = 0; r < grid.dim; r++)
+      tempx[r] = x[r]-tempx[r];
+   tempgrid.tol = grid.tol;
+   for (r = 0; r < grid.dim; r++)
+   {
+      for (i = 0; i < grid.dim; i++)
+         tindex[i] = 0;
+      while (tindex[0] <= 1)
+      {
+         for (t = 0; t < grid.dim; t++)
+         {
+            sindex[t] = index[t]+tindex[t];
+            rindex[t] = sindex[t];
+         }
+         val = 0.0;
+         for (s = -1; s <= 1; s += 2) 
+         {
+            rindex[r] = fmin(fmax(sindex[r]+s,0),grid.nx[r]);
+            val += s*evalarray(S,rindex);
+         }
+         val /= 2.0*grid.dx[r];
+         setvalarray(temp,tindex,val);
+   
+         (tindex[grid.dim-1])++;
+         for (i = grid.dim-1; i > 0 && tindex[i] > 1; i--)
+         {
+            tindex[i] = 0;
+            (tindex[i-1])++;
+         }
+      }
+      normal[r] = bilinearinterp(tempx,temp,tempgrid);
+   }
+   grad = sqrt(getdotprod(normal,normal,grid.dim));
+   for (r = 0; r < grid.dim; r++)
+      normal[r] /= grad;
+
+// use exact here
+//   for (r = 0; r < grid.dim; r++)
+//      normal[r] = x[r]/sqrt(getdotprod(x,x,grid.dim));
+
+   length = 0.0;
+   t = -1;
+   for (r = 0; r < grid.dim; r++)
+   {   
+      for (s = 0; s < grid.dim; s++)
+         tangent2[s] = 0.0;
+      tangent2[r] = 1.0;
+      project(tangent2,normal,tangent2,grid.dim);
+      if (sqrt(getdotprod(tangent2,tangent2,grid.dim)) > length)
+      {
+         length = sqrt(getdotprod(tangent2,tangent2,grid.dim));
+         for (s = 0; s < grid.dim; s++)
+            tangent1[s] = tangent2[s]/length;
+      }
+   }
+   getunitcrossprod(tangent2,normal,tangent1);
+
+   for (r = 0; r < grid.dim; r++)
+      for (m = r; m < grid.dim; m++)
+      {
+         for (i = 0; i < grid.dim; i++)
+            tindex[i] = 0;
+         while (tindex[0] <= 1)
+         {
+            for (t = 0; t < grid.dim; t++)
+            {
+               sindex[t] = index[t]+tindex[t];
+               rindex[t] = sindex[t];
+            }
+            val = 0.0;
+            if (r == m)
+            {
+               for (s = -1; s <= 1; s += 2) 
+               {
+                  rindex[r] = fmin(fmax(sindex[r]+s,0),grid.nx[r]);
+                  val += evalarray(S,rindex)-evalarray(S,sindex);
+               }
+               val /= grid.dx[r]*grid.dx[r];
+            }
+            else
+            {
+               for (s = -1; s <= 1; s += 2)
+               {
+                  rindex[r] = fmin(fmax(sindex[r]+s,0),grid.nx[r]);
+                  for (t = -1; t <= 1; t += 2)
+                  {
+                     rindex[m] = fmin(fmax(sindex[m]+t,0),grid.nx[r]);
+                     val += s*t*evalarray(S,rindex);
+                  }
+               }
+               val /= 4.0*grid.dx[r]*grid.dx[m];
+            }
+            setvalarray(temp,tindex,val);
+   
+            (tindex[grid.dim-1])++;
+            for (i = grid.dim-1; i > 0 && tindex[i] > 1; i--)
+            {
+               tindex[i] = 0;
+               (tindex[i-1])++;
+            }
+         }
+         Dn2[r][m] = bilinearinterp(tempx,temp,tempgrid);
+         Dn2[m][r] = Dn2[r][m];
+      }
+
+   for (r = 0; r < grid.dim; r++)
+      for (m = 0; m < grid.dim; m++)
+      {
+         Dn[r][m] = Dn2[r][m]/grad;
+         for (n = 0; n < grid.dim; n++)
+            Dn[r][m] -= normal[r]*Dn2[m][n]*normal[n]/grad;
+      }
+
+// use exact Dn
+//   for (r = 0; r < grid.dim; r++)
+//      for (s = 0; s < grid.dim; s++)
+//      {
+//         Dn[r][s] = -x[r]*x[s]/sqrt(getdotprod(x,x,grid.dim))/getdotprod(x,x,grid.dim);
+//         if (r == s)
+//            Dn[r][s] += 1.0/sqrt(getdotprod(x,x,grid.dim));
+//      }
+
+   jumpfe = getf(x,1,pb,grid)/pb.epsilonp-getf(x,-1,pb,grid)/pb.epsilonm;
+   tau = gettau(x,pb,grid);
+   getDtau(Dtau,x,pb,grid);
+   getD2tau(D2tau,x,pb,grid);
+   sigma = getsigma(x,normal,pb,grid);
+   getDsigma(Dsigma,x,normal,Dn,pb,grid);
+
+/*
+   double tempval;
+   cout << "testing" << endl;
+   for (r = 0; r < grid.dim; r++)
+      for (s = 0; s < grid.dim; s++)
+      {
+         tempval = -x[r]*x[s]/sqrt(getdotprod(x,x,grid.dim))/getdotprod(x,x,grid.dim);
+         if (r == s)
+            tempval += 1.0/sqrt(getdotprod(x,x,grid.dim));
+         cout << tempval << " " << Dn[r][s] << endl;
+      }
+*/
+
+   free_matrix(temp,1,1,1);
 }

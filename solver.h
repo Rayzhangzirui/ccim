@@ -27,8 +27,7 @@ void prerightBICGSTABsmall(double ***x, SparseElt2**** &A, double ***b,
 void preBICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, SparseElt2**** M, 
                       GridData &grid, int numsteps, double tol, double ***S, 
                       PBData &pb, TempStruct &tmp);
-void leftmultmxsmall(double ***y, SparseElt2 ****A, double ***x, GridData &grid,
-                     double ***S, PBData &pb);
+
 void ILU(SparseElt2**** &M, SparseElt2**** &A, GridData &grid);
 void Atransposesmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***S,
                      PBData &pb);
@@ -40,6 +39,6 @@ void ILUsmall(SparseElt2**** &M, SparseElt2**** &A, GridData &grid, double ***S,
               PBData &pb);
 void ILUsmall(SparseElt2**** &M, SparseElt2**** &A, GridData &grid, double ***a, 
               double ***S, PBData &pb);
-void leftmultILUinv(double ***y, SparseElt2**** &M, double ***x, GridData &grid);
+
 
 #endif

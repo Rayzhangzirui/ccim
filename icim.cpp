@@ -1723,7 +1723,7 @@ void linearsystem_icim(SparseElt2**** &A, double ***b, double ***S, double*** si
 	cout << "found " << count[0] << " boundary pts, " << count[1] << " interior pts, " << count[2] << " cim pts" <<endl;
 }
 
-// has tow nbr not ghost
+// has two nbr not ghost
 bool Exist2NotGhostNbr(int &dim, int &dir, Index ind, double *** S, double *** sign_surf, GridData& grid){
 	for(int r = 0; r < 3; r++){
 		for(int s = -1; s<=1; s+=2){

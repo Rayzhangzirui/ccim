@@ -2,26 +2,8 @@
 #define INPUT_H
 
 #include "grid.h"
+#include "pb.h"
 
-struct PBData
-{
-   double epsilonp, epsilonm;
-   double gamma0;
-   double ***psi;
-
-   double **x;
-   int N;
-   double *Q;
-   double beta;
-   double *c;
-   double *epsilone;
-   int dim;
-
-   double rho0;
-   double *epsilonlj;
-   double *sigmalj;
-   double ***LJ;
-};
 
 double DBC(double *x, int thedim, double thetime);
 double getf(double *x, int thesign, PBData &pb, GridData &grid);

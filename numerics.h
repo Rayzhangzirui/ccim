@@ -28,4 +28,10 @@ double bisection(double *u, int i, int j, double a, double dx, double nx);
 void weno(double& dfp, double& dfn, double* fi, const long i,
           const double dx, const int order);
 
+double pythag(double a, double b);
+void svdcmp(double **a, int m, int n, double w[], double **v);
+double svbksb(double **u, double w[], double **v, int m, int n, double b[], double x[],
+              double thresh);
+
+
 #endif

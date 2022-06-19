@@ -58,6 +58,11 @@ void sparse2(int *rindex, int *cindex, SparseElt2**** &A, double value, GridData
       (*current).val += value;
 }
 
+/*
+A is a linked list of sparse element
+if cindex is in A, set A[cindex] += value
+otherwise A[cindex]= value, append at the front
+*/ 
 void sparse2(int *cindex, SparseElt2* &A, double value, GridData &grid)
 {
    int r;
@@ -424,4 +429,226 @@ void removeelt(SparseElt* &current, SparseElt* &head)
       delete current;
       current = NULL;
    }
+}
+
+
+
+void leftmultmxsmall(double ***y, SparseElt2 ****A, double ***x, GridData &grid,
+                     double ***S, PBData &pb)
+{
+   int i, m, n, tindex[grid.dim], rindex[grid.dim];
+   double ehere, temp;
+   SparseElt2 *current;
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      for (m = 0; m < grid.dim; m++)
+         rindex[m] = tindex[m];
+      if (evalarray(S,tindex) < 0.0)
+         ehere = pb.epsilonm;
+      else
+         ehere = pb.epsilonp;
+
+      temp = 0.0;
+      if (evalarray(A,tindex) == NULL)
+         for (m = 0; m < grid.dim; m++)
+         {
+            temp += 2.0*ehere/(grid.dx[m]*grid.dx[m])*evalarray(x,rindex);
+            for (n = -1; n <= 1; n += 2)
+            {
+               rindex[m] = tindex[m]+n;
+               if (rindex[m] >= 0 && rindex[m] <= grid.nx[m])
+                  temp += -ehere/(grid.dx[m]*grid.dx[m])*evalarray(x,rindex);
+            }
+            rindex[m] = tindex[m];
+         }
+      else
+         for (current = evalarray(A,tindex); current != NULL; 
+              current = (*current).next)
+            temp += (*current).val*evalarray(x,(*current).cindex);
+
+      setvalarray(y,tindex,temp);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+}
+
+
+
+void leftmultILUinv(double ***y, SparseElt2**** &M, double ***x, GridData &grid)
+{
+   int i, tindex[grid.dim];
+   double d;
+   SparseElt2 *current;
+   int N = 1;
+   for (i = 0; i < grid.dim; i++)
+      N *= grid.nx[i]+1;
+/*
+   clock_t cstart1, cend1;
+   clock_t cstart2, cend2;
+   clock_t cstart3, cend3;
+   clock_t cstart4, cend4;
+   clock_t cstart5, cend5;
+   clock_t cstart6, cend6;
+   clock_t cstart7, cend7;
+   clock_t cstart8, cend8;
+   double temp;
+   
+   cstart1 = clock ();
+   for (i = 0; i < N; i++)
+   {
+      ind2sub(tindex,i,grid.nx,grid.dim);
+      setvalarray(y,tindex,0.0);
+      for (current = evalarray(M,tindex); current != NULL; current = (*current).next)
+         setvalarray(y,tindex,evalarray(y,tindex)+
+                              (*current).val*evalarray(x,(*current).cindex));
+   }
+   cend1 = clock ();
+   cout << "mx-vec mult time = " << (double) (cend1-cstart1)/CLOCKS_PER_SEC << endl;
+   cstart3 = clock ();
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      setvalarray(y,tindex,0.0);
+      for (current = evalarray(M,tindex); current != NULL; current = (*current).next)
+         setvalarray(y,tindex,evalarray(y,tindex)+
+                              (*current).val*evalarray(x,(*current).cindex));
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   cend3 = clock ();
+   cout << "mx-vec mult time = " << (double) (cend3-cstart3)/CLOCKS_PER_SEC << endl;
+   cstart4 = clock ();
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      temp = 0.0;
+      for (current = evalarray(M,tindex); current != NULL; current = (*current).next)
+         temp += (*current).val*evalarray(x,(*current).cindex);
+      setvalarray(y,tindex,temp);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   cend4 = clock ();
+   cout << "mx-vec mult time = " << (double) (cend4-cstart4)/CLOCKS_PER_SEC << endl;
+   cstart6 = clock ();
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      temp = evalarray(x,tindex);
+      for (current = evalarray(M,tindex); 
+           current != NULL && 
+           ((*current).cindex[0] < tindex[0] || 
+            ((*current).cindex[0] == tindex[0] && (*current).cindex[1] < tindex[1]) || 
+            ((*current).cindex[0] == tindex[0] && (*current).cindex[1] == tindex[1] &&
+             (*current).cindex[2] < tindex[2]));
+           current = (*current).next)
+         temp -= (*current).val*evalarray(y,(*current).cindex);
+      setvalarray(y,tindex,temp);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   cend6 = clock ();
+   cout << "forward solve time = " << (double) (cend6-cstart6)/CLOCKS_PER_SEC << endl;
+   cstart7 = clock ();
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      temp = evalarray(x,tindex);
+      for (current = evalarray(M,tindex); 
+           current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) < 
+                              sub2ind(tindex,grid.nx,grid.dim);
+           current = (*current).next)
+         temp -= (*current).val*evalarray(y,(*current).cindex);
+      setvalarray(y,tindex,temp);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   cend7 = clock ();
+   cout << "forward solve time = " << (double) (cend7-cstart7)/CLOCKS_PER_SEC << endl;
+   int r;
+   cstart8 = clock ();
+   r = 0;
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      temp = evalarray(x,tindex);
+      for (current = evalarray(M,tindex); 
+           current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) < r;
+           current = (*current).next)
+         temp -= (*current).val*evalarray(y,(*current).cindex);
+      setvalarray(y,tindex,temp);
+      r++;
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   cend8 = clock ();
+   cout << "forward solve time = " << (double) (cend8-cstart8)/CLOCKS_PER_SEC << endl;
+*/
+//   cstart2 = clock ();
+   for (i = 0; i < N; i++)
+   {
+      ind2sub(tindex,i,grid.nx,grid.dim);
+      setvalarray(y,tindex,evalarray(x,tindex));
+      for (current = evalarray(M,tindex); 
+           current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) < i;
+           current = (*current).next)
+         setvalarray(y,tindex,evalarray(y,tindex)-
+                              (*current).val*evalarray(y,(*current).cindex));
+   }
+//   cend2 = clock ();
+//   cout << "forward solve time = " << (double) (cend2-cstart2)/CLOCKS_PER_SEC << endl;
+//   cstart5 = clock ();
+   for (i = N-1; i >= 0; i--)
+   {
+      ind2sub(tindex,i,grid.nx,grid.dim);
+      for (current = evalarray(M,tindex); 
+           current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) < i;
+           current = (*current).next);
+      d = (*current).val;
+      for (current = (*current).next; current != NULL; current = (*current).next)
+         setvalarray(y,tindex,evalarray(y,tindex)-
+                              (*current).val*evalarray(y,(*current).cindex));
+      setvalarray(y,tindex,evalarray(y,tindex)/d);
+   }
+//   cend5 = clock ();
+//   cout << "backward solve time = " << (double) (cend5-cstart5)/CLOCKS_PER_SEC << endl;
+//   exit(1);
 }

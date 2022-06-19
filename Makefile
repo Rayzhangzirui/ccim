@@ -18,15 +18,15 @@ else
 	OPT = -Ofast -lomp
 endif
 
+solver = amg.o gmres.o solver.o
 
-
-cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o input.o solver.o sparse.o advance.o storage.o march.o amg.o numerics.o
+cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o input.o sparse.o advance.o storage.o march.o numerics.o interface.o iim.o pb.o $(solver)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-cim.o: cim.cpp
-	$(CC) $(OPT) -c $<
+solvers: $(solver)
+	$(CC) $(OPT) -o $@ $^ 
 
-tryvn.o: tryvn.c extratest.h
+cim.o: cim.cpp
 	$(CC) $(OPT) -c $<
 
 test: test.o tests_main.o tryvn.o helper.o icim.o

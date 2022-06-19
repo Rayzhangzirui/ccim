@@ -72,4 +72,11 @@ void clearfourd(double**** &fourd, char* &fdstatus, int Nfd, GridData &grid);
 void sparseorder(int row, int col, SparseElt** &A, double value);
 void sparseorder(int roc, SparseElt* &A, double value);
 
+// left multiplication
+void leftmultmxsmall(double ***y, SparseElt2 ****A, double ***x, GridData &grid,
+                     double ***S, PBData &pb);
+
+// left multiplication ILU
+void leftmultILUinv(double ***y, SparseElt2**** &M, double ***x, GridData &grid);
+
 #endif

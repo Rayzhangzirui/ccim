@@ -85,5 +85,11 @@ void testZL(char yesC, int add, double ***S, char ***tube, PBData &pb,
 void testZLatx(double *theerr, double *x, double thesign, char yesC, int add, 
                double ***S, char ***tube, PBData &pb, GridData &grid);
 
+// used in IIM
+void getinterfaceinfo(double *normal, double *tangent1, double *tangent2, double **Dn,
+                      double &tau, double *Dtau, double **D2tau, double &sigma, 
+                      double *Dsigma, double &jumpfe, double *x, double ***S,
+                      PBData &pb, GridData &grid);
+
 
 #endif
