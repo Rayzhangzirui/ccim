@@ -58,7 +58,7 @@ void init_grid(GridData &grid, int nx, double a){
 	grid.dx[0] = 2.0*fabs(grid.a[0])/grid.nx[0];
 	grid.dx[1] = 2.0*fabs(grid.a[1])/grid.nx[1];
 	grid.dx[2] = 2.0*fabs(grid.a[2])/grid.nx[2];
-  grid.mindx = min(min(grid.dx[0],grid.dx[1]),grid.dx[2]);
+   grid.mindx = min(min(grid.dx[0],grid.dx[1]),grid.dx[2]);
 	grid.dt = grid.mindx*grid.mindx/(2.0*grid.dim);
 	grid.tol = 1.0e-14;
 	grid.t = 0.0;

@@ -67,10 +67,6 @@ void outputneighbors(double ***S, int *index, GridData &grid);
 // void getinit(double*** &S, PBData &pb, MarchStruct &march, TempStruct &tmp, 
 //              GridData &grid);
 
-void reinitfull(double ***u, int numsteps, double ***rhs, double ***der, double ***tmp,
-                GridData &grid);
-void getReRHSfull(double ***rhs, double ***u, double ***u0, GridData &grid);
-
 
 void project(double *w, double *normal, double *v, int dim);
 
