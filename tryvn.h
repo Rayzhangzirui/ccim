@@ -56,11 +56,6 @@ void interiorptsmall(SparseElt2**** &A, double ***b, int *index, double ***S,
                      PBData &pb, GridData &grid);
 void cim1again2(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
-void cim1(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize,
-          int *index, int gamma[][2], double ***S, PBData &pb, GridData &grid);
-void cim1(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize,
-          int *index, double ***a, int gamma[][2], double ***S, PBData &pb, 
-          GridData &grid);
 void cim1again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
 
@@ -96,11 +91,7 @@ double LJwater(int *index, PBData &pb, GridData &grid);
 void outputstatus(ofstream& outfile, double ***phi, GridData &grid);
 void cim2again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
                 PBData &pb, GridData &grid);
-void cim2(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize,
-          int *index, int gamma[][2], double ***S, PBData &pb, GridData &grid);
-void cim2(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize,
-          int *index, double ***aa, int gamma[][2], double ***S, PBData &pb, 
-          GridData &grid);
+
 void cim3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
           PBData &pb, GridData &grid);
 void cim3again(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 

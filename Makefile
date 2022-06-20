@@ -18,12 +18,17 @@ else
 	OPT = -Ofast -lomp
 endif
 
-solver = amg.o gmres.o solver.o
+SOLVER = amg.o gmres.o solver.o hypresolver.o
 
-cim: cim.o tryvn.o helper.o icim.o amgsolver.o matrix.o input.o sparse.o advance.o storage.o march.o numerics.o interface.o iim.o pb.o $(solver)
+METHOD = cim12.o iim.o icim.o
+
+cim: cim.o tryvn.o helper.o  matrix.o input.o sparse.o advance.o storage.o march.o numerics.o interface.o pb.o $(SOLVER) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-solvers: $(solver)
+solvers: $(SOLVER)
+	$(CC) $(OPT) -o $@ $^ 
+
+methods: $(METHOD)
 	$(CC) $(OPT) -o $@ $^ 
 
 cim.o: cim.cpp
@@ -51,7 +56,7 @@ test_icim: test_icim.o tests_main.o tryvn.o helper.o icim.o
 icim: icimmain.o tryvn.o helper.o icim.o
 	$(CC) $(OPT) -o $@ $^ 
 
-amgsolver.o: amgsolver.cpp
+hypresolver.o: hypresolver.cpp
 	$(CC) $(OPT) $(CFLAGS) -c $<
 
 
