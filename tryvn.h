@@ -20,6 +20,7 @@
 #include "march.h"
 #include "storage.h"
 #include "numerics.h"
+#include "ccim.h"
 
 // using namespace std;
 using std::ofstream;
@@ -104,9 +105,6 @@ void cim345(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double *
             PBData &pb, GridData &grid);
 void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &smallsize, 
             int *index, int gamma[][2], double ***S, PBData &pb, GridData &grid);
-void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize, 
-            int *index, double ***a, int gamma[][2], double ***S, PBData &pb, 
-            GridData &grid);
 double evalcoef(double u0, double ***ucoef, double *uxxcoef, int *index, double ***S, 
                 GridData grid);
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
@@ -127,13 +125,8 @@ void getD2(double ***D2, int m, int n, int sk2[][3][4], GridData grid);
 void getD2(double ***D2, int m, int n, int sk2[][3][4], int *tindex, GridData grid);
 void getD2(double ***D2, double &jumpuxxcoef, int m, int n, int rstar, int sstar, 
            double thesign, int sk2[][3][4], GridData grid);
-void getD2(double ***D2, int m, int n, int *sk2, int *tindex, int *N, GridData grid);
-void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef, 
-                  double &jumpuxxcoef, char &perm, int m, int n, int *index, int rstar, 
-                  int sstar, int mid, double ***S, GridData &grid);
-void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef, 
-                      double &jumpuxxcoef, char &perm, int m, int n, int *index, 
-                      int rstar, int sstar, int mid, double ***S, GridData &grid);
+
+
 void getjumpux(double& u0, double ***ucoef, double *uxxcoef, int *index, int rstar, 
                int *sk, double alpha, int thesign, double *normal, double *tangent, 
                double ****D1ucoef, double **D1uxxcoef, double ***S, PBData &pb, 
@@ -147,11 +140,6 @@ void getjumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoef,
                double *normal, double *tangent, int mid, double ****D1ucoef, 
                double **D1uxcoef, double **D1uxxcoef, double ***S, PBData &pb, 
                GridData &grid);
-void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                     double **jumpuxxcoef, int *index, int rstar, int sk, double alpha, 
-                     int thesign, double *normal, double *tangent, int mid, 
-                     double ****D1ucoef, double **D1uxcoef, double **D1uxxcoef, 
-                     double ***D1jumpuxxcoef, double ***S, PBData &pb, GridData &grid);
 void recast(double &u0, double ***ucoef, double *uxcoef, double **uxxcoef, 
             double **jumpD2u, double *****jumpD2ucoef, double ***jumpD2uxcoef, 
             double ***jumpD2uxxcoef, double ***D2[][3], double D2jumpuxxcoef[][3],
@@ -179,24 +167,8 @@ void getjumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxcoef,
                 double *normal, int mid, double ****D1ucoef, double **D1uxcoef, 
                 double **D1uxxcoef, double*** D2[][3], double *D2uxcoef[][3], 
                 double *D2uxxcoef[][3], double ***S, PBData &pb, GridData &grid);
-void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                      int *index, int rstar, int sk, double alpha, int thesign, 
-                      double *normal, int mid, double *D1u, double ****D1ucoef, 
-                      double **D1uxcoef, double **D1uxxcoef, double ***D1jumpuxxcoef, 
-                      double **D2u, double *****D2ucoef, double ***D2uxcoef, 
-                      double ***D2uxxcoef, double **D2jumpuxxcoef, double &jumpD1u,
-                      double ***jumpD1ucoef, double *jumpD1uxcoef, 
-                      double *jumpD1uxxcoef, double **jumpD1jumpuxxcoef, double ***S, 
-                      PBData &pb, GridData &grid);
-void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                      int *index, int rstar, int sk, double alpha, int thesign, 
-                      double *normal, int mid, double ***a, double *D1u, 
-                      double ****D1ucoef, double **D1uxcoef, double **D1uxxcoef, 
-                      double ***D1jumpuxxcoef, double **D2u, double *****D2ucoef, 
-                      double ***D2uxcoef, double ***D2uxxcoef, double **D2jumpuxxcoef, 
-                      double &jumpD1u, double ***jumpD1ucoef, double *jumpD1uxcoef, 
-                      double *jumpD1uxxcoef, double **jumpD1jumpuxxcoef, double ***S, 
-                      PBData &pb, GridData &grid);
+
+
 void getDu(double ****ucoef, double **uxxcoef, int *index, int rstar,
            int sstar, double alpha, int thesign, int *sk, double ****D1, 
            double*** D2[][3], GridData grid);
@@ -204,12 +176,6 @@ void getDu(double **uxcoef, double ***uxxcoef, int *index, int rstar, int sstar,
            double alpha, int thesign, GridData grid);
 void getDu(double *Du, int *index, int rstar, int sstar, double alpha, int thesign, 
            int *sk, double ****D1, double*** D2[][3], GridData grid);
-void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef,
-                 double ***jumpuxxcoef, int *index, int rstar, int sstar, double alpha,
-                 double thesign, double **D2u, double *****D2ucoef, double ***D2uxcoef, 
-                 double ***D2uxxcoef, double **D2jumpuxxcoef, int mid, GridData &grid);
-char getsk2(int *sk2, int i, int j, int *index, double ***S, GridData &grid);
-char yessk2(int *sk2, int i, int j, int *index, double ***S, GridData &grid);
 int getstatus3(double ***S, int *index, GridData grid);
 int getstatus4(double ***S, int *index, GridData grid);
 double getinterfacegrad3(double *grad, double ***u, double ***S, int *index, int rstar, 
@@ -229,11 +195,7 @@ void linearsystem6(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
 void linearsystemZL(SparseElt2**** &A, double ***b, double ***S, PBData &pb, 
                     GridData &grid);
 int checkcim3(double ***S, int *index, GridData &grid);
-char getcim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, int n, 
-               int *index, int mid, double ***S, GridData &grid);
-char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, int n, 
-               int *index, int mid, double ***S, GridData &grid);
-int getstatus5(double ***S, int *index, GridData &grid);
+
 char checkcimstatus(double ***S, GridData &grid);
 
 
@@ -282,8 +244,6 @@ void getcim4Du(double &uint, double *Du, int *index, int rstar, int sstar, doubl
                double ***S, PBData &pb, GridData &grid);
 void getcim5Du(double &uint, double *Du, int *index, int rstar, int sstar, double ***u, 
                double ***S, PBData &pb, GridData &grid);
-void getcim345Du(double &uint, double *Du, int *index, int rstar, int sstar,
-                 double ***u, double ***S, PBData &pb, GridData &grid);
 void getinterfaceDu(double &uint, double *Du, int *index, int rstar, int sstar,
                     double ***u, double ***S, PBData &pb, GridData &grid);
 void cimexact(SparseElt2**** &A, double ***b, int *index, double ***S, PBData &pb, 

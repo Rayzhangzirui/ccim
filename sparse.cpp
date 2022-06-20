@@ -2,6 +2,8 @@
 #include <iostream>
 using namespace std;
 
+
+
 SparseElt2 ****sparseelt2ptrmatrix(int row, int col, int fr)
 {
    int i, j, k;
