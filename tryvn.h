@@ -61,11 +61,10 @@ void cim1again3(SparseElt2**** &A, double ***b, int *index, int gamma[][2], doub
                 PBData &pb, GridData &grid);
 
 
-void perturb(double ***S, double tol, GridData &grid);
-void perturb(double ***S, double tol, PBData &pb, GridData &grid);
+
 void perturbstatus(double ***S, double tol, int maxsteps, PBData &pb, GridData &grid);
-void perturbelt(double ***S, int *index, double tol);
-void perturbelt(double ***S, int *index, double tol, PBData &pb);
+
+
 char perturbstatuselt(double ***S, int *index, double tol, PBData &pb, GridData &grid);
 
 

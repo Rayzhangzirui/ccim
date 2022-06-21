@@ -1,14 +1,12 @@
 #include "icim.h"
 #include "tryvn.h"
 #include "interface.h"
+#include "global.h"
 #include <unordered_map>
 #include <list>
 #include <iterator>
 using namespace std;
 
-extern int eindex[3];
-extern int globsmall;
-extern char globdist;
 #define DEBUG
 
 int CUBENBR = 2;

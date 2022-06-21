@@ -48,4 +48,19 @@ void init_surf_protein_paper(double ***S, GridData& grid);
 
 
 void checkanswer(double ***u, double ***S, GridData &grid);
+
+
+
+
+
+
+// perturb surface, move interface away from grid point
+void perturbelt(double ***S, int *index, double tol);
+void perturb(double ***S, double tol, GridData &grid);
+
+
+void perturbelt(double ***S, int *index, double tol, PBData &pb);
+void perturb(double ***S, double tol, PBData &pb, GridData &grid);
+
+
 #endif

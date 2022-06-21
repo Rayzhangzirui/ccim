@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include <string>
+#include <fstream>
 
 extern double globerr;
 extern double globerrvec[3], globerrvec2[3], globerrvec3[3], globerrvec4[3]; 
@@ -82,6 +83,13 @@ extern std::string PROTEINFILE ;
 
 
 extern bool globgridperturb;
+
+
+
+extern std::ofstream outfile_mx;
+extern std::ofstream outfile_uerr;
+extern std::ofstream outfile_Duerr;
+
 
 void cmdLine(int argc, char *argv[]);
 

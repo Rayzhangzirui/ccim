@@ -1389,3 +1389,76 @@ void checkanswer(double ***u, double ***S,GridData &grid)
    cout << "Error is " << theerr << " at " << rindex[0] << " " << rindex[1] << " "  
         << rindex[2] << endl;
 }
+
+
+
+// if surface on grid point, within tol, shift to tol
+void perturbelt(double ***S, int *index, double tol)
+{
+   if (evalarray(S,index) >= 0.0 && evalarray(S,index) < tol)
+      setvalarray(S,index,tol);
+   else if (evalarray(S,index) < 0.0 && evalarray(S,index) > -tol)
+      setvalarray(S,index,-tol);
+}
+
+void perturb(double ***S, double tol, GridData &grid)
+{
+   int tindex[grid.dim];
+   int i;
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      perturbelt(S,tindex,tol);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+}
+
+
+
+
+// if outside, within tol, push to tol depending on epsilon
+void perturbelt(double ***S, int *index, double tol, PBData &pb)
+{
+   if (evalarray(S,index) >= 0.0 && evalarray(S,index) < tol)
+   {
+      if (pb.epsilonp >= pb.epsilonm)
+         setvalarray(S,index,tol);
+      else
+         setvalarray(S,index,-tol);
+   }
+   else if (evalarray(S,index) < 0.0 && evalarray(S,index) > -tol)
+   {
+      if (pb.epsilonm >= pb.epsilonp)
+         setvalarray(S,index,-tol);
+      else
+         setvalarray(S,index,tol);
+   }
+}
+
+void perturb(double ***S, double tol, PBData &pb, GridData &grid)
+{
+   int tindex[grid.dim];
+   int i;
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      perturbelt(S,tindex,tol,pb);
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+}

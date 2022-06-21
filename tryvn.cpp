@@ -489,45 +489,10 @@ void cim1again2(SparseElt2**** &A, double ***b, int *index, int gamma[][2], doub
 
 
 
-void perturb(double ***S, double tol, GridData &grid)
-{
-   int tindex[grid.dim];
-   int i;
 
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      perturbelt(S,tindex,tol);
 
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-}
 
-void perturb(double ***S, double tol, PBData &pb, GridData &grid)
-{
-   int tindex[grid.dim];
-   int i;
 
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      perturbelt(S,tindex,tol,pb);
-
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-}
 // pertube for maxstep number of steps according to status
 void perturbstatus(double ***S, double tol, int maxsteps, PBData &pb, GridData &grid)
 {
@@ -559,33 +524,9 @@ void perturbstatus(double ***S, double tol, int maxsteps, PBData &pb, GridData &
    }
 }
 
-// if surface on grid point, within tol, shift to tol
-void perturbelt(double ***S, int *index, double tol)
-{
-   if (evalarray(S,index) >= 0.0 && evalarray(S,index) < tol)
-      setvalarray(S,index,tol);
-   else if (evalarray(S,index) < 0.0 && evalarray(S,index) > -tol)
-      setvalarray(S,index,-tol);
-}
 
-// if outside, within tol, push to tol depending on epsilon
-void perturbelt(double ***S, int *index, double tol, PBData &pb)
-{
-   if (evalarray(S,index) >= 0.0 && evalarray(S,index) < tol)
-   {
-      if (pb.epsilonp >= pb.epsilonm)
-         setvalarray(S,index,tol);
-      else
-         setvalarray(S,index,-tol);
-   }
-   else if (evalarray(S,index) < 0.0 && evalarray(S,index) > -tol)
-   {
-      if (pb.epsilonm >= pb.epsilonp)
-         setvalarray(S,index,-tol);
-      else
-         setvalarray(S,index,tol);
-   }
-}
+
+
 // perturb according to status
 char perturbstatuselt(double ***S, int *index, double tol, PBData &pb, GridData &grid)
 {
@@ -8453,7 +8394,7 @@ void linearsystem6(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
 
       if (thestatus == 1)
       {
-         interiorptsmall(A,b,tindex,S,pb,grid);
+         // interiorptsmall(A,b,tindex,S,pb,grid);
          (count[1])++;
       }
       else if (thestatus == 2)

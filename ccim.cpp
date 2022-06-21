@@ -2808,7 +2808,8 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
    int buildsize = 0;
    smallsize = getstoragesize(S,grid);
    Dusmall = new StorageStruct[smallsize];
-
+   cout << "smallsize = " << smallsize << endl;
+   
    for (i = 0; i < numcount; i++)
       count[i] = 0;
 
