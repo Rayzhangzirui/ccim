@@ -1,13 +1,10 @@
 #include "sparse.h"
 #include "helper.h"
 #include "global.h"
-
+#include "hypresolver.h"
 /*
 AMG solver, copy from ex5
 */
-
-
-#include <math.h>
 #include "_hypre_utilities.h"
 #include "HYPRE_krylov.h"
 #include "HYPRE.h"
@@ -46,7 +43,7 @@ void Copy3DArrayFromHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
 
 
 
-void amgsolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
+void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
 {
    int i;
    int myid, num_procs;
@@ -305,7 +302,6 @@ void amgsolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, do
       HYPRE_ParCSRBiCGSTABDestroy(solver);
       HYPRE_EuclidDestroy(precond);
    }
-   
    else
    {
       if (myid ==0) printf("Invalid solver id specified.\n");

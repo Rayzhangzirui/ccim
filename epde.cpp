@@ -2,6 +2,7 @@
 #include "ccim.h"
 #include "input.h"
 #include "solver.h"
+#include "hypresolver.h"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ int main(int argc, char* argv[])
 	init_surf(S, grid.radius, grid, SURFOPT);
 
 	if (globperturb == 0)
-		perturb(S,grid.tol,pb,grid);
+		perturb(S, grid.tol, pb, grid);
 	// else if (globperturb > 0)
 	// 	perturbstatus(S,grid.tol,globperturb,pb,grid);
 
@@ -39,14 +40,15 @@ int main(int argc, char* argv[])
 
 	linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
 
-  	BICGSTABsmall(pb.psi,tmp.A,tmp.b,grid,grid.nx[0]*grid.nx[1]*grid.nx[2],tollinsolve,S,pb,tmp);
-	// amgsolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
+  	// BICGSTABsmall(pb.psi,tmp.A,tmp.b,grid,grid.nx[0]*grid.nx[1]*grid.nx[2],tollinsolve,S,pb,tmp);
+	HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
 
 	checkanswer(pb.psi,S,grid);
 	checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);
 
-	clearfourd(tmp.fourd,tmp.fdstatus,tmp.Nfd,grid);
+	
 
+	clearfourd(tmp.fourd,tmp.fdstatus,tmp.Nfd,grid);
 	free_matrix(a,grid.nx[0],grid.nx[1],grid.nx[2]);
 	free_matrix(S,grid.nx[0],grid.nx[1],grid.nx[2]);
 }

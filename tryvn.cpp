@@ -2551,6 +2551,7 @@ void cim3again(SparseElt2**** &A, double ***b, int *index, int gamma[][2], doubl
       exit(1);
 //   getchar();
 }
+
 //cim4 improves cim3 by bringing cross-derivative from the other side, cim12.pdf p 36
 void cim4(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double ***S, 
           PBData &pb, GridData &grid)
@@ -8922,7 +8923,7 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
       cout << "GMRES clock time = " << (double) (cend-cstart)/CLOCKS_PER_SEC << endl;
    }else if(globlinsolve == 4 || globlinsolve == 5){
       cstart = clock ();
-      amgsolve(pb.psi, tmp.A, tmp.b, grid,u, pb);
+      HypreSolve(pb.psi, tmp.A, tmp.b, grid,u, pb);
       cend = clock ();
       cout << "hypre clock time = " << (double) (cend-cstart)/CLOCKS_PER_SEC << endl;
    }

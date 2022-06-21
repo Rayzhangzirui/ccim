@@ -200,16 +200,15 @@ void getD2(double ***D2, int m, int n, int *sk2, int *tindex, int *N, GridData g
       for (t = 0; t < 2; t++)
       {
          sindex[n] = tindex[n]+sk2[2+t];
-         setvalarray(D2,sindex,
-                     (2*s-1)*(2*t-1)/((sk2[1]-sk2[0])*(sk2[3]-sk2[2])*
-                                      grid.dx[m]*grid.dx[n]));
+         setvalarray(D2,sindex,(2*s-1)*(2*t-1)/((sk2[1]-sk2[0])*(sk2[3]-sk2[2])*grid.dx[m]*grid.dx[n]));
       }
       sindex[n] = tindex[n];
    }
    sindex[m] = tindex[m];
 }
 
-//cim12.pdf p35, approximate mixed derivtive in (m,n) plane at index, 
+//cim12.pdf p35, approximate mixed derivtive in (m,n) plane at index
+//triangle stencil make use of u and uxx 
 char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, int n, 
                int *index, int mid, double ***S, GridData &grid)
 {
@@ -241,7 +240,7 @@ char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
 
    for (r = 0; r < grid.dim; r++)
       tindex[r] = index[r];
-   thesign = 2*(evalarray(S,tindex) >= 0.0)-1;//1=outside, -1 indside
+   thesign = 2*(evalarray(S,tindex) >= 0.0)-1;//1=outside, -1 indside, sign at current index
    dtheta = 2.0*M_PI/ntheta;
    theta0 = -3.0*M_PI/4.0;// start from bottom left corner
 // computes signs of points surrounding node, start from lower left corner, couter-clockwise
@@ -258,10 +257,11 @@ char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
    tindex[m] = index[m];
    tindex[n] = index[n];
 
-// looks for central differencing possibility around node
+   // looks for central differencing possibility around node, "large" triangle stencil
+   // r = 0, 2 ,4, 6 corresponds to bot-left, bot-right, top-right, top-left
    for (r = 0; r < ntheta; r += 2)
-      if ((thesign < 0)+(signs[r] < 0) != 1 && 
-          (thesign < 0)+(signs[(r+2)%ntheta] < 0) != 1)
+      // signs[r] and signs[r+2] same side as index
+      if ((thesign < 0)+(signs[r] < 0) != 1 && (thesign < 0)+(signs[(r+2)%ntheta] < 0) != 1)
       {
          theta = theta0+r*dtheta;
          themax = max(fabs(cos(theta)),fabs(sin(theta)));
@@ -303,7 +303,7 @@ char yescim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
          return 1;
       }
 
-// looks for forward differencing possibility around node
+   // looks for forward differencing possibility around node, "small" triangle stencil
    for (r = 0; r < ntheta; r++)
       if ((thesign < 0)+(signs[r] < 0) != 1 && 
           (thesign < 0)+(signs[(r+1)%ntheta] < 0) != 1)
@@ -387,32 +387,33 @@ int getstatus5(double ***S, int *index, GridData &grid)
       }
       rindex[r] = index[r];
    }
+
    if (yesinterior)
       return 1;
 
-// old incorrect version returned cim 5 if cim 5 for any m and n 
+
    junk1 = matrix(2,2,2);
-//   thecim = 3;
    for (m = 0; m < grid.dim; m++)
       for (n = m+1; n < grid.dim; n++)
       {
          cimstatus[m][n] = 3; 
          if (!yessk2(sk2,m,n,index,S,grid))//if do not have usual mixed derivative
          {
-            if (yescim5D2(junk1,junk2,junk3,m,n,index,mid,S,grid))//if has cim5 mixed derivative
-//               if (thecim == 3)
-//                  thecim = 5;
+            //if has cim5 mixed derivative: triangle stencil with ux and uxx
+            if (yescim5D2(junk1,junk2,junk3,m,n,index,mid,S,grid))
                cimstatus[m][n] = 5; 
+            // do not have stencil from nearby 8 direct nbrs, look for D2u approximation at neighoring grid points
+            // if exist, cimstatus = 4. otherwise cimstatus = 50
             else 
             {
-//               if (thecim == 3 || thecim == 5)
-//                  thecim = 4;
                cimstatus[m][n] = 4; 
                int count = 0;
+               // look at each dim, front and back
                for (r = 0; r < grid.dim; r++)
                   for (sk = -1; sk <= 1; sk += 2)
                   {
                      rindex[r] = index[r]+sk;
+                     // if same side and no sk2, increment count
                      if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1 &&
                          !yessk2(sk2,m,n,rindex,S,grid)){
                           ++count;
@@ -420,7 +421,8 @@ int getstatus5(double ***S, int *index, GridData &grid)
                       }
                      rindex[r] = index[r];
                   }
-                if (count==6){
+               // all up-down-left-right-front-back 6 nbrs do not have D2u approximation
+                if (count==grid.dim*2){
                   cimstatus[m][n] = 0;
                 }
             }
@@ -437,6 +439,7 @@ int getstatus5(double ***S, int *index, GridData &grid)
             thecim = 4;
          else if (thecim == 3 && cimstatus[m][n] == 5)
             thecim = 5;
+
 
    if (thecim == 3)
    {
@@ -461,6 +464,7 @@ int getstatus5(double ***S, int *index, GridData &grid)
       else
          thecim = 5;
    }
+
    if (thecim == 5)//
       return 3;
    else if (thecim == 4)
@@ -469,10 +473,13 @@ int getstatus5(double ***S, int *index, GridData &grid)
       return 5;
 }
 
-// approximate D2u in (m,n) plane at index
-// in terms of constant u0, NxNxN u coeff, 3x1 uxcoeff, 3x1 uxx coef, 1x1 jumpuxx coef 
-// In the first pass, rstar=0, sstar=0, return perm=1 if can be approx with same side, otherwise perm=0
-// if the first pass return 0, in the second pass, provide extra info on interface location, see if use uxy on the other side (cim4)
+/*
+approximate D2u in (m,n) plane at index in terms of constant u0, NxNxN u coeff, 3x1 uxcoeff, 3x1 uxx coef, 1x1 jumpuxx coef 
+In the first pass, rstar=0, sstar=0, return perm=1 if can be approx with same side, otherwise perm=0. Record coeff.
+In the second pass,
+(1) if the first pass return 0, in the second pass, provide extra info on interface location, see if use uxy on the other side (cim4)
+(2) if the first pass return 1, the coeffs are already recorded, in the second pass, nothing needs to be done, so the whole block is skipped
+*/
 void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef, 
                   double &jumpuxxcoef, char &perm, int m, int n, int *index, int rstar, 
                   int sstar, int mid, double ***S, GridData &grid)
@@ -499,7 +506,7 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
          jumpuxxcoef = 0.0;
          perm = 1;
       }
-      else if (getcim5D2(u,uxcoef,uxxcoef,m,n,index,mid,S,grid))
+      else if (getcim5D2(u,uxcoef,uxxcoef,m,n,index,mid,S,grid)) // use triangle stencil with ux and uxx
       {
          u0 = 0.0;
          jumpuxxcoef = 0.0;
@@ -508,7 +515,7 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
       else 
       {
          int r, s;
-         int **anosk2 = imatrix(1,3);//2x4 matrix
+         int **anosk2 = imatrix(1,3);//2x4 matrix, anosk2[0] is D2u stencil for s=-1, anosk2[1] for s=1
          char yes[2];
 
          if (globdirectD2) // approximate D2 from nbr of same side, prefer out of plane
@@ -518,7 +525,7 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
             for (r = 0; r < grid.dim && (r == m || r == n); r++); // find r no equal to m or n
             for (s = -1; s <= 1; s += 2)
             {
-               rindex[r] = index[r]+s; //rindex is nbr in one of m,n-plane
+               rindex[r] = index[r]+s; //rindex is nbr out of m,n-plane
                if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) != 1)//if change sign
                   yes[(s+1)/2] = getsk2(anosk2[(s+1)/2],m,n,rindex,S,grid); 
                   //yes[0] = 1 if s=-1, rindex has approx of mixed derivative
@@ -526,15 +533,17 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
                   yes[(s+1)/2] = 0;
             }
          }
-         if (globdirectD2 && (yes[0] || yes[1])) // if we could found s = +/-1
+
+         // if we could found s = +/-1, same side, out-of-plane, have D2u approx with u-value
+         if (globdirectD2 && (yes[0] || yes[1])) 
          {  
-            if ((yes[0] && !(yes[1])) || (yes[0] && yes[1] && 
-                                          abs(anosk2[0][0]-anosk2[0][1])+
-                                          abs(anosk2[0][2]-anosk2[0][3]) >
-                                          abs(anosk2[1][0]-anosk2[1][1])+
-                                          abs(anosk2[1][2]-anosk2[1][3])))
-              // s=-1 has sk2 and s=1 no sk2, or 
-            // s=-1 has sk2, s=1 has sk2, s=-1 has larger stencil,i.e. prefer central differencing
+            // with use s=-1 if 
+            // (1) s=-1 has sk2 but s=1 no sk2, or 
+            // (2) s=-1 has sk2, s=1 has sk2, s=-1 has larger stencil,i.e. prefer central differencing
+            if ((yes[0] && !(yes[1])) ||
+               (yes[0] && yes[1] && 
+               abs(anosk2[0][0]-anosk2[0][1])+abs(anosk2[0][2]-anosk2[0][3])>
+               abs(anosk2[1][0]-anosk2[1][1])+abs(anosk2[1][2]-anosk2[1][3])))              
                s = -1;// use s=-1
             else
                s = 1;
@@ -554,6 +563,8 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
             jumpuxxcoef = 0.0;
             perm = 1;
          }
+         // cannot find any approx in the same side, but rstar and sstar is provided, i.e. know where is interface
+         // approxiamte D2u at points on different side, make use of jumpuxx
          else if (rstar >= 0 && rstar < grid.dim && sstar != 0)
          {
             cout << "Using cim4" << endl;//use mix derivative from the other side
@@ -589,10 +600,15 @@ void getcim345D2u(double &u0, double ***u, double *uxcoef, double *uxxcoef,
             }
             rindex[rstar] = index[rstar];
          }
+         //cannot find any approx in the same side, sstar==0, i.e. don't know where is interface
          else
+         {
             perm = 0;
+         }
          free_matrix(anosk2,1,3);
       }
+
+
    }
 /*
    if (!perm)
@@ -906,7 +922,8 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
    int rindex[grid.dim], sindex[grid.dim];
    double b0[2*grid.dim], bxcoef[2*grid.dim][grid.dim], bxxcoef[2*grid.dim][grid.dim]; 
    double ***bcoef[2*grid.dim];
-   double **LU, **B, **Dn; 
+   
+   double **Dn; 
    double Dndott[grid.dim], Dndots[grid.dim], dotDndot[grid.dim];
    int PLR[2*grid.dim], PLC[2*grid.dim];
    double tangent1[grid.dim], tangent2[grid.dim];
@@ -917,8 +934,9 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
    int two2one[grid.dim][grid.dim];
    char theorder = 2;
 
-   LU = matrix(2*grid.dim-1,2*grid.dim-1);
-   B = matrix(2*grid.dim-1,2*grid.dim-1);
+   double **LU = matrix(2*grid.dim-1,2*grid.dim-1);
+   double **B = matrix(2*grid.dim-1,2*grid.dim-1);
+
    Dn = matrix(grid.dim-1,grid.dim-1);
    D2tau = matrix(grid.dim-1,grid.dim-1);
    for (r = 0; r < 2*grid.dim; r++)
@@ -1283,8 +1301,8 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
          jumpD1jumpuxxcoef[m][n] = 0.0;
       }
 
-   free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
-   free_matrix(B,2*grid.dim-1,2*grid.dim-1);
+   // free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
+   // free_matrix(B,2*grid.dim-1,2*grid.dim-1);
    free_matrix(Dn,grid.dim-1,grid.dim-1);
    free_matrix(D2tau,grid.dim-1,grid.dim-1);
    for (r = 0; r < 2*grid.dim; r++)
@@ -2148,14 +2166,19 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
    delete [] uxcoef;
 }
 
+/*
+used when with globdist = 1, otherwise use [getcim345D2u]
 
-// in the first pass, rstart = sstar = 0, return perm=2 if there is usual mix Du, then second pass is skipped
-// in the second pass, location for interface is provided, 
-// if perm=1 in the first pass, that is, no cim5 cim3 available, then use cim4 in rstar dim and sstar direction
-// with globdist = 1, globdistvar = 1
-// getsk2 with central diff > cim5 > getsk2 without central diff > sk2 on neighboring point(prefer the side with central diff) > sk2 on the other side
-// with globdist = 1, globdistvar = 0, this is the same as globdist = 0, getcim345D2
-// getsk2 (with or without central diff) > cim 5 > sk2 on neighboring point(prefer the side with central diff) > sk2 on the other side
+in the first pass, perm=0, rstart = sstar = 0, 
+return perm=2 if there is usual mix Du, then second pass is skipped
+return perm=1 if have to use the other side, then in the second pass, location for interface is provided,  use rstar and sstar to find jumpuxxcoeff
+
+globdistvar = 1: 
+getsk2 with central diff > cim5 (triangle stencil) > getsk2 without central diff > sk2 on out-of-plane nbr point(prefer the side with central diff) > sk2 on the other side
+globdistvar = 0: this is the same as [getcim345D2u]
+getsk2 (with or without central diff) > cim5 (triangle stencil) > sk2 on out-of-plane point(prefer the side with central diff) > sk2 on the other side
+*/
+
 void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef, 
                       double &jumpuxxcoef, char &perm, int m, int n, int *index, 
                       int rstar, int sstar, int mid, double ***S, GridData &grid)
@@ -2169,7 +2192,7 @@ void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef,
 
       for (t = 0; t < grid.dim; t++)
          rindex[t] = index[t];
-      if (perm != 1) //perm = 0
+      if (perm != 1)
       {
          regD2 = getsk2(sk2reg,m,n,index,S,grid);
          useuxD2 = getcim5D2(u,uxcoef,uxxcoef,m,n,index,mid,S,grid);
@@ -2187,19 +2210,17 @@ void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef,
       rindex[rstar] = index[rstar]+sstar; // get the other side
       otherD2 = getsk2(sk2other,m,n,rindex,S,grid); 
       rindex[rstar] = index[rstar];
-// abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3 means one direction of cross derivative use central difference
-// (useuxD2 && (fabs(uxxcoef[m]) > tol || fabs(uxxcoef[n]) > tol) means cim5D2 use uxxcoef in m n plane
-// in either case below , use sk2reg
-//case 1: (perm != 1 && !globdistvar && regD2 && ( abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3 ||(useuxD2 && (fabs(uxxcoef[m]) > tol || fabs(uxxcoef[n]) > tol))))
-//case 2: (perm != 1 &&  globdistvar && regD2 &&  abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3)
-// if globdistvar = 0, we choose sk2reg even when sk2reg is not central diff,
-// if globdistvar = 1, we choose sk2reg only when sk2reg is central diff     
-
-      if ((perm != 1 && !globdistvar && regD2 && 
-           (abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3 ||
-            (useuxD2 && (fabs(uxxcoef[m]) > tol || fabs(uxxcoef[n]) > tol)))) ||
-          (perm != 1 && globdistvar && regD2 && 
-           abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3))
+/*
+in either case below , use sk2reg, set perm=2
+case 1: perm != 1 && !globdistvar && regD2 && ( [1] || [2] )
+   where [1] abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3 means one direction of cross derivative use central difference
+         [2] (useuxD2 && (fabs(uxxcoef[m]) > tol || fabs(uxxcoef[n]) > tol) means cim5D2 use uxxcoef in m n plane
+case 2: perm != 1 &&  globdistvar && regD2 &&  [1]
+if globdistvar = 0, we choose sk2reg even when sk2reg is not central diff,
+if globdistvar = 1, we choose sk2reg only when sk2reg is central diff     
+*/
+      if ((perm != 1 && !globdistvar && regD2 && (abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3 ||(useuxD2 && (fabs(uxxcoef[m]) > tol || fabs(uxxcoef[n]) > tol))) ) ||
+          (perm != 1 && globdistvar && regD2 && abs(sk2reg[1]-sk2reg[0])+abs(sk2reg[3]-sk2reg[2]) >= 3))
       {
          for (t = 0; t < grid.dim; t++)
          {
@@ -2222,7 +2243,7 @@ void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef,
          jumpuxxcoef = 0.0;
          perm = 2;
       }
-      else if (perm != 1 && (nearD2[0] || nearD2[1])) //if (regD2 and getcim5D2 failed), use nearby points, prefer central diff
+      else if (perm != 1 && (nearD2[0] || nearD2[1])) //if (regD2 and getcim5D2 failed), use out-of-plane points, prefer central diff
       {
          if ((nearD2[0] && !(nearD2[1])) || (nearD2[0] && nearD2[1] && 
             abs(sk2near[0][0]-sk2near[0][1])+abs(sk2near[0][2]-sk2near[0][3]) >abs(sk2near[1][0]-sk2near[1][1])+abs(sk2near[1][2]-sk2near[1][3])))
@@ -2245,7 +2266,10 @@ void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef,
          jumpuxxcoef = 0.0;
          perm = 2;
       }
-      else if (rstar >= 0 && rstar < grid.dim && sstar != 0 && otherD2) //everything above fail, use the other side
+      // every method that use same side fails. Use the other side, set perm = 1
+      // this is skiped in the first pass, sstar = 0
+      // entered in the second pass with sstar !=1, know interface location, use the other side
+      else if (rstar >= 0 && rstar < grid.dim && sstar != 0 && otherD2) 
       {
          if (evalarray(S,index) < 0.0)
             thesign = -1;
@@ -2267,6 +2291,7 @@ void getcim345D2udist(double &u0, double ***u, double *uxcoef, double *uxxcoef,
          }
          perm = 1;
       }
+      // also skipped in the first pass as sstar=0
       else if (rstar >= 0 && rstar < grid.dim && sstar != 0)
       {
          cout << "bad status" << endl;

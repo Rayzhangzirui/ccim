@@ -689,6 +689,7 @@ void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid,
    removefourd(v,tmp.fourd,tmp.fdstatus,tmp.Nfd);
 }
 
+// with a
 void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
                    int numsteps, double tol, double ***a, double ***S, PBData &pb, 
                    TempStruct &tmp)

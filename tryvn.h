@@ -16,6 +16,7 @@
 
 #include "input.h"
 #include "solver.h"
+#include "hypresolver.h"
 #include "amg.h"
 #include "march.h"
 #include "storage.h"
@@ -269,11 +270,5 @@ double getexactDnormal(int *index, int r, int s, int rstar, int sstar, double al
                        GridData &grid);
 void checkexact(double ***S, double radius, PBData &pb, GridData &grid);
 
-
-
-
-
-
-void amgsolve (double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb);
 
 #endif

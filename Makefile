@@ -64,7 +64,7 @@ test_icim: test_icim.o tests_main.o tryvn.o helper.o icim.o
 icim: icimmain.o tryvn.o helper.o icim.o
 	$(CC) $(OPT) -o $@ $^ 
 
-hypresolver.o: hypresolver.cpp
+hypresolver.o: hypresolver.cpp hypresolver.h
 	$(CC) $(OPT) $(CFLAGS) -c $<
 
 
