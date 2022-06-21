@@ -1,9 +1,9 @@
 #include "interface.h"
 #include "numerics.h"
 #include "input.h"
+#include "global.h"
 #include <cmath>
 
-extern int globregfalweno;
 
 double getdotprod(double *v, double *w, int thedim)
 {

@@ -1,10 +1,6 @@
 #include "advance.h"
 #include "tryvn.h"
-
-extern int globrk;
-extern int globexactmotion;
-extern int globexactvn;
-extern int globperturb;
+#include "global.h"
 
 using namespace std;
 

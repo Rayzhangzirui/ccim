@@ -2,7 +2,7 @@
 #define ICIM_H
 
 #include "helper.h"
-#include "interface.h"
+#include "sparse.h"
 #include <algorithm>
 #include <array>
 

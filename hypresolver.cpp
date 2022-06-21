@@ -1,5 +1,6 @@
+#include "sparse.h"
 #include "helper.h"
-#include "tryvn.h"
+#include "global.h"
 
 /*
 AMG solver, copy from ex5
@@ -13,8 +14,7 @@ AMG solver, copy from ex5
 #include "HYPRE_parcsr_ls.h"
 using namespace std;
 
-extern double tollinsolve;
-extern int globlinsolve;
+
 void Copy3DArrayToHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
    for(int i = 0; i <= grid.nx[0]; i ++){
       for(int j = 0; j <= grid.nx[1]; j ++){

@@ -60,10 +60,10 @@ int main(int argc, char* argv[])
 	S = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
 	init_surf(S, grid.radius, grid, SURFOPT);
 
-	if (globperturb == 0)
-		perturb(S,grid.tol,pb,grid);
-	else if (globperturb > 0)
-		perturbstatus(S,grid.tol,globperturb,pb,grid);
+	// if (globperturb == 0)
+	// 	perturb(S,grid.tol,pb,grid);
+	// else if (globperturb > 0)
+	// 	perturbstatus(S,grid.tol,globperturb,pb,grid);
 
 	double ***a = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
 
@@ -74,9 +74,8 @@ int main(int argc, char* argv[])
 
 	amgsolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
 
-	if(globsmall){
-		checkcim345Du(pb.psi, Dusmall, smallsize, S, pb, grid);
-	}
+	
+	// checkcim345Du(pb.psi, Dusmall, smallsize, S, pb, grid);
 
 	clearfourd(tmp.fourd,tmp.fdstatus,tmp.Nfd,grid);
 

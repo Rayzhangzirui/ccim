@@ -20,13 +20,13 @@ endif
 
 SOLVER = amg.o gmres.o solver.o hypresolver.o
 
-METHOD = cim12.o iim.o icim.o
+METHOD = cim12.o iim.o icim.o cim345cond.o ccim.o
 
 cim: cim.o global.o tryvn.o helper.o  matrix.o input.o sparse.o advance.o storage.o march.o numerics.o interface.o pb.o $(SOLVER) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 
-epde: epde.o matrix.o input.o sparse.o storage.o numerics.o interface.o pb.o hypresolver.o ccim.o helper.o global.o
+epde: epde.o matrix.o input.o sparse.o storage.o numerics.o interface.o pb.o hypresolver.o ccim.o global.o helper.o
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 epde.o: epde.cpp

@@ -40,4 +40,10 @@ void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha,
 
 double getexactnormalTest(double *x, int r);
 
+
+// initialize surface
+void init_surf(double ***S, double radius, GridData &grid, int surfopt);
+
+void init_surf_protein_paper(double ***S, GridData& grid);
+
 #endif

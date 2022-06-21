@@ -2,13 +2,10 @@
 #include "numerics.h"
 #include "interface.h"
 #include "helper.h"
+#include "tryvn.h"
 #include <iostream>
 #include <cmath>
 #include <iomanip>
-
-extern char globcim1order;
-extern int globsmall;
-extern int eindex[3];
 
 using namespace std;
 

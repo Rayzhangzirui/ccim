@@ -1,15 +1,11 @@
 #include "input.h"
+#include "global.h"
+#include "helper.h"
 #include <cmath>
-
 #include <iostream>
+#include <sstream>
 
 using namespace std;
-
-extern int globtestnum;
-extern int globtesta;
-extern int SURFOPT;
-extern double EPSILONP;
-extern double EPSILONM;
 
 #include "extratest.h"
 
@@ -1196,4 +1192,237 @@ void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha,
       x[rstar] += sstar*alpha*grid.dx[rstar];
       getDsigmaTest(Dsigma, x, normal, Dnormal, pb);
     }
+}
+
+
+
+void init_surf(double ***S, double radius, GridData &grid, int opt){
+   double x[3];
+   
+   if(opt == 0){
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               S[i][j][k] = sqrt(pow(x[0],2) + pow(x[1],2) + pow(x[2],2)) - radius;
+            }
+         }
+      }
+   }else if (opt == 1){
+      // strange torus from getinit
+      double radii[3];
+      radii[0] = 0.5;
+      radii[1] = 0.25;
+      radii[2] = 0.15;
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+
+               double value = 0;
+               for (int r = 1; r < grid.dim; r++)
+                  value += x[r]*x[r];
+               value = sqrt(value)-radii[0];
+               double theta = atan2(x[2],x[1]);
+   // main one used in tests
+               value = sqrt(value*value+x[0]*x[0])-(0.5*(radii[1]-radii[2])*sin(3.0*theta)+
+                                              0.5*(radii[1]+radii[2]));
+   //      value = sqrt(value*value+x[0]*x[0])-(0.5*(radii[1]-radii[2])*sin(theta)+
+   //                                           0.5*(radii[1]+radii[2]));
+   //      value = sqrt(value*value+x[0]*x[0])-radii[1];
+               S[i][j][k] = value;
+            }
+         }
+      }
+
+   }
+   else if (opt == 11){
+      //ellipsoid
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               S[i][j][k]= 2 * pow(x[0],2) + 3 * pow(x[1],2) + 6 * pow(x[2],2) - 1.3 * 1.3;
+            }
+         }
+      }
+   }else if (opt == 12){
+      //donut from paper
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               S[i][j][k]= -0.3 * 0.3 + pow(-0.6 + sqrt(pow(x[0],2) + pow(x[1],2)),2) + pow(x[2],2);
+            }
+         }
+      }
+   }else if (opt == 13){
+      //banana
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               S[i][j][k] = 1521 - 94*pow(6 + 7*x[0],2) + pow(6 + 7*x[0],4) + 3822*pow(x[1],2) + 2401*pow(x[1],4) - 4606*pow(x[2],2) + 4802*pow(x[1],2)*pow(x[2],2) + 3601.5*pow(x[2],4) + 98*pow(6 + 7*x[0],2)*(pow(x[1],2) + pow(x[2],2));
+            }
+         }
+      }
+   }else if (opt == 14){
+      //8 balls
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               double d = std::numeric_limits<double>::infinity();
+               for(int n = 0; n <=7; n++){
+                  double c[3] = {pow(-1,floor(n/4)) * 0.5, pow(-1,floor(n/2)) * 0.5, pow(-1,n) * 0.5};
+                  d = min(d,dist(x,c)-0.3);
+                  S[i][j][k] = d;
+               }
+            }
+         }
+      }
+   }else if (opt == 15){
+      //peanut
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               double r = sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+
+               double theta = atan2(x[1],x[0]);
+               
+               double phi = acos(x[2]/r);
+
+               if(r < 1e-9){
+                S[i][j][k] = 0 - 0.5 - 0.2;
+               }else{
+                S[i][j][k] = r - 0.5 - 0.2 * sin(2*theta)*sin(phi); 
+               }               
+               
+            }
+         }
+      }
+   }
+   else if (opt == 16){
+      //popcorn
+      double r0 = 0.6;
+      double A = 2;
+      double sigma = 0.2;
+      double xk[12][3] ;
+
+      for(int k = 0; k <=11; k++){
+         if(k<=9){
+            xk[k][0] = r0/sqrt(5.0) * 2 * cos(2 * k * M_PI/5 - floor(k/5.0) * M_PI);
+            xk[k][1] = r0/sqrt(5.0) * 2 * sin(2 * k * M_PI/5 - floor(k/5.0) * M_PI);
+            xk[k][2] = r0/sqrt(5.0) * pow(-1,floor(k/5.0));
+         }else{
+            xk[k][0] = r0 * 0;
+            xk[k][1] = r0 * 0;
+            xk[k][2] = r0 * pow(-1,k-10);
+         }
+      }
+      for(int i = 0; i <= grid.nx[0]; i++){
+         for(int j = 0; j <= grid.nx[1]; j++){
+            for(int k = 0; k <= grid.nx[2]; k++){
+               int index[3] = {i,j,k};
+               sub2coord(x,index,grid);
+               S[i][j][k] = sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]) - r0;
+               double temp = 0.0;
+               for(int n = 0; n <=11; n++){
+                  temp += 2 * exp( -25 * pow(dist(x,xk[n]),2));
+               }
+               S[i][j][k] -= temp;
+            }
+         }
+      }
+   }else if (opt == 20){
+      init_surf_protein_paper(S, grid);
+   }
+   else{
+      cerr<<"invalid surface option";
+      exit(1);
+   }
+}
+
+
+
+
+
+void read_protein(double ***S, GridData &grid, vector< vector<double> >& p){
+  cout<<"using protein file "<<PROTEINFILE<<endl;
+   ifstream infile( PROJECTDIR + PROTEINFILE);
+   if(!infile.is_open()){
+      cerr<<"file do not exist"<<endl;
+      exit(1);
+   }
+
+   string line;
+   while(getline(infile,line)){
+      stringstream ss(line);
+      string x,y,z,r;
+      getline(ss,x,',');
+      getline(ss,y,',');
+      getline(ss,z,',');
+      getline(ss,r,',');
+   
+      
+      p.push_back(std::vector<double> {stod(x),stod(y),stod(z),stod(r)});
+   }
+
+   for(int i = 0; i < 3; i++){
+      printf("%d %f %f %f %f\n",i,p[i][0],p[i][1],p[i][2],p[i][3]);
+   }
+
+   for(int i = p.size()-3; i < p.size(); i++){
+      printf("%d %f %f %f %f\n",i,p[i][0],p[i][1],p[i][2],p[i][3]);
+   }   
+}
+
+
+inline double chi(double x){
+   const double eta = 1.0/ETA; //in paper 1/40
+   return 1.0/2.0 * (1.0 + tanh(x/eta));
+}
+
+void init_surf_protein_paper(double ***S, GridData& grid){
+  // if file exist
+  string file = PROTEINDIR + string("surf_protein_paper") + "_eta"+to_string( (int)ETA) + "_gd" + to_string(GRIDNUM) + "_" + PROTEINFILE;
+  if(fileExist(file)){
+    cout<<"reading "<< file<<endl;
+    readMatrix(file, S, grid);
+    return;
+  }
+  cout<<"file "<<file <<" do not exist, construct from protein"<<endl;
+  // if file do not exist
+  vector< vector<double> > p;
+  read_protein(S,grid,p);
+  const double c = 0.25;
+   #pragma omp parallel for collapse(3)
+   for(int i = 0; i <= grid.nx[0]; i++){
+      for(int j = 0; j <= grid.nx[1]; j++){
+         for(int k = 0; k <= grid.nx[2]; k++){
+            array<double,3> x = sub2coord(array<int,3> {i,j,k}, grid);
+            double sum = 0.0;
+
+            for(int n = 0; n < p.size(); n++){
+               array<double,3> px = {p[n][0],p[n][1],p[n][2]};//px is coordinate
+               sum += chi(p[n][3] - dist(x,px)); //p[n][3] = radius of atom n
+            }
+            S[i][j][k] = c - sum;
+         }
+      }
+   }
+
+   // FillVoid(S, grid);
+   // write to file
+   cout<<"write "<< file<<endl;
+   write_field(file, S, grid);
+
 }

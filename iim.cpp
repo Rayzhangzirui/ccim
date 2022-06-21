@@ -1,10 +1,10 @@
 #include "iim.h"
 #include "numerics.h"
 #include "interface.h"
+#include "global.h"
 
 #include <iostream>
 #include <cmath>
-extern int globdebug;
 using namespace std;
 
 void getiimjumps(double &up0, double &upum, double *uxp0, double **uxpuxm, 

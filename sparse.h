@@ -32,6 +32,9 @@ struct TempStruct
 };
 
 
+// Initialize sparse matrix solver
+void init_TempStruct(TempStruct &tmp, GridData &grid);
+
 
 
 SparseElt2 ****sparseelt2ptrmatrix(int row, int col, int fr);

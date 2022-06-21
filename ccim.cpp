@@ -1,4 +1,5 @@
 #include "grid.h"
+#include "global.h"
 #include "ccim.h"
 #include "interface.h"
 #include "numerics.h"
@@ -8,12 +9,6 @@
 #include <iostream>
 using namespace std;
 
-extern int globsmall;
-extern char globdist;
-extern char globbiasstat;
-extern char globdistvar;
-extern char globdirectD2;
-extern int globintorder;
 
 const int gdim = 3;
 const int NN = 4;
@@ -2837,7 +2832,7 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
    double temp;
    int tempsk2[4];
 
-   cout << "in linearsystem6" << endl;
+   cout << "in linearsystemcim345" << endl;
 
    clearsparse(A,grid);
 
@@ -2892,7 +2887,7 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
          // interiorptsmall(A,b,tindex,S,pb,grid); // temporary: interiorptsmall should do nothing
          (count[thestatus])++;
       }
-      else if (thestatus >= 2 && thestatus <=5)
+      else if (thestatus >= 2 && thestatus <=4)
       {        
        cim345(A,b,Dusmall,buildsize,tindex,a,gamma,S,pb,grid);
          (count[thestatus])++;

@@ -1,5 +1,6 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
+#include <string>
 
 extern double globerr;
 extern double globerrvec[3], globerrvec2[3], globerrvec3[3], globerrvec4[3]; 
@@ -67,5 +68,21 @@ extern int SURFOPT;
 // #define FIXBANANA // surgical fix for banana shape at
 extern bool globwritemx;//write coupling matrix for analysis
 extern bool globwriteerr;//write error in u and Du at each grid point
+
+// motion
+extern double RADIUS;
+extern int runStep;
+extern double globtime;
+
+// protein surface
+extern double ETA ;
+extern std::string PROTEINDIR ;
+extern std::string PROJECTDIR ;
+extern std::string PROTEINFILE ;
+
+
+extern bool globgridperturb;
+
+void cmdLine(int argc, char *argv[]);
 
 #endif

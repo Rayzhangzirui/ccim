@@ -1,30 +1,24 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-#include "tryvn.h"
+#include "grid.h"
+#include "matrix.h"
 #include <omp.h>
 #include <array>
 #include <vector>
 #include <random>
+#include <iostream>
+#include <fstream>
+#include "global.h"
 
 using std::array;
+using std::vector;
 using Index = std::array<int,3>;
 using Vector3d = std::array<double,3>;
 
 inline Index ToIndex(int* x){
 	return Index {x[0],x[1],x[2]};
 }
-
-void cmdLine(int argc, char *argv[]);
-
-//initialize grid
-void init_grid(GridData &grid, int nx, double a);
-
-// Initialize sparse matrix solver
-void init_TempStruct(TempStruct &tmp, GridData &grid);
-
-
-
 
 
 // subscript to coordinate
@@ -67,9 +61,6 @@ inline double GetSign(double*** S, Index x){
 }
 
 
-// create sphere surface
-void create_sphere(double*** surf, GridData &grid, double radius, array<double,3> center);
-
 //maximum error
 double field_max_diff(double ***f1, double ***f2, GridData &grid);
 
@@ -99,13 +90,7 @@ void printMat(int row, const T &m){
 }
 
 
-void init_surf_protein_paper(double ***S, GridData &grid);
-void init_surf_protein_dist(double ***S, GridData &grid, int step = 0);
-
-// initialize surface
-void init_surf(double ***S, double radius, GridData &grid, int surfopt);
-
-void init_surf_perturb(double ***S, double radius, GridData &grid, int opt, PBData &pb, double tol);
+// void init_surf_perturb(double ***S, double radius, GridData &grid, int opt, PBData &pb, double tol);
 
 // index at boundary
 inline bool atbound(int* ind, GridData &grid){
@@ -159,26 +144,18 @@ void print_surf(double ***S, array<int,3> ind, int m);
 void print_surf(char ***S, int* index, int m);
 void print_surf(char ***S, array<int,3> ind, int m);
 
-void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData& grid);
 
-void checkcim345DuAll(double ***u, double ***S, PBData &pb, GridData &grid);
+vector<vector<double> > randmx(int m, int n);
+vector<double> randmx(int n);
 
+double norm1(const vector<vector<double>> &A);
 
-int getstatus5debug(double ***S, int *index, GridData &grid);
-
-
-std::vector<std::vector<double> > randmx(int m, int n);
-std::vector<double> randmx(int n);
-
-double norm1(const std::vector<std::vector<double>> &A);
-double condest(const std::vector<std::vector<double>> &A);
+vector<vector<double>> Pointer2dToVector(double **A, int m, int n);
+double** VectorToPointer2d(const vector<vector<double>> &A);
 
 //solve Ax = b , dim n, idx 0 to n-1
-std::vector<double> gesolve(const std::vector<std::vector<double>> &A, std::vector<double> b);
+vector<double> gesolve(const vector<vector<double>> &A, vector<double> b);
 
-void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize, int *index, double ***a, int gamma[][2], double ***S, PBData &pb, GridData &grid);
-
-char yescim5D2All(std::vector<double***> &D2ucoefvec, std::vector<double*> &D2uxcoefvec, std::vector<double*> &D2uxxcoefvec, std::vector<std::vector<int>> &offsetvec, int m, int n, int *index, int mid, double ***S, GridData &grid);
 
 inline void copyMat(double*** toA, double*** fromB, int m, int n, int l){
    for (int i = 0; i <= m; ++i){
@@ -191,7 +168,7 @@ inline void copyMat(double*** toA, double*** fromB, int m, int n, int l){
 }
 
 // for radius statistics
-inline double mean(std::vector<double> x){
+inline double mean(vector<double> x){
     double sum = 0;
     for (auto& xi : x)
         sum += xi;
@@ -199,7 +176,7 @@ inline double mean(std::vector<double> x){
 }
 
 
-inline double variance(std::vector<double> x){
+inline double variance(vector<double> x){
     double sum = 0;
     double m = mean(x);
     for (auto& xi : x)
@@ -208,7 +185,7 @@ inline double variance(std::vector<double> x){
     return sum/(x.size()-1);
 }
 
-inline double rmse(std::vector<double> x, double y){
+inline double rmse(vector<double> x, double y){
     double sum = 0;
     for (auto& xi : x)
         sum += pow(xi - y,2);
@@ -216,7 +193,7 @@ inline double rmse(std::vector<double> x, double y){
     return sqrt(sum/x.size());
 }
 
-inline double rmse(std::vector<double> x){
+inline double rmse(vector<double> x){
     double sum = 0;
     for (auto& xi : x)
         sum += pow(xi,2);
@@ -248,6 +225,47 @@ inline void printPlane(double ***S, GridData &grid, int idx[], int m,int n, int 
 		std::cout<<std::endl;
 	}
 }
+
+
+inline vector<vector<double>> transpose(const vector<vector<double>> &A){
+   int n = A.size();
+   vector<vector<double>> B (A);
+   for(int i = 0; i < n; i++){
+      for(int j = 0; j < n; j++){
+         B[i][j] = A[j][i];
+      }
+   }
+   return B;
+}
+
+//componentwise
+inline vector<double> abs(const vector<double> &x){
+   vector<double> v(x);
+   for(auto &vi:v){
+      vi = abs(vi);
+   }
+   return v;
+}
+
+inline double sum(const vector<double> &x){
+   return std::accumulate(x.begin(), x.end(), 0.0);
+}
+
+
+inline vector<double> sign(const vector<double> &x){
+   vector<double> v(x);
+   for(auto &vi:v){
+      vi = (vi>=0)? 1.0: -1.0;
+   }
+   return v;
+}
+
+inline int max_abs_idx(const vector<double> &x){
+   vector<double> temp = abs(x);
+   return  max_element(temp.begin(),temp.end()) - temp.begin();
+}
+
+
 
 inline bool fileExist (const std::string& name) {
     std::ifstream f(name.c_str());
@@ -292,4 +310,5 @@ inline bool SameSide(double*** S, Index a, Index b){
 
 
 void OutputVector(std::string filename, double *x, int n);
+
 #endif

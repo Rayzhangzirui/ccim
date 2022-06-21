@@ -20,6 +20,7 @@
 #include "iim.h"
 #include "gmres.h"
 #include "cim12.h"
+#include "cim345cond.h"
 #include "global.h"
 
 
@@ -11892,6 +11893,7 @@ void checkcim345Du(double ***u, double ***S, PBData &pb, GridData &grid)
 
    free_matrix(zindex,grid.dim-1,grid.dim-1);
 }
+
 // check du with StorageStruct at interface
 void checkcim345Du(double ***u, StorageStruct *Dusmall, int smallsize, double ***S, 
                    PBData &pb, GridData &grid)
@@ -12132,6 +12134,7 @@ void checkcim345Dupm(double ***u, double ***S, PBData &pb, GridData &grid)
    free_matrix(windex,1,grid.dim-1);
    free_matrix(Du,1,grid.dim-1);
 }
+
 // check error
 void checkcim345jumpDu(double ***u, double ***S, PBData &pb, GridData &grid)
 {

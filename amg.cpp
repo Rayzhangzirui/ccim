@@ -1,12 +1,10 @@
 #include "amg.h"
 #include "numerics.h"
+#include "global.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>
 using namespace std;
-
-extern int globnorm;
-extern int globheap;
 
 // argument theta = 1
 void startamg(int *strength, SparseAMGMx &A, double theta)

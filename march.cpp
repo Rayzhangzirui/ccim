@@ -1,13 +1,10 @@
 #include "march.h"
 #include "matrix.h"
 #include "tryvn.h"
+#include "global.h"
 
 #include <iostream>
 #include <cmath>
-
-extern int globheat;
-extern int globexactvn;
-extern int globsmall;
 
 
 using namespace std;

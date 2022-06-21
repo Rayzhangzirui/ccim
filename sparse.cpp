@@ -1,6 +1,26 @@
 #include "sparse.h"
+#include "global.h"
 #include <iostream>
 using namespace std;
+
+
+
+// Initialize sparse matrix solver
+void init_TempStruct(TempStruct &tmp, GridData &grid){
+   tmp.Nfd = 10;
+   tmp.fourd = new double ***[tmp.Nfd];
+   tmp.fdstatus = new char[tmp.Nfd];
+   for (int i = 0; i < tmp.Nfd; i++)
+   {
+      tmp.fourd[i] = NULL;
+      tmp.fdstatus[i] = 0;
+   }
+   tmp.A = sparseelt2ptrmatrix(grid.nx[0],grid.nx[1],grid.nx[2]); // A is 3d array,each is a pointer to sparseelt
+   if (globlinsolve == 1){
+      tmp.M = sparseelt2ptrmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
+   }
+   tmp.b = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
+}
 
 
 
