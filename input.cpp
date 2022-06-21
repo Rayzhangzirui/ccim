@@ -164,85 +164,6 @@ double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData 
     return getf(x, thesign, pb, grid);
 }
 
-#if 0
-// getu at x, not used 
-double getu(double *x, int thesign, GridData &grid)
-{
-   if (globtestnum == 0)
-   {
-      int r;
-      double value, radius2;
-
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      if (thesign < 0.0)
-         value = 1.0/(1.0+radius2);
-      else
-         value = -1.0/(1.0+radius2);
-
-      return value;
-   }
-   else if (globtestnum == 1)
-   {
-      int r;
-      double value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      if (thesign < 0.0)
-         value = epsp/epsm*radius2-(epsp/epsm-1.0)*pow(grid.radius0,2)*exp(4.0*(1.0-epsp/epsm)*grid.t);
-      else
-         value = radius2;
-
-      return value;
-   }
-   else if (globtestnum == 2)
-   {
-      int r;
-      double value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      if (thesign < 0.0)
-         value = exp(epsp/epsm*radius2-(epsp/epsm-1.0)*grid.radius*grid.radius);
-      else
-         value = exp(radius2);
-
-      return value;
-   }
-   else if (globtestnum == 3 || globtestnum == 4)
-   {
-      int r;
-      double value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-      double A = 1.0, B = fabs(1.0-epsp/epsm), C = epsp/epsm, 
-             D = grid.radius*grid.radius*(1.0-epsp/epsm)+B;
-
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      if (thesign < 0.0)
-         value = sqrt(C*radius2+D);
-      else
-         value = sqrt(A*radius2+B);
-
-      return value;
-   }
-   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10)
-   {
-      return getuTest(x,thesign);
-   }
-
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
-   return 0.0;
-}
-#endif
-
 double getu(double* x, int thesign, GridData &grid)
 {
    double value = 0.0;     
@@ -1425,4 +1346,46 @@ void init_surf_protein_paper(double ***S, GridData& grid){
    cout<<"write "<< file<<endl;
    write_field(file, S, grid);
 
+}
+
+
+
+// get maximum error of u at grid points
+void checkanswer(double ***u, double ***S,GridData &grid)
+{
+   int i, s, tindex[grid.dim], rindex[grid.dim];
+   double theerr = 0.0, tmperr;
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      if (evalarray(S,tindex) < 0.0)
+         tmperr = evalarray(u,tindex)-getu(tindex,0,0,0.0,-1,grid);
+      else
+         tmperr = evalarray(u,tindex)-getu(tindex,0,0,0.0,1,grid);
+      if (fabs(tmperr) > fabs(theerr))
+      {
+         theerr = tmperr;
+         for (s = 0; s < grid.dim; s++)
+            rindex[s] = tindex[s];
+      }
+
+      // if (globwriteerr){
+      //   outfile_uerr<<tindex[0]<<","<<tindex[1]<<","<<tindex[2]<<",";
+      //   outfile_uerr <<setprecision(12)<<tmperr<< endl;;
+      // }
+
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+    
+  cout<<"[checkanswer]"<<endl;
+   cout << "Error is " << theerr << " at " << rindex[0] << " " << rindex[1] << " "  
+        << rindex[2] << endl;
 }

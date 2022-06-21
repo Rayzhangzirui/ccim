@@ -26,7 +26,7 @@ cim: cim.o global.o tryvn.o helper.o  matrix.o input.o sparse.o advance.o storag
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 
-epde: epde.o matrix.o input.o sparse.o storage.o numerics.o interface.o pb.o hypresolver.o ccim.o global.o helper.o
+epde: epde.o matrix.o input.o sparse.o storage.o numerics.o interface.o pb.o hypresolver.o ccim.o global.o helper.o solver.o
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 epde.o: epde.cpp

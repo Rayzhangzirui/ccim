@@ -2207,8 +2207,8 @@ void CheckIcimDu(double*** u_ghost, double *** u_real, double*** sign_surf, doub
 
 
 	for(int i = 0; i <= grid.nx[0]; i ++){
-	for(int j = 0; j <= grid.nx[0]; j ++){
-	for(int k = 0; k <= grid.nx[0]; k ++){
+	for(int j = 0; j <= grid.nx[1]; j ++){
+	for(int k = 0; k <= grid.nx[2]; k ++){
 		Index index = {i, j, k};
 		if(nearinterface(index, S, grid)){
 			// For interface points
@@ -2257,7 +2257,8 @@ void CheckIcimDu(double*** u_ghost, double *** u_real, double*** sign_surf, doub
 	}
 	}
 	}
-
+	
+	printf("fail to extrapolate = %i \n", nancount);
 	printf("Du max err = %.8f at %i %i %i\n", max_err, max_idx[0], max_idx[1], max_idx[2]);
 	printf("Du rmse = %.8f \n", rmse(err_all));
 

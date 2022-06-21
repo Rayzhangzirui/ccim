@@ -46,4 +46,6 @@ void init_surf(double ***S, double radius, GridData &grid, int surfopt);
 
 void init_surf_protein_paper(double ***S, GridData& grid);
 
+
+void checkanswer(double ***u, double ***S, GridData &grid);
 #endif

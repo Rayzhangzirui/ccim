@@ -1,9 +1,10 @@
 #include "storage.h"
 #include "matrix.h"
-
 #include "stdio.h"
 
-extern int globsmall;
+#include "interface.h"
+#include "global.h"
+
 using namespace std;
 
 void newstorage(StorageStruct &Dusmall)
@@ -12,6 +13,7 @@ void newstorage(StorageStruct &Dusmall)
    Dusmall.info = new int[Dusmall.N];
    Dusmall.head = NULL;
 }
+
 // get initial storage size for Dusmall:  4 x number of points near interface
 int getstoragesize(double ***S, GridData &grid)
 {
@@ -208,3 +210,95 @@ void clearstorage(StorageStruct* &Dusmall, int &smallsize)
 
    smallsize = 0;
 }
+
+
+
+// check du with StorageStruct at interface
+void checkDuStorage(double ***u, StorageStruct *Dusmall, int smallsize, double ***S, PBData &pb, GridData &grid)
+{
+  cout<< "[checkcim345Du Storage]" <<endl;
+   int i, r, s, t, m, mid = 2;
+   int tindex[grid.dim], rindex[grid.dim];
+   double uint, Du[grid.dim];
+   double alpha, thesign, tangent[grid.dim], normal[grid.dim];
+   double tmperr;
+   double theerr[grid.dim];
+   int zindex[grid.dim][grid.dim];
+
+   for (t = 0; t < grid.dim; t++)
+      theerr[t] = 0.0;
+
+   double uint2, Du2[grid.dim];
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      if (evalarray(S,tindex) < 0.0)
+         thesign = -1.0;
+      else
+         thesign = 1.0;
+      for (r = 0; r < grid.dim; r++)
+         rindex[r] = tindex[r];
+      for (r = 0; r < grid.dim; r++)
+      {
+         for (s = -1; s <= 1; s += 2)
+         {
+            rindex[r] = tindex[r]+s;
+            if (rindex[r] >= 0 && rindex[r] <= grid.nx[r] && 
+                (evalarray(S,tindex) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)
+            {
+//               getinterfaceDu(uint2,Du2,tindex,r,s,u,S,pb,grid);
+//               evalfromstorage(uint,Du,tindex,r,s,mid,Dusmall,smallsize,u,S,pb,grid);
+               evalfromstorage(uint,Du,tindex,r,s,Dusmall,smallsize,u,S,pb,grid);
+
+               getinterfaceinfo(alpha,tangent,normal,S,tindex,r,s,grid);
+               for (t = 0; t < grid.dim; t++)
+               {
+                  tmperr = fabs(Du[t]-getDu(tindex,t,r,s,alpha,thesign,grid));
+                  if (tmperr > theerr[t])
+                  {
+                     theerr[t] = tmperr;
+                     for (m = 0; m < grid.dim; m++)
+                        zindex[t][m] = tindex[m];
+                  }
+               }
+
+               // if (globwriteerr){
+               //    outfile_Duerr<<tindex[0]<<","<<tindex[1]<<","<<tindex[2]<<","<<r<<","<<s<<",";
+               //    outfile_Duerr <<setprecision(12)
+               //    <<Du[0]-getDu(tindex,0,r,s,alpha,thesign,grid)<<","
+               //    <<Du[1]-getDu(tindex,1,r,s,alpha,thesign,grid)<<","
+               //    <<Du[2]-getDu(tindex,2,r,s,alpha,thesign,grid)
+               //    <<endl;
+               //  }
+
+            }
+         }
+         rindex[r] = tindex[r];
+      }
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+   
+   cout << "Error in cim345 derivative is " << theerr[0] << " " << theerr[1] << " " 
+        << theerr[2] << endl;
+   cout << "   at";
+   for (t = 0; t < grid.dim; t++)
+   {
+      for (m = 0; m < grid.dim; m++)
+         cout << " " << zindex[t][m];
+      // cout << " (" << getstatus5(S,zindex[t],grid) << ")";
+      if (t < grid.dim-1)
+         cout << ", ";
+      else
+         cout << "." << endl;
+   }
+
+}
+

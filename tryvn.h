@@ -219,7 +219,7 @@ double Bval(double s, PBData &pb);
 double Bprime(double s, PBData &pb);
 double B2prime(double s, PBData &pb);
 
-void checkanswer(double ***u, double ***S, PBData &pb, GridData &grid);
+
 void checkDanswer(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkDanswer(double *uxerr, int *index, int gamma[][2], double ***u, double ***S, 
                   PBData &pb, GridData &grid);
@@ -236,8 +236,7 @@ void checkcim3Du(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkallDu(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkcim5Du(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkcim345Du(double ***u, double ***S, PBData &pb, GridData &grid);
-void checkcim345Du(double ***u, StorageStruct *Dusmall, int smallsize, double ***S, 
-                   PBData &pb, GridData &grid);
+
 void checkcim345Dupm(double ***u, double ***S, PBData &pb, GridData &grid);
 void checkcim345jumpDu(double ***u, double ***S, PBData &pb, GridData &grid);
 void getcim4Du(double &uint, double *Du, int *index, int rstar, int sstar, double ***u, 

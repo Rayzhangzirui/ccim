@@ -690,173 +690,6 @@ void Atransposesmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, doubl
    }
 }
 
-void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***S, 
-                   PBData &pb)
-{
-   int i, r, m, n, tindex[grid.dim];
-   SparseElt2 *current, *current2, *prev, *temp;
-   double ehere;
-
-// copy A to B and order B
-   clearsparse(B,grid);
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      setvalarray(B,tindex,NULL);
-      if (evalarray(A,tindex) == NULL)
-      {
-// create rows in B when they don't exist in A
-         if (evalarray(S,tindex) < 0.0)
-            ehere = pb.epsilonm;
-         else
-            ehere = pb.epsilonp;
-         temp = new SparseElt2;
-         (*temp).cindex = new int[grid.dim];
-         for (r = 0; r < grid.dim; r++) 
-            (*temp).cindex[r] = tindex[r];
-         (*temp).val = 0.0;
-         for (m = 0; m < grid.dim; m++)
-            (*temp).val += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
-         (*temp).next = NULL;
-         setvalarray(B,tindex,temp);
-
-         for (m = 0; m < grid.dim; m++)
-            for (n = -1; n <= 1; n += 2)
-            {
-               temp = new SparseElt2;
-               (*temp).cindex = new int[grid.dim];
-               for (r = 0; r < grid.dim; r++) 
-                  (*temp).cindex[r] = tindex[r];
-               (*temp).cindex[m] = tindex[m]+n;
-               if ((*temp).cindex[m] >= 0 && (*temp).cindex[m] <= grid.nx[m])
-               {
-                  (*temp).val = -ehere/(grid.dx[m]*grid.dx[m]);
-                  for (prev = NULL,current2 = evalarray(B,tindex); 
-                       current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
-                                           sub2ind((*temp).cindex,grid.nx,grid.dim); 
-                       prev = current2,current2 = (*current2).next);
-                  (*temp).next = current2;
-                  if (prev != NULL)
-                     (*prev).next = temp;
-                  else
-                     setvalarray(B,tindex,temp);
-               }
-            }
-      }
-      else
-         for (current = evalarray(A,tindex); current != NULL; current = (*current).next)
-         {
-            temp = new SparseElt2;
-            (*temp).cindex = new int[grid.dim];
-            for (r = 0; r < grid.dim; r++) 
-               (*temp).cindex[r] = (*current).cindex[r];
-            (*temp).val = (*current).val;
-            for (prev = NULL,current2 = evalarray(B,tindex); 
-                 current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
-                                     sub2ind((*temp).cindex,grid.nx,grid.dim); 
-                 prev = current2,current2 = (*current2).next);
-            (*temp).next = current2;
-            if (prev != NULL)
-               (*prev).next = temp;
-            else
-               setvalarray(B,tindex,temp);
-         }   
-      
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-}
-
-void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***a, 
-                   double ***S, PBData &pb)
-{
-   int i, r, m, n, tindex[grid.dim];
-   SparseElt2 *current, *current2, *prev, *temp;
-   double ehere;
-
-// copy A to B and order B
-   clearsparse(B,grid);
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      setvalarray(B,tindex,NULL);
-      if (evalarray(A,tindex) == NULL)
-      {
-// create rows in B when they don't exist in A
-         if (evalarray(S,tindex) < 0.0)
-            ehere = pb.epsilonm;
-         else
-            ehere = pb.epsilonp;
-         temp = new SparseElt2;
-         (*temp).cindex = new int[grid.dim];
-         for (r = 0; r < grid.dim; r++) 
-            (*temp).cindex[r] = tindex[r];
-         (*temp).val = evalarray(a,tindex);
-         for (m = 0; m < grid.dim; m++)
-            (*temp).val += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
-         (*temp).next = NULL;
-         setvalarray(B,tindex,temp);
-
-         for (m = 0; m < grid.dim; m++)
-            for (n = -1; n <= 1; n += 2)
-            {
-               temp = new SparseElt2;
-               (*temp).cindex = new int[grid.dim];
-               for (r = 0; r < grid.dim; r++) 
-                  (*temp).cindex[r] = tindex[r];
-               (*temp).cindex[m] = tindex[m]+n;
-               if ((*temp).cindex[m] >= 0 && (*temp).cindex[m] <= grid.nx[m])
-               {
-                  (*temp).val = -ehere/(grid.dx[m]*grid.dx[m]);
-                  for (prev = NULL,current2 = evalarray(B,tindex); 
-                       current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
-                                           sub2ind((*temp).cindex,grid.nx,grid.dim); 
-                       prev = current2,current2 = (*current2).next);
-                  (*temp).next = current2;
-                  if (prev != NULL)
-                     (*prev).next = temp;
-                  else
-                     setvalarray(B,tindex,temp);
-               }
-            }
-      }
-      else
-         for (current = evalarray(A,tindex); current != NULL; current = (*current).next)
-         {
-            temp = new SparseElt2;
-            (*temp).cindex = new int[grid.dim];
-            for (r = 0; r < grid.dim; r++) 
-               (*temp).cindex[r] = (*current).cindex[r];
-            (*temp).val = (*current).val;
-            for (prev = NULL,current2 = evalarray(B,tindex); 
-                 current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
-                                     sub2ind((*temp).cindex,grid.nx,grid.dim); 
-                 prev = current2,current2 = (*current2).next);
-            (*temp).next = current2;
-            if (prev != NULL)
-               (*prev).next = temp;
-            else
-               setvalarray(B,tindex,temp);
-         }   
-      
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-}
-
-
-
-
 double getpsivn(double ***u, double ***S, int *index, int rstar, PBData &pb, 
                 GridData grid)
 {
@@ -9162,7 +8995,7 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
       // output(phi2d,pb.psi,grid.nx);
 //      checkcim3Du(pb.psi,u,pb,grid);
       if(globcim !=7){
-        checkanswer(pb.psi,u,pb,grid);
+        checkanswer(pb.psi,u,grid);
       }
       if (globcim == 5)
       {
@@ -9172,7 +9005,7 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
       else if (globcim == 345 || globcim == 0 ||globcim == 6)
       {
          if (globsmall)
-            checkcim345Du(pb.psi,Dusmall,smallsize,u,pb,grid);
+            checkDuStorage(pb.psi,Dusmall,smallsize,u,pb,grid);
          else
             checkcim345Du(pb.psi,u,pb,grid);
          // checkcim345Dupm(pb.psi,u,pb,grid); //skip, not using Dusmall, slow
@@ -9192,7 +9025,7 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
         // checkDanswer2(pb.psi,u,pb,grid);
         checkcim12Du(pb.psi,u,pb,grid);
         if(globsmall){
-          checkcim345Du(pb.psi,Dusmall,smallsize,u,pb,grid);
+          checkDuStorage(pb.psi,Dusmall,smallsize,u,pb,grid);
         }
       }
       else if (globcim == 4)
@@ -9511,7 +9344,7 @@ void getRHS(double ***rhs, double ***u, double ***a, PBData &pb, MarchStruct &ma
    if (globcheck)
    {
       // output(phi2d,pb.psi,grid.nx);
-      checkanswer(pb.psi,u,pb,grid);
+      checkanswer(pb.psi,u,grid);
       if (globcim == 5)
       {
          checkcim5Du(pb.psi,u,pb,grid);
@@ -9520,7 +9353,7 @@ void getRHS(double ***rhs, double ***u, double ***a, PBData &pb, MarchStruct &ma
       else if (globcim == 345 || globcim == 0 || globcim == 6)
       {
          if (globsmall)
-            checkcim345Du(pb.psi,Dusmall,smallsize,u,pb,grid);
+            checkDuStorage(pb.psi,Dusmall,smallsize,u,pb,grid);
          else
             checkcim345Du(pb.psi,u,pb,grid);
       }
@@ -10110,45 +9943,7 @@ double B2prime(double s, PBData &pb)
    return value;
 }
 
-// get maximum error of u at grid points
-void checkanswer(double ***u, double ***S, PBData &pb, GridData &grid)
-{
-   int i, s, tindex[grid.dim], rindex[grid.dim];
-   double theerr = 0.0, tmperr;
 
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      if (evalarray(S,tindex) < 0.0)
-         tmperr = evalarray(u,tindex)-getu(tindex,0,0,0.0,-1,grid);
-      else
-         tmperr = evalarray(u,tindex)-getu(tindex,0,0,0.0,1,grid);
-      if (fabs(tmperr) > fabs(theerr))
-      {
-         theerr = tmperr;
-         for (s = 0; s < grid.dim; s++)
-            rindex[s] = tindex[s];
-      }
-
-      if (globwriteerr){
-        outfile_uerr<<tindex[0]<<","<<tindex[1]<<","<<tindex[2]<<",";
-        outfile_uerr <<setprecision(12)<<tmperr<< endl;;
-      }
-
-
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-    
-  cout<<"[checkanswer]"<<endl;
-   cout << "Error is " << theerr << " at " << rindex[0] << " " << rindex[1] << " "  
-        << rindex[2] << endl;
-}
 
 void checkDanswer(double ***u, double ***S, PBData &pb, GridData &grid)
 {
@@ -11894,93 +11689,8 @@ void checkcim345Du(double ***u, double ***S, PBData &pb, GridData &grid)
    free_matrix(zindex,grid.dim-1,grid.dim-1);
 }
 
-// check du with StorageStruct at interface
-void checkcim345Du(double ***u, StorageStruct *Dusmall, int smallsize, double ***S, 
-                   PBData &pb, GridData &grid)
-{
-  cout<< "[checkcim345Du Storage]" <<endl;
-   int i, r, s, t, m, mid = 2;
-   int tindex[grid.dim], rindex[grid.dim], **zindex = imatrix(grid.dim-1,grid.dim-1);
-   double uint, Du[grid.dim];
-   double alpha, thesign, tangent[grid.dim], normal[grid.dim];
-   double tmperr, theerr[grid.dim];
-   for (t = 0; t < grid.dim; t++)
-      theerr[t] = 0.0;
 
-   double uint2, Du2[grid.dim];
 
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      if (evalarray(S,tindex) < 0.0)
-         thesign = -1.0;
-      else
-         thesign = 1.0;
-      for (r = 0; r < grid.dim; r++)
-         rindex[r] = tindex[r];
-      for (r = 0; r < grid.dim; r++)
-      {
-         for (s = -1; s <= 1; s += 2)
-         {
-            rindex[r] = tindex[r]+s;
-            if (rindex[r] >= 0 && rindex[r] <= grid.nx[r] && 
-                (evalarray(S,tindex) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)
-            {
-//               getinterfaceDu(uint2,Du2,tindex,r,s,u,S,pb,grid);
-//               evalfromstorage(uint,Du,tindex,r,s,mid,Dusmall,smallsize,u,S,pb,grid);
-               evalfromstorage(uint,Du,tindex,r,s,Dusmall,smallsize,u,S,pb,grid);
-
-               getinterfaceinfo(alpha,tangent,normal,S,tindex,r,s,grid);
-               for (t = 0; t < grid.dim; t++)
-               {
-                  tmperr = fabs(Du[t]-getDu(tindex,t,r,s,alpha,thesign,grid));
-                  if (tmperr > theerr[t])
-                  {
-                     theerr[t] = tmperr;
-                     for (m = 0; m < grid.dim; m++)
-                        zindex[t][m] = tindex[m];
-                  }
-               }
-
-               if (globwriteerr){
-                  outfile_Duerr<<tindex[0]<<","<<tindex[1]<<","<<tindex[2]<<","<<r<<","<<s<<",";
-                  outfile_Duerr <<setprecision(12)
-                  <<Du[0]-getDu(tindex,0,r,s,alpha,thesign,grid)<<","
-                  <<Du[1]-getDu(tindex,1,r,s,alpha,thesign,grid)<<","
-                  <<Du[2]-getDu(tindex,2,r,s,alpha,thesign,grid)
-                  <<endl;;
-                }
-
-            }
-         }
-         rindex[r] = tindex[r];
-      }
-
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-   
-   cout << "Error in cim345 derivative is " << theerr[0] << " " << theerr[1] << " " 
-        << theerr[2] << endl;
-   cout << "   at";
-   for (t = 0; t < grid.dim; t++)
-   {
-      for (m = 0; m < grid.dim; m++)
-         cout << " " << zindex[t][m];
-      cout << " (" << getstatus5(S,zindex[t],grid) << ")";
-      if (t < grid.dim-1)
-         cout << ", ";
-      else
-         cout << "." << endl;
-   }
-
-   free_matrix(zindex,grid.dim-1,grid.dim-1);
-}
 // check cim 345 Du in positive region and negative region
 void checkcim345Dupm(double ***u, double ***S, PBData &pb, GridData &grid)
 {

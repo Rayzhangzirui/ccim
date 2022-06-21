@@ -10,37 +10,6 @@
 using namespace std;
 
 
-const int gdim = 3;
-const int NN = 4;
-
-struct stencil{
-
-	double D1u[gdim][2][gdim];
-	double D1ucoef[gdim][2][gdim][NN][NN][NN];
-	double D1uxxcoef[gdim][2][NN][NN];
-	double D1jumpuxxcoef[gdim][gdim][gdim];
-
-
-	double D2u[gdim][gdim]; // D2u[i][j] constant term
-	double D2ucoef[gdim][gdim][NN][NN][NN]; // D2u[i][j] in terms of nbr u-value [NN][NN][NN]
-	double D2uxcoef[gdim][gdim][gdim];
-	double D2uxxcoef[gdim][gdim][gdim];
-	double D2jumpuxxcoef[gdim][gdim];
-
-	double jumpD1u = 0.0;
-	double jumpD1ucoef[NN][NN][NN];
-	double jumpD1uxcoef[gdim];
-	double jumpD1uxxcoef[gdim];
-	double jumpD1jumpuxxcoef[gdim][gdim];
-
-
-	double jumpD2u = 0.0;
-	double jumpD2ucoef[NN][NN][NN]; // jump D2u in terms of nbr u-value
-	double jumpD2uxcoef[gdim]; 
-	double jumpD2uxxcoef[gdim];
-
-};
-
 
 // get mixed derivative at index in i,j-plane, stored in sk2,
 // e.g. index(i,j) = (a,b), 4 points (a+sk2[0], b+sk2[2]), (a+sk2[1], b+sk2[2]),(a+sk2[0], b+sk2[3]),(a+sk2[1], b+sk2[3])

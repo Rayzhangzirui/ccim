@@ -25,4 +25,7 @@ void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
                      PBData &pb, GridData &grid);
 
 void clearstorage(StorageStruct* &Dusmall, int &smallsize);
+
+void checkDuStorage(double ***u, StorageStruct *Dusmall, int smallsize, double ***S, PBData &pb, GridData &grid);
+
 #endif

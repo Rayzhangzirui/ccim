@@ -3,6 +3,175 @@
 #include <cmath>
 using namespace std;
 
+
+void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***S, 
+                   PBData &pb)
+{
+   int i, r, m, n, tindex[grid.dim];
+   SparseElt2 *current, *current2, *prev, *temp;
+   double ehere;
+
+// copy A to B and order B
+   clearsparse(B,grid);
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      setvalarray(B,tindex,NULL);
+      if (evalarray(A,tindex) == NULL)
+      {
+// create rows in B when they don't exist in A
+         if (evalarray(S,tindex) < 0.0)
+            ehere = pb.epsilonm;
+         else
+            ehere = pb.epsilonp;
+         temp = new SparseElt2;
+         (*temp).cindex = new int[grid.dim];
+         for (r = 0; r < grid.dim; r++) 
+            (*temp).cindex[r] = tindex[r];
+         (*temp).val = 0.0;
+         for (m = 0; m < grid.dim; m++)
+            (*temp).val += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
+         (*temp).next = NULL;
+         setvalarray(B,tindex,temp);
+
+         for (m = 0; m < grid.dim; m++)
+            for (n = -1; n <= 1; n += 2)
+            {
+               temp = new SparseElt2;
+               (*temp).cindex = new int[grid.dim];
+               for (r = 0; r < grid.dim; r++) 
+                  (*temp).cindex[r] = tindex[r];
+               (*temp).cindex[m] = tindex[m]+n;
+               if ((*temp).cindex[m] >= 0 && (*temp).cindex[m] <= grid.nx[m])
+               {
+                  (*temp).val = -ehere/(grid.dx[m]*grid.dx[m]);
+                  for (prev = NULL,current2 = evalarray(B,tindex); 
+                       current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
+                                           sub2ind((*temp).cindex,grid.nx,grid.dim); 
+                       prev = current2,current2 = (*current2).next);
+                  (*temp).next = current2;
+                  if (prev != NULL)
+                     (*prev).next = temp;
+                  else
+                     setvalarray(B,tindex,temp);
+               }
+            }
+      }
+      else
+         for (current = evalarray(A,tindex); current != NULL; current = (*current).next)
+         {
+            temp = new SparseElt2;
+            (*temp).cindex = new int[grid.dim];
+            for (r = 0; r < grid.dim; r++) 
+               (*temp).cindex[r] = (*current).cindex[r];
+            (*temp).val = (*current).val;
+            for (prev = NULL,current2 = evalarray(B,tindex); 
+                 current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
+                                     sub2ind((*temp).cindex,grid.nx,grid.dim); 
+                 prev = current2,current2 = (*current2).next);
+            (*temp).next = current2;
+            if (prev != NULL)
+               (*prev).next = temp;
+            else
+               setvalarray(B,tindex,temp);
+         }   
+      
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+}
+
+void copyfromsmall(SparseElt2**** &B, SparseElt2**** &A, GridData &grid, double ***a, 
+                   double ***S, PBData &pb)
+{
+   int i, r, m, n, tindex[grid.dim];
+   SparseElt2 *current, *current2, *prev, *temp;
+   double ehere;
+
+// copy A to B and order B
+   clearsparse(B,grid);
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      setvalarray(B,tindex,NULL);
+      if (evalarray(A,tindex) == NULL)
+      {
+// create rows in B when they don't exist in A
+         if (evalarray(S,tindex) < 0.0)
+            ehere = pb.epsilonm;
+         else
+            ehere = pb.epsilonp;
+         temp = new SparseElt2;
+         (*temp).cindex = new int[grid.dim];
+         for (r = 0; r < grid.dim; r++) 
+            (*temp).cindex[r] = tindex[r];
+         (*temp).val = evalarray(a,tindex);
+         for (m = 0; m < grid.dim; m++)
+            (*temp).val += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
+         (*temp).next = NULL;
+         setvalarray(B,tindex,temp);
+
+         for (m = 0; m < grid.dim; m++)
+            for (n = -1; n <= 1; n += 2)
+            {
+               temp = new SparseElt2;
+               (*temp).cindex = new int[grid.dim];
+               for (r = 0; r < grid.dim; r++) 
+                  (*temp).cindex[r] = tindex[r];
+               (*temp).cindex[m] = tindex[m]+n;
+               if ((*temp).cindex[m] >= 0 && (*temp).cindex[m] <= grid.nx[m])
+               {
+                  (*temp).val = -ehere/(grid.dx[m]*grid.dx[m]);
+                  for (prev = NULL,current2 = evalarray(B,tindex); 
+                       current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
+                                           sub2ind((*temp).cindex,grid.nx,grid.dim); 
+                       prev = current2,current2 = (*current2).next);
+                  (*temp).next = current2;
+                  if (prev != NULL)
+                     (*prev).next = temp;
+                  else
+                     setvalarray(B,tindex,temp);
+               }
+            }
+      }
+      else
+         for (current = evalarray(A,tindex); current != NULL; current = (*current).next)
+         {
+            temp = new SparseElt2;
+            (*temp).cindex = new int[grid.dim];
+            for (r = 0; r < grid.dim; r++) 
+               (*temp).cindex[r] = (*current).cindex[r];
+            (*temp).val = (*current).val;
+            for (prev = NULL,current2 = evalarray(B,tindex); 
+                 current2 != NULL && sub2ind((*current2).cindex,grid.nx,grid.dim) < 
+                                     sub2ind((*temp).cindex,grid.nx,grid.dim); 
+                 prev = current2,current2 = (*current2).next);
+            (*temp).next = current2;
+            if (prev != NULL)
+               (*prev).next = temp;
+            else
+               setvalarray(B,tindex,temp);
+         }   
+      
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+}
+
+
+
+
+
 void gaussseidelsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
                       int numsteps, double ***S, PBData &pb)
 {
@@ -1709,3 +1878,4 @@ void ILUsmall(SparseElt2**** &M, SparseElt2**** &A, GridData &grid, double ***a,
       }
    }
 }
+
