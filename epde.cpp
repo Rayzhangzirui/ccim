@@ -1,5 +1,7 @@
 #include "helper.h"
 #include "ccim.h"
+#include "cim12.h"
+#include "icim.h"
 #include "input.h"
 #include "solver.h"
 #include "hypresolver.h"
@@ -37,14 +39,39 @@ int main(int argc, char* argv[])
 
 	StorageStruct *Dusmall;
 	int smallsize = 0;
+	
+	if (globcim == 7){
+		double ***sign_surf = matrix(grid.nx[0],grid.nx[1],grid.nx[2]); // sign of flipped surface
+		double *** psi_true = matrix(grid.nx[0],grid.nx[1],grid.nx[2]); // reconstructed psi
 
-	linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
+		SignSurf(sign_surf, S, grid);
+		int maxIter = 10;
+		int depth = 1;
+		bool flipbydet = true;
+		flip(sign_surf, S, pb, grid, maxIter, depth, flipbydet);
+		linearsystem_icim(tmp.A,tmp.b, S, sign_surf, pb, grid);
 
-  	// BICGSTABsmall(pb.psi,tmp.A,tmp.b,grid,grid.nx[0]*grid.nx[1]*grid.nx[2],tollinsolve,S,pb,tmp);
-	HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
 
-	checkanswer(pb.psi,S,grid);
-	checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);
+		HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
+
+		// reconstruct solution
+		reconstruct(psi_true, S, pb.psi, sign_surf, grid);
+
+		CheckErrGrid(psi_true, S, pb, grid); // check original surface 
+		CheckIcimDu(pb.psi, psi_true, sign_surf, S, pb, grid);
+
+		free_matrix(sign_surf, grid.nx[0],grid.nx[1],grid.nx[2]);
+		free_matrix(psi_true, grid.nx[0],grid.nx[1],grid.nx[2]);
+
+    }
+    if (globcim == 345) {
+		linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
+
+		HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
+		checkanswer(pb.psi,S,grid);
+		checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);
+    }
+	
 
 	
 

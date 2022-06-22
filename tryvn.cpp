@@ -5498,7 +5498,8 @@ double evalcoef(double u0, double ***ucoef, double *uxxcoef, int *index, double 
 }
 
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                double **jumpuxxcoef, int *index, int rstar, int sstar, double alpha, 
+                double **jumpuxxcoef,
+               int *index, int rstar, int sstar, double alpha, 
                 double ***S, GridData grid)
 {
    int i, s, tindex[grid.dim], sindex[grid.dim];
@@ -5547,7 +5548,11 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef,
    return value;
 }
 
-double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
+
+
+
+double evalcoef(double u0, double ***ucoef, double *uxcoef,
+                double *uxxcoef, 
                 int *index, int rstar, int sstar, double alpha, int mid, 
                 double thesign, GridData grid)
 {
@@ -5581,49 +5586,11 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef,
    return value;
 }
 
-double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                int *index, int rstar, int sstar, double alpha, int mid, 
-                double ***S, GridData grid)
-{
-   int i, s, N = 2*mid, tindex[grid.dim], sindex[grid.dim];
-   double value = u0, thesign;
 
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = 0;
-   while (sindex[0] <= N)
-   {
-      for (s = 0; s < grid.dim; s++)
-         tindex[s] = index[s]-mid+sindex[s];
-      if (evalarray(S,tindex) < 0.0)
-         thesign = -1.0;
-      else
-         thesign = 1.0;
-      value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,thesign,grid);
 
-      (sindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-      {
-         sindex[i] = 0;
-         (sindex[i-1])++;
-      }
-   }
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-
-   if (evalarray(S,index) < 0.0)
-      thesign = -1.0;
-   else
-      thesign = 1.0;
-   for (s = 0; s < grid.dim; s++)
-   {
-      value += uxcoef[s]*getDu(index,s,rstar,sstar,alpha,thesign,grid);
-      value += uxxcoef[s]*getD2u(index,s,s,rstar,sstar,alpha,thesign,grid);
-   }
-
-   return value;
-}
 //uxx include cross derivative
-double evalcoef(double u0, double ***ucoef, double *uxcoef, double **uxxcoef, 
+double evalcoef(double u0, double ***ucoef, double *uxcoef, 
+                double **uxxcoef, 
                 int *index, int rstar, int sstar, double alpha, int mid, 
                 double thesign, GridData grid)
 {
@@ -5694,6 +5661,7 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double **uxxcoef,
    return value;
 }
 */
+
 // D1 is 3x3x3x3, D[r] is coefficient for u in 3x3x3 kernel when approximating derivative of Du in dim r
 // D1 only include first order component. 
 void getD1(double ****D1, int *sk, GridData grid)
@@ -5739,6 +5707,7 @@ void getD1(double ****D1, int *sk, GridData grid)
       }
    }
 }
+
 // coefficient of cross derivative in (m,n) plane in terms of u in 3x3x3 kernel
 void getD2(double ***D2[][3], int sk2[][3][4], GridData grid)
 {
@@ -5819,6 +5788,7 @@ void getD2(double ***D2, int m, int n, int sk2[][3][4], GridData grid)
    sindex[m] = 1;
 }
 
+
 void getD2(double ***D2, int m, int n, int sk2[][3][4], int *tindex, GridData grid)
 {
    int i, s, t, N[grid.dim], sindex[grid.dim];
@@ -5856,6 +5826,8 @@ void getD2(double ***D2, int m, int n, int sk2[][3][4], int *tindex, GridData gr
    }
    sindex[m] = tindex[m];
 }
+
+
 //used in CIM4, cim12.pdf page 36, D2[5x5x5] is cross-derivative in m,n plane in terms of u-value
 void getD2(double ***D2, double &jumpuxxcoef, int m, int n, int rstar, int sstar, 
            double thesign, int sk2[][3][4], GridData grid)

@@ -7,9 +7,6 @@
 #include "storage.h"
 
 char getsk2(int *sk2, int i, int j, int *index, double ***S, GridData &grid);
-char yessk2(int *sk2, int i, int j, int *index, double ***S, GridData &grid);
-
-void getD2(double ***D2, int m, int n, int *sk2, int *tindex, int *N, GridData grid);
 
 int getstatus5(double ***S, int *index, GridData &grid);
 

@@ -14,10 +14,10 @@ double DBC(double *x, int thedim, double thetime)
 // usually assume boundary uses outside(plus side) 
    if (globtestnum == 0)
    {
-      int j;
+      
       double value = 0.0;
       
-      for (j = 0; j < thedim; j++)
+      for (int j = 0; j < thedim; j++)
          value += x[j]*x[j];
       value = -1.0/(1.0+value);
 
@@ -25,30 +25,30 @@ double DBC(double *x, int thedim, double thetime)
    }
    else if (globtestnum == 1)
    {
-      int j;
+      
       double value = 0.0;
       
-      for (j = 0; j < thedim; j++)
+      for (int j = 0; j < thedim; j++)
          value += x[j]*x[j];
    
       return value;
    }
    else if (globtestnum == 2)
    {
-      int j;
+      
       double value = 0.0;
       
-      for (j = 0; j < thedim; j++)
+      for (int j = 0; j < thedim; j++)
          value += x[j]*x[j];
    
       return exp(value);
    }
    else if (globtestnum == 3 || globtestnum == 4)
    {
-      int j;
+      
       double value = 0.0, epsp = EPSILONP, epsm = EPSILONM;
       
-      for (j = 0; j < thedim; j++)
+      for (int j = 0; j < thedim; j++)
          value += x[j]*x[j];
    
       return sqrt(value+fabs(1.0-epsp/epsm));
@@ -61,7 +61,7 @@ double DBC(double *x, int thedim, double thetime)
 
 
 
-double getf(double *x, int thesign, PBData &pb, GridData &grid){
+double getf(double *x, double thesign, PBData &pb, GridData &grid){
   double value = 0.0;
   double radius2 = 0.0;
   for (int r = 0; r < grid.dim; r++)
@@ -154,7 +154,7 @@ double getf(double *x, int thesign, PBData &pb, GridData &grid){
 
 
 // getf between gridpoint use alpha
-double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData &pb, 
+double getf(int *index, int rstar, int sstar, double alpha, double thesign, PBData &pb, 
             GridData &grid)
 {
     double value = 0.0;
@@ -164,7 +164,7 @@ double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData 
     return getf(x, thesign, pb, grid);
 }
 
-double getu(double* x, int thesign, GridData &grid)
+double getu(double* x, double thesign, GridData &grid)
 {
    double value = 0.0;     
    if (globtestnum == 0)
@@ -236,7 +236,7 @@ double getu(double* x, int thesign, GridData &grid)
 
 
 
-double getu(int *index, int rstar, int sstar, double alpha, int thesign, GridData &grid)
+double getu(int *index, int rstar, int sstar, double alpha, double thesign, GridData &grid)
 {
     double value = 0.0;
     double x[grid.dim];
@@ -246,7 +246,7 @@ double getu(int *index, int rstar, int sstar, double alpha, int thesign, GridDat
 }
 
 
-double getDu(double *x, int s, int thesign, GridData &grid)
+double getDu(double *x, int s, double thesign, GridData &grid)
 {
    if (globtestnum == 0)
    {
@@ -327,7 +327,7 @@ double getDu(double *x, int s, int thesign, GridData &grid)
    return 0.0;
 }
 
-double getDu(int *index, int s, int rstar, int sstar, double alpha, int thesign, 
+double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, 
              GridData &grid)
 {
    if (globtestnum == 0)
@@ -420,7 +420,7 @@ double getDu(int *index, int s, int rstar, int sstar, double alpha, int thesign,
    return 0.0;
 }
 
-double getD2u(double *x, int r, int s, int thesign, GridData &grid)
+double getD2u(double *x, int r, int s, double thesign, GridData &grid)
 {
    if (globtestnum == 0)
    {
@@ -525,7 +525,7 @@ double getD2u(double *x, int r, int s, int thesign, GridData &grid)
 }
 
 double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, 
-              int thesign, GridData &grid)
+              double thesign, GridData &grid)
 {
    if (globtestnum == 0)
    {
@@ -638,7 +638,7 @@ double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha,
    return 0.0;
 }
 
-//double getf(double ***f, int index, int rstar, int sstar, double alpha, int thesign, 
+//double getf(double ***f, int index, int rstar, int sstar, double alpha, double thesign, 
 //            GridData &grid)
 //{
 //   int r, rindex[grid.dim];

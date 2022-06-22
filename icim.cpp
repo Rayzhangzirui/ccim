@@ -1,7 +1,9 @@
 #include "icim.h"
-#include "tryvn.h"
+#include "finitediff.h"
 #include "interface.h"
 #include "global.h"
+#include "numerics.h"
+
 #include <unordered_map>
 #include <list>
 #include <iterator>
@@ -18,6 +20,8 @@ struct Info{
 	double d2u[3];
 	double sign;
 };
+
+unordered_map<int, Info> D2uMap;
 
 
 Info SaveInfo(double** M, double* d, double**** f){
@@ -63,7 +67,7 @@ void GetInfo(double** M, double* d, double**** f, const Info& info){
 	}
 };
 
-unordered_map<int, Info> D2uMap;
+
 
 
 // equation (12) in ICIM paper, return ind[r] = 3 if the r-dim touch boundary
@@ -1694,7 +1698,7 @@ void linearsystem_icim(SparseElt2**** &A, double ***b, double ***S, double*** si
 
 				if (thestatus == 0){
 					// interior points
-					interiorptsmall(A, b, tindex.data(), S, pb, grid);
+					// interiorptsmall(A, b, tindex.data(), S, pb, grid);
 					(count[1])++;
 				
 				}else if (thestatus == 4){
@@ -2196,6 +2200,7 @@ void ComputeByExtrapolate(double& uval, Vector3d& du,
 }
 
 // check du at interface
+// extrapolation by nearby non-ghost point
 void CheckIcimDu(double*** u_ghost, double *** u_real, double*** sign_surf, double ***S,  PBData &pb, GridData &grid){
 	cout<<"[Check icim Du]"<<endl;
 	double max_err = 0.0;

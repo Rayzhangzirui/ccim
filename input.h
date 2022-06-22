@@ -6,18 +6,18 @@
 
 
 double DBC(double *x, int thedim, double thetime);
-double getf(double *x, int thesign, PBData &pb, GridData &grid);
-double getf(int *index, int rstar, int sstar, double alpha, int thesign, PBData &pb, 
+double getf(double *x, double thesign, PBData &pb, GridData &grid);
+double getf(int *index, int rstar, int sstar, double alpha, double thesign, PBData &pb, 
             GridData &grid);
-double getu(double *x, int thesign, GridData &grid);
-double getu(int *index, int rstar, int sstar, double alpha, int thesign, GridData &grid);
-double getDu(double *x, int s, int thesign, GridData &grid);
-double getDu(int *index, int s, int rstar, int sstar, double alpha, int thesign, 
+double getu(double *x, double thesign, GridData &grid);
+double getu(int *index, int rstar, int sstar, double alpha, double thesign, GridData &grid);
+double getDu(double *x, int s, double thesign, GridData &grid);
+double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, 
              GridData &grid);
-double getD2u(double *x, int r, int s, int thesign, GridData &grid);
+double getD2u(double *x, int r, int s, double thesign, GridData &grid);
 double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, 
-              int thesign, GridData &grid);
-//double getf(double ***f, int index, int rstar, int sstar, double alpha, int thesign, 
+              double thesign, GridData &grid);
+//double getf(double ***f, int index, int rstar, int sstar, double alpha, double thesign, 
 //GridData &grid);
 double geta(double *x, double thesign, PBData& pb, GridData& grid);
 void geta(double ***a, double ***u, double ***S, PBData &pb, GridData &grid);

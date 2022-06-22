@@ -22,6 +22,8 @@
 #include "storage.h"
 #include "numerics.h"
 #include "ccim.h"
+#include "icim.h"
+#include "finitediff.h"
 
 // using namespace std;
 using std::ofstream;
@@ -105,20 +107,27 @@ void cim345(SparseElt2**** &A, double ***b, int *index, int gamma[][2], double *
             PBData &pb, GridData &grid);
 void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &smallsize, 
             int *index, int gamma[][2], double ***S, PBData &pb, GridData &grid);
+
 double evalcoef(double u0, double ***ucoef, double *uxxcoef, int *index, double ***S, 
                 GridData grid);
+
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                double **jumpuxxcoef, int *index, int rstar, int sstar, double alpha, 
-                double ***S, GridData grid);
+                double **jumpuxxcoef, 
+                int *index, int rstar, int sstar, double alpha, 
+                double ***S,
+                GridData grid);
+
+
+
+
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
                 int *index, int rstar, int sstar, double alpha, int mid, 
                 double thesign, GridData grid);
-double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
-                int *index, int rstar, int sstar, double alpha, int mid, 
-                double ***S, GridData grid);
+
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double **uxxcoef, 
                 int *index, int rstar, int sstar, double alpha, int mid, 
                 double thesign, GridData grid);
+
 void getD1(double ****D1, int *sk, GridData grid);
 void getD2(double ***D2[][3], int sk2[][3][4], GridData grid);
 void getD2(double ***D2, int m, int n, int sk2[][3][4], GridData grid);
