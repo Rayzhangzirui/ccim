@@ -27,7 +27,7 @@ void init_march(MarchStruct &march, double*** S, PBData &pb, GridData&grid){
    march.pb = pb;
 }
 
-
+// fast marching
 void fmarch(MarchStruct &march, double phitube, GridData &grid)
 {
    int i, r, s;
@@ -35,7 +35,8 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
    char notstop;
    clock_t cstart, cend;
 
-   for (i = 0; i < grid.dim; i++) // go over every grid point, set status as FAR(1)
+   // === go over every grid point, set status as FAR(1)
+   for (i = 0; i < grid.dim; i++) 
       tindex[i] = 0;
    while (tindex[0] <= grid.nx[0])
    {
@@ -49,17 +50,21 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
       }
    }
 
+   // 
    cstart = clock ();
    for (i = 0; i < grid.dim; i++)
       tindex[i] = 0;
    while (tindex[0] <= grid.nx[0])
    {
+      // if status is not ACCEPT(3)
       if (evalarray(march.status,tindex) != 0 && evalarray(march.status,tindex) != 3)
       {
          if (evalarray(march.dorig,tindex) != 0.0)
             notstop = 1; //if tindex not exactly at interface
          else
-            notstop = 0;//if tindex exactly at interface
+            notstop = 0;//if tindex exactly at interface, should stop
+
+         // for points not exactly on interface, if any nbr is on diff side, mark as stop
          for (r = 0; r < grid.dim; r++)
             rindex[r] = tindex[r];
          for (r = 0; r < grid.dim && notstop; r++)
@@ -71,11 +76,13 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
                    evalarray(march.status,rindex) != 0 && 
                    (evalarray(march.dorig,tindex) <= 0.0)+
                    (evalarray(march.dorig,rindex) <= 0.0) == 1)
-                  notstop = 0;// if tindex near interface
+                  notstop = 0;
             }
             rindex[r] = tindex[r];
          }
-         if (!notstop) // for points near interface
+
+         // for points near interface
+         if (!notstop) 
          {
             fmarchstep(march,tindex,grid); //get temp distance and extension
             addtoheap(march.heap,tindex,march.dist);//add to heap
@@ -94,47 +101,6 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
    cout << "fmarch initialization = " << (double) (cend-cstart)/CLOCKS_PER_SEC 
         << endl;
 
-/*
-   int count = 0;
-   double uint, Du[grid.dim];
-   clock_t cstart2, cend2;
-   cstart2 = clock ();
-   for (i = 0; i < grid.dim; i++)
-      tindex[i] = 0;
-   while (tindex[0] <= grid.nx[0])
-   {
-      for (r = 0; r < grid.dim; r++)
-         rindex[r] = tindex[r];
-      for (r = 0; r < grid.dim; r++)
-      {
-         for (s = -1; s <= 1; s += 2)
-         {
-            rindex[r] = tindex[r]+s;
-            if (rindex[r] >= 0 && rindex[r] <= grid.nx[r] && 
-                (evalarray(march.dorig,tindex) <= 0.0)+
-                (evalarray(march.dorig,rindex) <= 0.0) == 1)
-            {
-               getinterfaceDu(uint,Du,tindex,r,s,(march.pb).psi,march.dorig,march.pb,
-                              grid);
-               getinterfaceDu(uint,Du,rindex,r,-s,(march.pb).psi,march.dorig,march.pb,
-                              grid);
-               count++;
-            }
-         }
-         rindex[r] = tindex[r];
-      }
-
-      (tindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-      {
-         tindex[i] = 0;
-         (tindex[i-1])++;
-      }
-   }
-   cend2 = clock ();
-   cout << "calculated " << 2*count << " times" << endl;
-   cout << "test = " << (double) (cend2-cstart2)/CLOCKS_PER_SEC << endl;
-*/
 
    while ((march.heap).head != NULL && (*((march.heap).head)).index[0] >= 0)
       if (phitube < 0.0 ||
@@ -145,7 +111,8 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
             tindex[i] = (*((march.heap).head)).index[i]; // get index of head
          fixheapeltdelete(march.heap,(march.heap).head,march.dist); // remove head from heap
 
-         for (r = 0; r < grid.dim; r++) // go through nbhr of head and modify distance
+         // go through nbhr of tindex and modify distance
+         for (r = 0; r < grid.dim; r++) 
             rindex[r] = tindex[r];
          for (r = 0; r < grid.dim; r++)
          {
@@ -172,7 +139,9 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
       else
          fixheapeltdelete(march.heap,(march.heap).head,march.dist);
 
-   if (phitube >= 0.0) // if fast marhing to bandwidth phitube, set phi>phitube to (+/-)phitube
+
+   // if fast marhing to bandwidth phitube, set phi>phitube to (+/-)phitube
+   if (phitube >= 0.0) 
    {
       for (i = 0; i < grid.dim; i++)
          tindex[i] = 0;
@@ -195,6 +164,8 @@ void fmarch(MarchStruct &march, double phitube, GridData &grid)
       }
    }
 }
+
+
 // update distance and extension at index with nbr information
 void fmarchstep(MarchStruct &march, int *index, GridData &grid)
 {
@@ -227,6 +198,7 @@ void fmarchstep(MarchStruct &march, int *index, GridData &grid)
 
    free_matrix(evalue,march.nval-1,grid.dim-1);
 }
+
 // get direction to look for update, if yes[r] = 1, use info comming in dim r, dvalue[r] = phi value in dim r, 
 // evalue[0][r] = vn value in dim r, thedx[r] = dx in dim r
 void fmarchdirection(char *yes, double *dvalue, double **evalue, double *thedx,

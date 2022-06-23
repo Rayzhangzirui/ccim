@@ -268,6 +268,7 @@ void advanceheat(double ***u, TempStruct &tmp, GridData &grid)
    cout<<"heatsmooth with dt = " <<dtheat<<endl;
    removefourd(temp,tmp.fourd,tmp.fdstatus,tmp.Nfd);
 }
+
 //u is extended velocity, solve du/dt = laplacian(u) unitl finaltime, u(t+1) = u(t) + dt(uxx+uyy+uzz)
 void advanceheat(double ***u, double finaltime, TempStruct &tmp, GridData &grid)
 {

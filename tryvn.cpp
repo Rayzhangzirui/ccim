@@ -9011,6 +9011,10 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
       advanceheat(march.extend[0],globheatsmoothtime,tmp,grid);
    }
 
+
+   // after fast marching, phi_{t+1} =  phi_{t} - dt vn |grad phi|
+   // rhs = vn |grad phi|
+   // march.extend[0] is vn
    for (i = 0; i < grid.dim; i++)
       tindex[i] = 0;
    while (tindex[0] <= grid.nx[0])
@@ -9025,6 +9029,9 @@ void getRHS(double ***rhs, double ***u, PBData &pb, MarchStruct &march, TempStru
          weno(dfp[r],dfn[r],u1d,deg,grid.dx[r],2*deg-1);
          rindex[r] = tindex[r];
       }
+
+      // if vn<tol, rhs = 0
+      // otherwise, rhs = - vn grad, grad approximated by upwinding
       if (fabs(evalarray(march.extend[0],tindex)) < grid.tol)
          setvalarray(rhs,tindex,0.0);
       else
