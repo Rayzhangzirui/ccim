@@ -738,7 +738,7 @@ char getcim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
 
 
 
-// get jump in Du in rstar dim, cim12.pdf p27
+// get [Du] in rstar dim, cim12.pdf p27
 // Du-[r] = NxNxN D1ucoeff[r] u + 1x3 D1uxcoef[r] ux + 1x3 D1uxxcoef[r] uxx + 3x3 D1jumpuxxcoef [uxx]
 void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
                      double **jumpuxxcoef, int *index, int rstar, int sk, double alpha, 
@@ -762,7 +762,9 @@ void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoe
    getsigma(sigma,index,rstar,sk,alpha,normal,pb,grid);
    getDtau(Dtau,index,rstar,sk,alpha,grid);
    
-   u0 = sigma/ethere*normal[rstar]+getdotprod(Dtau,tangent,grid.dim)*tangent[rstar];//constant term
+   // constant term, only one tangent vector is needed, as the other tangent vector (tangent2) can be chosen
+   // to be in the plane with normal e[rstar], so tangent2[rstar] = 0
+   u0 = sigma/ethere*normal[rstar] + getdotprod(Dtau,tangent,grid.dim)*tangent[rstar];
 
    // recast Du-, [epsilon]/epsilonp dot(grad(Du-),n) n[star]
    for (s = 0; s < grid.dim; s++)
@@ -781,6 +783,7 @@ void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoe
          (sindex[i-1])++;
       }
    }
+
    for (s = 0; s < grid.dim; s++)
       sindex[s] = mid;
 
@@ -810,8 +813,7 @@ void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoe
 }
 
 
-// without a, [DDu_{rstar}] = u0 + ucoef NxNxN u-value + uxcoef Du_{1,2,3} + uxxcoef 1x3 DDu_{1,2,3}
-// recast jumpuxxcoeff to ucoef, uxcoef and uxxcoef
+// without a
 void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
                       int *index, int rstar, int sk, double alpha, int thesign, 
                       double *normal, int mid, double *D1u, double ****D1ucoef, 
@@ -1205,15 +1207,59 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
          jumpD1jumpuxxcoef[m][n] = 0.0;
       }
 
-   // free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
-   // free_matrix(B,2*grid.dim-1,2*grid.dim-1);
+   free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
+   free_matrix(B,2*grid.dim-1,2*grid.dim-1);
    free_matrix(Dn,grid.dim-1,grid.dim-1);
    free_matrix(D2tau,grid.dim-1,grid.dim-1);
    for (r = 0; r < 2*grid.dim; r++)
       free_matrix(bcoef[r],N,N,N);
 }
 
-// with a
+// with a [DDu_{rstar}] = u0 + ucoef NxNxN u-value + uxcoef Du_{1,2,3} + uxxcoef 1x3 DDu_{1,2,3}
+// recast jumpuxxcoeff to ucoef, uxcoef and uxxcoef
+
+/*
+get Du- between index[][][] and index[rstar+sstar][][] 
+in dim-r, Du-[r] = u0[r] +  sum ucoef[r][index] u[index] + sum uxcoef[r][0:2] Du + sum uxxoef[r][0:2] DDu
+
+[DDu_{rstar}]
+output:
+u0[r] = const term
+ucoef[i][j][k] = coefs of u[i][j][k], i,j,k in [N]
+uxcoeff[i] = coefs of Du[i], i in [dim]
+uxxoef[i] = coefs of D2u[i][i], i in [dim]
+
+
+called with
+getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
+                             alpha[r][(sk+1)/2],thesign,normal,mid,a,D1u[r][(sk+1)/2],
+                             D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
+                             D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,
+                             D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
+                             jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);
+
+input: all in terms of const, u, D1u, D2u[i][i], jumpD2u[i][i], no mixed derivative
+(1) approximation of Du-[r] at interface
+D1ucoef[r][(sk+1)/2]
+D1uxcoef[r][(sk+1)/2]
+D1uxxcoef[r][(sk+1)/2]
+D1jumpuxxcoef
+(2) approximation of D2u- at interface
+D2u
+D2ucoef
+D2uxcoef
+D2uxxcoef
+D2jumpuxxcoef
+(2) approximation of jumpD1u[rstar] at interface 
+jumpD1u
+jumpD1ucoef
+jumpD1uxcoef
+jumpD1uxxcoef
+jumpD1jumpuxxcoef
+*/
+
+
+
 void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
                       int *index, int rstar, int sk, double alpha, int thesign, 
                       double *normal, int mid, double ***a, double *D1u, 
@@ -1264,6 +1310,8 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
 // form Dn dot product with various vectors
    getDtau(Dtau,index,rstar,sk,alpha,grid);
    getD2tau(D2tau,index,rstar,sk,alpha,grid);
+
+
    for (n = 0; n < grid.dim; n++)
    {
       Dndott[n] = 0.0;
@@ -1276,18 +1324,18 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
    {
       for (m = 0; m < grid.dim; m++)
       {
-         Dndott[n] += Dn[n][m]*tangent1[m];
-         Dndots[n] += Dn[n][m]*tangent2[m];
-         dotD2taudot[0] += tangent1[n]*D2tau[n][m]*tangent1[m];
-         dotD2taudot[1] += tangent2[n]*D2tau[n][m]*tangent2[m];
-         dotD2taudot[2] += tangent1[n]*D2tau[n][m]*tangent2[m];
+         Dndott[n] += Dn[n][m]*tangent1[m]; //Dndott = Dn tangent1
+         Dndots[n] += Dn[n][m]*tangent2[m]; //Dndots = Dn tangent2
+         dotD2taudot[0] += tangent1[n]*D2tau[n][m]*tangent1[m]; //dotD2taudot[0] = tangent1 D2tau tangent1
+         dotD2taudot[1] += tangent2[n]*D2tau[n][m]*tangent2[m]; //dotD2taudot[1] = tangent2 D2tau tangent2
+         dotD2taudot[2] += tangent1[n]*D2tau[n][m]*tangent2[m]; //dotD2taudot[2] = tangent1 D2tau tangent2
       }
-      dotDndot[0] += tangent1[n]*Dndott[n];
-      dotDndot[1] += tangent2[n]*Dndots[n];
-      dotDndot[2] += tangent1[n]*Dndots[n];
-      Dtaudot[0] += Dtau[n]*normal[n];
-      Dtaudot[1] += Dtau[n]*tangent1[n];
-      Dtaudot[2] += Dtau[n]*tangent2[n];
+      dotDndot[0] += tangent1[n]*Dndott[n]; //dotDndot[0] = tangent1 Dn tangent1
+      dotDndot[1] += tangent2[n]*Dndots[n]; //dotDndot[1] = tangent2 Dn tangent2
+      dotDndot[2] += tangent1[n]*Dndots[n]; //dotDndot[2] = tangent1 Dn tangent2
+      Dtaudot[0] += Dtau[n]*normal[n]; //Dtaudot[0] = Dtau n
+      Dtaudot[1] += Dtau[n]*tangent1[n]; //Dtaudot[1] = Dtau tangent1
+      Dtaudot[2] += Dtau[n]*tangent2[n]; //Dtaudot[2] = Dtau tangent2
    }
 // form matrix
    for (n = 0; n < grid.dim; n++)
@@ -1299,6 +1347,11 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       for (n = 0; n < m; n++)
          two2one[m][n] = two2one[n][m];
 
+   // === LHS of linear system
+   // original LHS, only involve tangent and normal, not yet consdier d2u in RHS might include jumpuxx
+   // first 3 row, s1[D2u]s1, s2[D2u]s2, s1[D2u]s2
+   // next 2 row, s1[D2u]n, s2[D2u]n
+   // last row, [lap(u)]
    for (n = 0; n < grid.dim; n++)
    {
       B[0][n] = tangent1[n]*tangent1[n];
@@ -1319,47 +1372,67 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       B[4][n] = normal[m]*tangent2[s]+normal[s]*tangent2[m];
       B[5][n] = 0.0;
    }
+
+   // === contribution from Du and D2u (from RHS) to jump(LHS)
    for (m = 0; m < grid.dim; m++)
       for (n = m+1; n < grid.dim; n++)
       {
-// get contributions of Du to jump data
+         // get contributions of Du to jump data
+         // first 3 rows, rhs include [eps]/epsm dot(Du-,n) sn.Dn.sm
          value = 0.0;
          for (r = 0; r < grid.dim; r++)
-            value += D1jumpuxxcoef[r][m][n]*normal[r];
+            value += D1jumpuxxcoef[r][m][n]*normal[r]; // dot(Du-,n)
          for (r = 0; r < grid.dim; r++)
             B[r][two2one[m][n]] -= thesign*(ethere-ehere)/ethere*value*dotDndot[r];
+
+         // in the 4th row, rhs include [eps]/epsm s1.Dn.Du-
          value = 0.0;
          for (r = 0; r < grid.dim; r++)
-            value += D1jumpuxxcoef[r][m][n]*Dndott[r];
+            value += D1jumpuxxcoef[r][m][n]*Dndott[r]; // Du- Dn tangent1
          B[grid.dim][two2one[m][n]] -= thesign*(ethere-ehere)/ethere*value;
+         
+         // in the 5th row, rhs include [eps]/epsm s2.Dn.Du-
          value = 0.0;
          for (r = 0; r < grid.dim; r++)
-            value += D1jumpuxxcoef[r][m][n]*Dndots[r];
+            value += D1jumpuxxcoef[r][m][n]*Dndots[r]; // Du- Dn tangent2
          B[grid.dim+1][two2one[m][n]] -= thesign*(ethere-ehere)/ethere*value;
-// get contributions of D2u to jump data
+
+         // in our application, we assume eps is piecewise constant, so no Deps term
+         // no correction in the 6th row
+         
+         // get contributions of D2u to jump data
+         // in the 4th row, rhs include [eps]/epsm s1.D2u-.n 
          B[grid.dim][two2one[m][n]] -= thesign*(ethere-ehere)/ethere*
                                        (normal[m]*tangent1[n]+normal[n]*tangent1[m])*
                                        D2jumpuxxcoef[m][n];
+         // in the 5th row, rhs include [eps]/epsm s1.D2u-.n 
          B[grid.dim+1][two2one[m][n]] -= thesign*(ethere-ehere)/ethere*
                                          (normal[m]*tangent2[n]+normal[n]*tangent2[m])*
                                          D2jumpuxxcoef[m][n];
       }
 
+
+   //=== constant term
+   // in the first 3 row, sn.D2tau.sm + (sigma/epsm - Dtau.n )sn.Dn.sm
    for (n = 0; n < grid.dim; n++)
       b0[n] = (sigma/ethere-Dtaudot[0])*dotDndot[n]+dotD2taudot[n];
+
    b0[grid.dim] = getdotprod(Dsigma,tangent1,grid.dim)/ethere-
                   Dtaudot[1]*dotDndot[0]-Dtaudot[2]*dotDndot[2];
    b0[grid.dim+1] = getdotprod(Dsigma,tangent2,grid.dim)/ethere-
                     Dtaudot[1]*dotDndot[2]-Dtaudot[2]*dotDndot[1];
+   // last row [f/eps] + ap/epsp tau
    b0[grid.dim+2] = -jumpfe+aethere*tau;
-//   b0[grid.dim+2] = getD2u(index,0,0,rstar,sk,alpha,1.0,grid)-
-//                    getD2u(index,0,0,rstar,sk,alpha,-1.0,grid)+
-//                    getD2u(index,1,1,rstar,sk,alpha,1.0,grid)-
-//                    getD2u(index,1,1,rstar,sk,alpha,-1.0,grid)+
-//                    getD2u(index,2,2,rstar,sk,alpha,1.0,grid)-
-//                    getD2u(index,2,2,rstar,sk,alpha,-1.0,grid);
 
-// get b coefs
+   // === The RHS include u-val, Du, D2u, with bcoef, bxcoef, bxxcoef
+   // m = 1:6, s = 1:3
+   // bcoef[m][sindex]: coef of u[sindx] in m-row
+   // bxcoef[m][s]: coef of Du_s in m-row
+   // bxxcoef[m][s]: coef of D2u_ss in m-row
+
+   // === get b coefs
+   // coef of u-value, b[r] = NxNxN matrix for r = 0,...5
+   // all coeff of u-val in N-nbr of the r-th row of equation, 
    for (s = 0; s < grid.dim; s++)
       sindex[s] = 0;
    while (sindex[0] <= N)
@@ -1368,16 +1441,20 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       for (m = 0; m < 2*grid.dim; m++)
          setvalarray(bcoef[m],sindex,0.0);
 
-// get contributions of Du at interface
+      // get contributions from Du-
+      // [eps]/epsp (Du- dot n) (si Dn sj)
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
-         value += evalarray(D1ucoef[n],sindex)*normal[n];
+         value += evalarray(D1ucoef[n],sindex)*normal[n]; //Du- dot n
       for (m = 0; m < grid.dim; m++)
          setvalarray(bcoef[m],sindex,evalarray(bcoef[m],sindex)+
                                      thesign*(ethere-ehere)/ethere*value*dotDndot[m]);
+
+       
+      //[eps]/epsp Du- Dn s
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
-         value += evalarray(D1ucoef[n],sindex)*Dndott[n];
+         value += evalarray(D1ucoef[n],sindex)*Dndott[n]; //Du- Dn s
       setvalarray(bcoef[grid.dim],sindex,evalarray(bcoef[grid.dim],sindex)+
                                   thesign*(ethere-ehere)/ethere*value);
       value = 0.0;
@@ -1386,7 +1463,7 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       setvalarray(bcoef[grid.dim+1],sindex,evalarray(bcoef[grid.dim+1],sindex)+
                                     thesign*(ethere-ehere)/ethere*value);
 
-// get contributions of D2u
+      // get contributions from D2u in row 4 and 5
       for (m = 0; m < grid.dim; m++)
          for (n = m+1; n < grid.dim; n++)
          {
@@ -1411,25 +1488,27 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
    }
    for (s = 0; s < grid.dim; s++)
       sindex[s] = mid;
-// addition
-//   double x[grid.dim];
-//   sub2coord(x,index,grid);
-//   x[rstar] += sk*alpha*grid.dx[rstar];
-//   jumpae = cos(x[grid.dim-1])-sin(x[0]);
+
+   // get contributions from u- in the last row
    setvalarray(bcoef[grid.dim+2],sindex,jumpae);
 
-// get bx and bxx coefs
+
+
+   //=== get bx and bxx coefs
    for (s = 0; s < grid.dim; s++)
    {
+      //=== get bx coefs
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
          value += D1uxcoef[n][s]*normal[n];
       for (m = 0; m < grid.dim; m++)
          bxcoef[m][s] = thesign*(ethere-ehere)/ethere*value*dotDndot[m];
+
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
          value += D1uxcoef[n][s]*Dndott[n];
       bxcoef[grid.dim][s] = thesign*(ethere-ehere)/ethere*value;
+      
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
          value += D1uxcoef[n][s]*Dndots[n];
@@ -1446,6 +1525,8 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
                                      D2uxcoef[m][n][s];
          }
 
+
+      //=== get bxx coefs
       value = 0.0;
       for (n = 0; n < grid.dim; n++)
          value += D1uxxcoef[n][s]*normal[n];
@@ -1476,31 +1557,29 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
 // addition
    bxcoef[grid.dim+2][rstar] = jumpae*sk*alpha*grid.dx[rstar];
    bxxcoef[grid.dim+2][rstar] = jumpae*0.5*alpha*grid.dx[rstar]*alpha*grid.dx[rstar];//possible with minus sign?
-//   cout << index[0] << " " << index[1] << " " << index[2] << " "
-//        << evalcoef(b0[grid.dim+2],bcoef[grid.dim+2],bxcoef[grid.dim+2],
-//                    bxxcoef[grid.dim+2],index,0,0,0.0,mid,S,grid) << " ";
-//   cout << -jumpfe+jumpae*getu(index,rstar,sk,alpha,thesign,grid) << endl;
-//   getchar();
-//   cout << index[0] << " " << index[1] << " " << index[2] << " "
-//        << evalcoef(b0[grid.dim+2],bcoef[grid.dim+2],bxcoef[grid.dim+2],
-//                    bxxcoef[grid.dim+2],index,0,0,0.0,mid,S,grid) << " "
-//        << getD2u(index,0,0,rstar,sk,alpha,1.0,grid)-
-//           getD2u(index,0,0,rstar,sk,alpha,-1.0,grid)+
-//           getD2u(index,1,1,rstar,sk,alpha,1.0,grid)-
-//           getD2u(index,1,1,rstar,sk,alpha,-1.0,grid)+
-//           getD2u(index,2,2,rstar,sk,alpha,1.0,grid)-
-//           getD2u(index,2,2,rstar,sk,alpha,-1.0,grid) << endl;
-//   getchar();
 
+   // === GE of LHS matrix
    gecp0(LU,PLR,PLC,B,2*grid.dim-1,2*grid.dim-1);
 
-// form jumpuxx in rstar direction and also recast Du and D2u
+
+   // === for RHS cont, u-val, Du, D2u, solve the linear system,
+
+   // === solve for RHS const
+   // form jumpuxx in rstar direction and also recast Du and D2u
+   // temp is constant term of jumpD2u[m][n]
    forwardbacksub0(temp,b0,LU,PLR,PLC,2*grid.dim-1);
    u0 = temp[two2one[rstar][rstar]];
+
+   
+   // D1u (Du-r) might depends on jumpD2u by D1jumpuxxcoef
+   // recast constant term of jumpD2u in D1jumpuxxcoef to D1u
    for (s = 0; s < grid.dim; s++)
       for (m = 0; m < grid.dim; m++)
          for (n = m+1; n < grid.dim; n++)
             D1u[s] += D1jumpuxxcoef[s][m][n]*temp[two2one[m][n]];
+   
+   // D2u might depends on jumpD2u by D2jumpuxxcoef
+   // jumpD1u might depends on jumpD2u by jumpD1jumpuxxcoef
    for (m = 0; m < grid.dim; m++)
       for (n = m+1; n < grid.dim; n++)
       {
@@ -1508,20 +1587,27 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
          jumpD1u += jumpD1jumpuxxcoef[m][n]*temp[two2one[m][n]];
       }
 
+   // === solve for RHS u-val
    for (s = 0; s < grid.dim; s++)
       sindex[s] = 0;
    while (sindex[0] <= N)
    {
       for (m = 0; m < 2*grid.dim; m++)
          temp[m] = evalarray(bcoef[m],sindex);
+      // temp is coeff of u[sindex]
       forwardbacksub0(temp,temp,LU,PLR,PLC,2*grid.dim-1);
       setvalarray(ucoef,sindex,temp[two2one[rstar][rstar]]);
+
+      //D1u- depends on jumpD2u, which depends on u, so recast D1jumpuxxcoef to D1ucoef
       for (s = 0; s < grid.dim; s++)
          for (m = 0; m < grid.dim; m++)
             for (n = m+1; n < grid.dim; n++)
                setvalarray(D1ucoef[s],sindex,evalarray(D1ucoef[s],sindex)+
                                              D1jumpuxxcoef[s][m][n]*
                                              temp[two2one[m][n]]);
+
+      //D2u- depends on jumpD2u, which depends on u, so recast D2jumpuxxcoef to D2ucoef
+      //jumpD1u- depends on jumpD2u, which depends on u, so recast jumpD1jumpuxxcoef to jumpD1ucoef
       for (m = 0; m < grid.dim; m++)
          for (n = m+1; n < grid.dim; n++)
          {
@@ -1538,9 +1624,12 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
          (sindex[i-1])++;
       }
    }
+
+
    for (s = 0; s < grid.dim; s++)
       sindex[s] = mid;
 
+   // === solve for RHS Du- D2u-,  
    for (s = 0; s < grid.dim; s++)
    {
       for (m = 0; m < 2*grid.dim; m++)
@@ -1925,6 +2014,7 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
                value += 0.5*(alpha[r][(sk+1)/2]*grid.dx[r])*
                             (alpha[r][(sk+1)/2]*grid.dx[r])*D2u[r][r];
             sparseorder(-1,Dusmall[buildsize].head,value);
+            
             for (s = 0; s < grid.dim; s++)
                sindex[s] = 0;
             while (sindex[0] <= N)
@@ -1962,6 +2052,7 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
             }
             for (s = 0; s < grid.dim; s++)
                sindex[s] = mid;
+
             buildsize++;
 
 // storing Du info
@@ -2624,10 +2715,30 @@ void getcim345Du(double &uint, double *Du, int *index, int rstar, int sstar,
 }
 
 
-// get Du- between index[][][] and index[rstart+sstart][][] 
-// in dim-r, Du-[r] = u0[r] +  sum ucoef[r][index] u[index] + sum uxcoef[r][0:2] Du + sum uxxoef[r][0:2] DDu
-// uxcoeff[r][i] = Du-_r in terms of Du_i, i = 1,2,3
-// uxxoef[r][i] = Du-_r in terms of DDu_i, i = 1,2,3
+/*
+get Du- between index[][][] and index[rstar+sstar][][] 
+in dim-r, Du-[r] = u0[r] +  sum ucoef[r][index] u[index] + sum uxcoef[r][0:2] Du + sum uxxoef[r][0:2] DDu
+
+output:
+u0[r] = Du-[r] const term
+ucoef[r][i][j][k] = Du-[r] as u[i][j][k], i,j,k in [N]
+uxcoeff[r][i] = Du-[r] as Du[i], i in [dim]
+uxxoef[r][i] = Du-[r] as D2u[i][i], i in [dim]
+jumpuxx[r][m][n] = Du-[r] as jump of D2u[m][n], m,n in [N]
+
+called with
+getcim345Du(D1u[r][(sk+1)/2],D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
+            D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,index,r,sk,
+            alpha[r][(sk+1)/2],thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,
+            D2jumpuxxcoef,mid,grid);
+input:
+D2u[m][n]: const term of D2u[m][n]
+D2ucoef[m][n][i][j][k]: D2u[m][n] as nbr u-val 
+D2uxcoef[m][n][i]: D2u[m][n] as Du[i]
+D2uxxcoef[m][n][i]: D2u[m][n] as D2u[i][i]
+D2jumpuxxcoef[m][n] = D2u[m][n] as jump of D2u[m][n]
+*/
+
 void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef,
                  double ***jumpuxxcoef, int *index, int rstar, int sstar, double alpha,
                  double thesign, double **D2u, double *****D2ucoef, double ***D2uxcoef, 
@@ -2669,6 +2780,9 @@ void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef
    }
 
    // recast 
+   // first order taylor Du-[s] = Du[s] + sstar  alpha h D2u[s][rstar]
+   // so uxxcoef[s][s] = 1, uxxcoeflarge[s][s][rstar] = sstar alpha h
+   // 
    for (s = 0; s < grid.dim; s++)
    {
       uxcoef[s][s] = 1.0;
@@ -2686,8 +2800,7 @@ void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef
             while (sindex[0] <= N)
             {
                setvalarray(ucoef[r],sindex,evalarray(ucoef[r],sindex)+
-                                           uxxcoeflarge[r][m][n]*
-                                           evalarray(D2ucoef[m][n],sindex)); 
+                                           uxxcoeflarge[r][m][n]*evalarray(D2ucoef[m][n],sindex)); 
                (sindex[grid.dim-1])++;
                for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
                {

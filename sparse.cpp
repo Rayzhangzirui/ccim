@@ -145,17 +145,23 @@ void sparseorder(int *rindex, int *cindex, SparseElt2**** &A, double value,
       (*prev).val += value;
 }
 
+// add or increment element to sparse linked list, keep order by index
 void sparseorder(int *cindex, SparseElt2* &A, double value, GridData &grid)
 {
    int r;
    SparseElt2 *current, *prev;
-
+   // move pointer prev and current, stop if (1) or (2)
+   // (1) current==Null, at the beginning of linked list
+   // (2) current go pass cindex, current points to the first element larger than cindex, 
+   // prev points to last element smaller than or equal to cindex, 
    for (prev = NULL,current = A;
-        current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) <=
-                           sub2ind(cindex,grid.nx,grid.dim); 
+        current != NULL && sub2ind((*current).cindex,grid.nx,grid.dim) <=sub2ind(cindex,grid.nx,grid.dim); 
         prev = current,current = (*current).next);
-   if (prev == NULL || sub2ind((*prev).cindex,grid.nx,grid.dim) !=
-                       sub2ind(cindex,grid.nx,grid.dim))
+   // if (1) prev==Null, then cindex at beginning
+   // if (2) pre points to the last element smaller than but not equal to cindex
+   // then we insert SparseElt2 temp with cindex and value, 
+   // prev.next = temp, temp.next = current
+   if (prev == NULL || sub2ind((*prev).cindex,grid.nx,grid.dim) !=sub2ind(cindex,grid.nx,grid.dim))
    {
       SparseElt2 *temp;
       temp = new SparseElt2;
@@ -169,9 +175,11 @@ void sparseorder(int *cindex, SparseElt2* &A, double value, GridData &grid)
       else
          A = temp;
    }
+   // prev points cindex, i.e., element already exists, update value
    else
       (*prev).val += value;
 }
+
 
 void multsparserow2(SparseElt2 ****A, int *index, double value)
 {
@@ -404,9 +412,10 @@ void sparseorder(int row, int col, SparseElt** &A, double value)
       (*prev).val += value;
 }
 
-// used in AMGsmall
-// A is the left most node for a row corresponding to A[tindex]
+// used in AMGsmall, A is the left most node for a row corresponding to A[tindex]
 // roc is column index,
+// used in cim small data structure
+// A is head of smaller storagestruct
 void sparseorder(int roc, SparseElt* &A, double value)
 {
    int r;
