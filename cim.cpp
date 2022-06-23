@@ -1,5 +1,6 @@
 #include "tryvn.h"
 #include "helper.h"
+#include "interface.h"
 #include "advance.h"
 #include "global.h"
 

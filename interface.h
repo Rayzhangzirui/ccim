@@ -30,5 +30,6 @@ void getinterfaceinfo(double *tangent1, double *tangent2, double &tau, double &s
                       double &aethere, int *index, int rstar, int sstar, double alpha, 
                       double ***a, double ***S, PBData &pb, GridData &grid);
 
-
+// check with exact radius for motion
+void checkwithexact(double ***S, double radius, GridData &grid);
 #endif

@@ -1771,3 +1771,102 @@ void getcim12Du(double &uint, double *Du, int *index, int rstar, int sstar,
 }
 
 
+// status 0 = boundary, 1 = interior, 2 = cim2, 3 = exceptional
+int getstatus3(double ***S, int *index, GridData grid)
+{
+   int r, s, j, k, sk;
+   int tindex[grid.dim];
+   double Sval1, Sval2, Sval3, Sval4, Sval5;
+   char interior = 1, except = 0, failed;
+
+   for (r = 0; r < grid.dim && index[r] > 0 && index[r] < grid.nx[r]; r++); // r=3 if interior
+   if (r < grid.dim)
+      return 0;
+
+   for (r = 0; r < grid.dim; r++)
+      tindex[r] = index[r];
+   for (r = 0; r < grid.dim; r++)
+   {
+      sk = 0;
+      for (s = -1; s <= 1; s += 2)
+      {
+         tindex[r] = index[r]+s;
+         Sval1 = evalarray(S,index);//Sval1 is current point
+         Sval2 = evalarray(S,tindex);//Sval2 is nbr +/- 1
+         if (Sval1*Sval2 < 0.0)//change sign in r dim
+         {
+            sk += 1;
+            if (sk == 2) // if sk = 2, then both front and back are in different side
+               return 3;
+            tindex[r] = index[r]+2*s;
+            Sval3 = evalarray(S,tindex); //Sval3 = dimr + 2s
+            if (Sval2*Sval3 < 0.0) // less then 2 points in the other side
+               return 3;
+            interior = 0;
+         }
+         else// not yet return, 2 points in both side, look for cross derivative
+            for (j = 0; j < grid.dim; j++) 
+               if (j != r) // j is a dimension different thant r
+               {
+                  failed = 0;
+                  for (k = -1; k <= 1; k += 2)
+                  {
+                     tindex[r] = index[r];
+                     tindex[j] = index[j]+k; // tindex is diag
+                     Sval3 = evalarray(S,tindex);
+                     if (Sval1*Sval3 >= 0.0)// if diagonal has same sign
+                     {
+                        tindex[r] = index[r]+s;
+                        Sval4 = evalarray(S,tindex);
+                        if (Sval3*Sval4 < 0.0)
+                           failed += 1; //fail to apprx cross derivative
+                     }
+                     else 
+                        failed += 1;//change sign in dim=j
+                     tindex[j] = index[j];
+                  }
+                  if (failed == 2)
+                     except = 1; // can not approximate cross derivative
+               }
+      }
+      tindex[r] = index[r];
+   }
+
+   if (interior)
+      return 1;// interior point
+   else if (except)
+      return 3;//exceptional
+   else
+      return 2;// can use CIM2
+}
+
+
+
+double getinterfacegrad4(double *grad, double ***u, double ***S, int *index, int rstar,
+                         int sstar, PBData &pb, GridData grid)
+{                  
+   int r, s, rindex[grid.dim], gamma[grid.dim][2];
+   double uint;
+   
+   for (r = 0; r < grid.dim; r++)
+      rindex[r] = index[r];
+   for (r = 0; r < grid.dim; r++)
+   {
+      for (s = -1; s <= 1; s += 2)
+      {
+         rindex[r] = min(max(index[r]+s,0),grid.nx[r]);
+         if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)
+            gamma[r][(s+1)/2] = 1;
+         else
+            gamma[r][(s+1)/2] = 0;
+      }
+      rindex[r] = index[r];
+   }
+
+   if (getstatus3(S,index,grid) == 3)
+      getcim1Du(uint,grad,index,rstar,sstar,u,gamma,S,pb,grid);
+   else if (getstatus3(S,index,grid) == 2)
+      getcim2Du(uint,grad,index,rstar,sstar,u,gamma,S,pb,grid);
+
+   return uint;
+}

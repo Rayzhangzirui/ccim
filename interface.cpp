@@ -2,7 +2,11 @@
 #include "numerics.h"
 #include "input.h"
 #include "global.h"
+#include "helper.h"
 #include <cmath>
+#include <iostream>
+
+using namespace std;
 
 
 double getdotprod(double *v, double *w, int thedim)
@@ -611,5 +615,73 @@ void getinterfaceinfo(double *tangent1, double *tangent2, double &tau, double &s
 }
 
 
+
+// go through all grid points, calculated radius, display maximum error
+void checkwithexact(double ***S, double radius, GridData &grid)
+{
+   int i, r, s, t, tindex[grid.dim], rindex[grid.dim];
+   double value, theerr = 0.0, alpha, x[grid.dim], tangent[grid.dim], normal[grid.dim];
+   double y[grid.dim], morerr[grid.dim];
+   vector<double> rvec; 
+   for (t = 0; t < grid.dim; t++)
+      morerr[t] = 0.0;
+
+   for (i = 0; i < grid.dim; i++)
+      tindex[i] = 0;
+   while (tindex[0] <= grid.nx[0])
+   {
+      s = 1;
+      for (r = 0; r < grid.dim; r++)
+      {
+         for (i = 0; i < grid.dim; i++)
+            rindex[i] = tindex[i];
+         rindex[r] = tindex[r]+s;
+         if (rindex[r] <= grid.nx[r] && 
+             (evalarray(S,tindex) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)
+         {
+            sub2coord(x,tindex,grid);
+//            cout << tindex[0] << " " << tindex[1] << " " << tindex[2] << endl;
+//            cout << rindex[0] << " " << rindex[1] << " " << rindex[2] << endl;
+            getinterfaceinfo(alpha,tangent,normal,S,tindex,rindex,grid);
+            x[r] += s*alpha*grid.dx[r];//x is interface location
+            value = 0.0;
+            for (i = 0; i < grid.dim; i++)
+               value += x[i]*x[i];
+            value = sqrt(value);// value = norm(x) = radius
+            if (tindex[0] == grid.nx[0]/2 && tindex[1] == grid.nx[1]/2 && 
+                tindex[2] >= grid.nx[2]/2 && r == 2)// error of radius along positive z axis if grid.nx is even
+               cout << "Especially z-axis " << value << " " << radius << " " 
+                    << fabs(value-radius) << " " << x[2] << endl;
+//            mu2d << value-radius << " ";
+            rvec.push_back(fabs(value));
+            if (fabs(value-radius) > theerr) 
+            {
+               theerr = fabs(value-radius);
+               for (t = 0; t < grid.dim; t++)
+                  y[t] = x[t];
+            }
+            for (t = 0; t < grid.dim; t++)
+               if (fabs(normal[t]-x[t]/value) > morerr[t])//suppose surface is a sphere, then normal should be same as x/norm(x)
+                  morerr[t] = fabs(normal[t]-x[t]/value);
+         }
+      }
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
+      {
+         tindex[i] = 0;
+         (tindex[i-1])++;
+      }
+   }
+
+//   mu2d << endl;
+   cout << "radius mean = " << mean(rvec) << " variance = " << variance(rvec) << " rmse =" << rmse(rvec, radius) <<endl;
+   cout << "Max error for radius = " << theerr << " at " << y[0] << " " << y[1] << " "
+        << y[2] << endl;
+   cout << "Max error for normal = " << morerr[0] << " " << morerr[1] << " " 
+        << morerr[2] << endl; 
+   // epsilon2d << grid.t << " " << theerr << " " << morerr[0] << " " << morerr[1] << " "
+   //           << morerr[2] << endl;
+}
 
 

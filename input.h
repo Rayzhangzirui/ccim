@@ -63,4 +63,7 @@ void perturbelt(double ***S, int *index, double tol, PBData &pb);
 void perturb(double ***S, double tol, PBData &pb, GridData &grid);
 
 
+double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,GridData &grid);
+
+
 #endif

@@ -1,7 +1,7 @@
 #include "march.h"
 #include "matrix.h"
-#include "tryvn.h"
 #include "global.h"
+#include "getvn.h"
 
 #include <iostream>
 #include <cmath>

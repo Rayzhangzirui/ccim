@@ -15,23 +15,30 @@ $(info    CC is $(CC))
 ifeq ($(debug), 1)
 	OPT = -g 
 else
-	OPT = -Ofast -lomp
+	OPT = -Ofast
 endif
 
 SOLVER = amg.o gmres.o solver.o hypresolver.o
 
 METHOD = cim12.o iim.o icim.o cim345cond.o ccim.o
 
-COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o pb.o
+COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o pb.o helper.o
 
-cim: cim.o $(COMMON) tryvn.o helper.o  advance.o storage.o march.o  $(SOLVER) $(METHOD)
+MOTION = storage.o march.o getvn.o
+
+cim: cim.o $(COMMON) tryvn.o  advance.o $(SOLVER) $(METHOD) $(MOTION)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
+epde: epde.o $(COMMON) storage.o hypresolver.o ccim.o solver.o icim.o
+	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-epde: epde.o $(COMMON) storage.o hypresolver.o ccim.o helper.o solver.o icim.o
+motion: motion.o $(COMMON) hypresolver.o solver.o $(MOTION) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 epde.o: epde.cpp
+	$(CC) $(OPT) -c $<
+
+motion.o: motion.cpp
 	$(CC) $(OPT) -c $<
 
 

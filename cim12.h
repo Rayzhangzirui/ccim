@@ -24,4 +24,6 @@ void getcim12Du(double &uint, double *Du, int *index, int rstar, int sstar,
                 double ***u, double ***S, PBData &pb, GridData &grid);
 void checkcim12Du(double ***u, double ***S, PBData &pb, GridData &grid);
 
+
+double getinterfacegrad4(double *grad, double ***u, double ***S, int *index, int rstar,int sstar, PBData &pb, GridData grid);
 #endif

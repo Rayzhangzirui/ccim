@@ -1,4 +1,5 @@
 #include "advance.h"
+#include "getvn.h"
 #include "tryvn.h"
 #include "global.h"
 

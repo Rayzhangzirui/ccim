@@ -1462,3 +1462,75 @@ void perturb(double ***S, double tol, PBData &pb, GridData &grid)
       }
    }
 }
+
+
+
+
+
+
+double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,
+                      GridData &grid)
+{
+   if (globtestnum == 0)
+   {
+      double x, prevx = x+2.0*(1.0+tol), value, dvalue;
+      int step;
+
+      x = x0;
+      for (step = 1; step <= Nstep && fabs(x-prevx) > tol; step++)
+      {
+         value = (log(x)+x*x*(1.0+x*x/4.0))/4.0-
+                 (log(radius0)+radius0*radius0*(1.0+radius0*radius0/4.0))/4.0-thetime;//Newtons methodto find root
+         dvalue = (1.0/x+x*(2.0+x*x))/4.0;
+         prevx = x;
+         x -= value/dvalue;
+      }
+   
+      return x;
+   }
+   else if (globtestnum == 1)
+   {
+      double epsp = EPSILONP, epsm = EPSILONM;
+      return grid.radius0*exp(2.0*(1.0-epsp/epsm)*thetime);
+   }
+   else if (globtestnum == 2)
+   {
+      if (thetime == 0.0)
+         return radius0;
+      else
+      {//Heun's Method
+         double epsp = EPSILONP, epsm = EPSILONM, temp, vn;
+         vn = 2.0*x0*exp(x0*x0)*(1.0-epsp/epsm); //f(r_i)
+         temp = x0+grid.dt*vn; // r_i + h f(r_i)
+         vn = 2.0*temp*exp(temp*temp)*(1.0-epsp/epsm); // f(r_i + h f(r_i))
+         temp = 0.5*(x0+temp)+0.5*grid.dt*vn; //r_i + 0.5 h f(r_i)) + 0.5 h f(r_i + h f(r_i))
+         return temp;
+      }
+   }
+   else if (globtestnum == 3 || globtestnum == 4)
+   {
+      if (thetime == 0.0)
+         return radius0;
+      else
+      {
+        //Third-order Strong Stability Preserving Runge-Kutta (SSPRK3), wiki/List_of_Runge-Kutta_methods
+         double epsp = EPSILONP, epsm = EPSILONM, tmp, der, rhs, vn; 
+         double A = 1.0, B = fabs(1.0-epsp/epsm), C = epsp/epsm;
+         vn = x0*(A-C)/sqrt(A*x0*x0+B); //f(r_i) 
+         tmp = x0+grid.dt*vn; //x_i + h f(r_i)  
+         der = tmp*(A-C)/sqrt(A*tmp*tmp+B); // f(x_i + h f(r_i))
+         rhs = vn+der; // f(r_i) + f(x_i + dt f(r_i))
+         tmp = x0+0.25*grid.dt*rhs;// r_i +  0.25 h (f(r_i) + f(x_i + dt f(r_i)))
+         der = tmp*(A-C)/sqrt(A*tmp*tmp+B); // f(r_i +  0.25 h (f(r_i) + f(x_i + dt f(r_i))))
+         rhs = rhs+4.0*der; //  f(r_i) + f(x_i + dt f(r_i)) + 4 f(r_i +  0.25 h (f(r_i) + f(x_i + dt f(r_i))))
+         tmp = x0+grid.dt*rhs/6.0; // r_i + 1/6 h (f(r_i) + f(x_i + dt f(r_i)) + 4 f(r_i +  0.25 h (f(r_i) + f(x_i + dt f(r_i))))) 
+         return tmp;
+      }
+   }
+
+   cout << "NOT SUPPOSED TO BE HERE" << endl;
+   return 0.0;
+}
+
+
+

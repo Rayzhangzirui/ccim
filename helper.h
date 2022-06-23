@@ -3,13 +3,15 @@
 
 #include "grid.h"
 #include "matrix.h"
+#include "global.h"
+
 #include <omp.h>
 #include <array>
 #include <vector>
 #include <random>
 #include <iostream>
 #include <fstream>
-#include "global.h"
+
 
 using std::array;
 using std::vector;

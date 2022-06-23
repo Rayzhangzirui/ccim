@@ -72,23 +72,6 @@ char perturbstatuselt(double ***S, int *index, double tol, PBData &pb, GridData 
 
 
 
-double getpsivn(double ***u, double ***S, int *index, int rstar, PBData &pb, 
-                GridData grid);
-double getpsivn2(double ***u, double ***S, int *index, int rstar, PBData &pb, 
-                 GridData grid);
-double getLJvn(double ***u, double ***S, int *index, int rstar, PBData &pb, 
-               GridData grid);
-double getvn(double ***psi, double ***LJ, double ***S, int *index, int rstar, 
-             PBData &pb, GridData grid);
-double getheatvn(double ***u, double ***S, int *index, int rstar, int sstar, 
-                 PBData &pb, GridData &grid);
-double getheatvn(double ***u, double ***S, int *index, int rstar, int sstar, 
-                 StorageStruct *Dusmall, int smallsize, PBData &pb, GridData &grid);
-double getrishuvn(double ***u, double ***S, int *index, int rstar, int sstar, 
-                  StorageStruct *Dusmall, int smallsize, PBData &pb, GridData &grid);
-double getexactvn(int *index, int r, int s, double ***S, GridData &grid);
-double formvn(double *Dup, double *Dum, double *normal, GridData &grid);
-double LJwater(int *index, PBData &pb, GridData &grid);
 
 
 void outputstatus(ofstream& outfile, double ***phi, GridData &grid);
@@ -185,12 +168,12 @@ void getDu(double **uxcoef, double ***uxxcoef, int *index, int rstar, int sstar,
            double alpha, int thesign, GridData grid);
 void getDu(double *Du, int *index, int rstar, int sstar, double alpha, int thesign, 
            int *sk, double ****D1, double*** D2[][3], GridData grid);
-int getstatus3(double ***S, int *index, GridData grid);
+
 int getstatus4(double ***S, int *index, GridData grid);
-double getinterfacegrad3(double *grad, double ***u, double ***S, int *index, int rstar, 
-                         int sstar, PBData &pb, GridData grid);
-double getinterfacegrad4(double *grad, double ***u, double ***S, int *index, int rstar,
-                         int sstar, PBData &pb, GridData grid);
+// double getinterfacegrad3(double *grad, double ***u, double ***S, int *index, int rstar, 
+//                          int sstar, PBData &pb, GridData grid);
+
+
 void linearsystembasic(SparseElt2**** &A, double ***b, double ***S, GridData &grid);
 void linearsystem3(SparseElt2**** &A, double ***b, double ***S, PBData &pb, 
                    GridData &grid);
@@ -220,13 +203,6 @@ void getRHSexactvn(double ***rhs, double ***u, PBData &pb, MarchStruct &march,
 void getRHScurv(double ***rhs, double ***u, TempStruct &tmp, GridData &grid);
 
 
-double getpsivac(double *x, PBData &pb);
-void getDpsivac(double *Dpsi, double *x, PBData &pb);
-double getDpsivacn(int *index, double ***S, PBData &pb, GridData &grid);
-void getD2psivac(double **D2psi, double *x, PBData &pb);
-double Bval(double s, PBData &pb);
-double Bprime(double s, PBData &pb);
-double B2prime(double s, PBData &pb);
 
 
 void checkDanswer(double ***u, double ***S, PBData &pb, GridData &grid);
@@ -266,9 +242,9 @@ void getcim2Du(double &uint, double *Du, int *index, int rstar, int sstar, doubl
 void getcim12Du(double &uint, double *Du, int *index, int rstar, int sstar,
                 double ***u, double ***S, PBData &pb, GridData &grid);
 void checkcim12Du(double ***u, double ***S, PBData &pb, GridData &grid);
-double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,
-                      GridData &grid);
-void checkwithexact(double ***S, double radius, GridData &grid);
+
+
+
 
 
 double getexactresidual(double ***r, SparseElt2 ****A, double ***b, GridData &grid,
