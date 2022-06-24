@@ -21,6 +21,7 @@ else
 	OPT = -Ofast
 endif
 
+
 SOLVER = amg.o gmres.o solver.o hypresolver.o
 
 METHOD = cim12.o iim.o icim.o cim345cond.o ccim.o
@@ -38,24 +39,34 @@ epde: epde.o $(COMMON) storage.o hypresolver.o ccim.o solver.o icim.o
 motion: motion.o $(COMMON) hypresolver.o solver.o $(MOTION) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-cim.o: cim.cpp
-	$(CC) $(OPT) -c $<
+# cim.o: cim.cpp
+# 	$(CC) $(OPT) -c $<
 
-motion.o: motion.cpp
-	$(CC) $(OPT) -c $<
-epde.o: epde.cpp
-	$(CC) $(OPT) -c $<
+# motion.o: motion.cpp
+# 	$(CC) $(OPT) -c $<
+# epde.o: epde.cpp
+# 	$(CC) $(OPT) -c $<
 
-motion.o: motion.cpp
-	$(CC) $(OPT) -c $<
+# motion.o: motion.cpp
+# 	$(CC) $(OPT) -c $<
 
 hypresolver.o: hypresolver.cpp hypresolver.h
 	$(CC) $(OPT) $(CFLAGS) -c $<
 
-%.o: %.cpp %.h
-	$(CC) $(OPT) -c $< 
+# %.o: %.cpp %.h
+# 	$(CC) $(OPT) -c $< 
+
+
+srcs = $(wildcard *.cpp)
+objs = $(srcs:.cpp=.o)
+deps = $(srcs:.cpp=.d)
+
+%.o: %.cpp
+	$(CC) -MMD -MP -c $< -o $@
 
 
 .PHONY: clean
 clean:
 	rm  *.o
+
+-include $(deps)
