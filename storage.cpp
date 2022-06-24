@@ -195,19 +195,14 @@ void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
 
 void clearstorage(StorageStruct* &Dusmall, int &smallsize)
 {
-   int i;
    SparseElt *current, *current2;
-
-   for (i = 0; i < smallsize; i++)
+   for (int i = 0; i < smallsize; i++)
    {
-      for (current = Dusmall[i].head, current2 = current;
-           current != NULL;
-           current = (*current).next, delete current2,
-           current2 = current)
-         delete [] Dusmall[i].info;
+      for (current = Dusmall[i].head, current2 = current; current != NULL; 
+           current = (*current).next, delete current2, current2 = current);
+      delete [] Dusmall[i].info;
    }
    delete [] Dusmall;
-
    smallsize = 0;
 }
 

@@ -2,6 +2,8 @@
 #include "helper.h"
 #include "global.h"
 #include "hypresolver.h"
+
+int printLevel = 0;
 /*
 AMG solver, copy from ex5
 */
@@ -233,7 +235,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
       HYPRE_BoomerAMGCreate(&solver);
 
       /* Set some parameters (See Reference Manual for more parameters) */
-      HYPRE_BoomerAMGSetPrintLevel(solver, 3);  /* print solve info + parameters */
+      HYPRE_BoomerAMGSetPrintLevel(solver, printLevel);  /* print solve info + parameters */
       HYPRE_BoomerAMGSetNumSweeps(solver, 1);   /* Sweeeps on each level */
       HYPRE_BoomerAMGSetMaxLevels(solver, 20);  /* maximum number of levels */
       HYPRE_BoomerAMGSetTol(solver, tollinsolve);      /* conv. tolerance */
@@ -274,7 +276,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
       /* Set some parameters (See Reference Manual for more parameters) */
       HYPRE_ParCSRBiCGSTABSetMaxIter(solver, 10000); /* max iterations */
       HYPRE_ParCSRBiCGSTABSetTol(solver, tollinsolve); /* conv. tolerance */
-      HYPRE_ParCSRBiCGSTABSetPrintLevel(solver, 3); /* prints out the iteration info */
+      HYPRE_ParCSRBiCGSTABSetPrintLevel(solver, printLevel); /* prints out the iteration info */
       HYPRE_ParCSRBiCGSTABSetLogging(solver, 1); /* needed to get run info later */
 
       // Preconditioner

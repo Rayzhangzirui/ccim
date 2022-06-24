@@ -109,6 +109,7 @@ void advance(double ***u, PBData &pb, MarchStruct &march, TempStruct &tmp,
    removefourd(temp,tmp.fourd,tmp.fdstatus,tmp.Nfd);
 }
 
+// with a
 void advance(double ***u, double ***a, PBData &pb, MarchStruct &march, TempStruct &tmp, 
              GridData &grid)
 {

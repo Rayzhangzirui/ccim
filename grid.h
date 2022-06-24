@@ -34,6 +34,7 @@ inline void init_grid(GridData &grid, int nx, double a){
    grid.dt = grid.mindx*grid.mindx/(2.0*grid.dim);
    grid.tol = 1.0e-14;
    grid.t = 0.0;
+   grid.tfinal = globtime;
 
   grid.radius = RADIUS; // current radius for sphere
   grid.radius0 = RADIUS; // initial radius for sphere

@@ -71,8 +71,6 @@ int main(int argc, char* argv[])
 	// 		grid.tfinal = 0.1;
 	// }
 
-	grid.tfinal = globtime;
-
 	double ***a = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
 
 	// check initial error in radius
@@ -95,6 +93,7 @@ int main(int argc, char* argv[])
 		else if (globperturb > 0)
 			perturbstatus(S,grid.tol,globperturb,pb,grid);
 		cout << "Exact radius = " << grid.radius << endl;
+		
 		checkwithexact(S, grid.radius, grid); // check radius with exact
 		
 	}

@@ -13,14 +13,12 @@
 using namespace std;
 
 
-void solvepde(double*** S, double ***a, PBData &pb, GridData &grid){
+
+
+void solvepde(double*** S, double ***a,StorageStruct* &Dusmall,int& smallsize, PBData &pb, GridData &grid){
 	TempStruct tmp;//sparse matrix solver
 	init_TempStruct(tmp, grid);
 	
-	StorageStruct *Dusmall;
-	int smallsize = 0;
-
-
 	linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
 
 	HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
@@ -135,8 +133,7 @@ int main(int argc, char* argv[])
 	MarchStruct march;
 	init_march(march, S, pb, grid);
 
-	march.Dusmall = Dusmall;
-	march.smallsize = smallsize;
+	
 	march.dorig = S;
 
 
@@ -148,9 +145,14 @@ int main(int argc, char* argv[])
 		if (globperturb == 0)
 			perturb(S,grid.tol,pb,grid);
 
-		solvepde(S, a, pb, grid);
+		solvepde(S, a, Dusmall, smallsize, pb, grid);
+
+		march.Dusmall = Dusmall;
+		march.smallsize = smallsize;
 
 		fmarch(march,-1.0,grid);
+
+		clearstorage(march.Dusmall, march.smallsize);
 
 		rhsvngrad(rhs, S, march, pb, grid);
 
