@@ -14,12 +14,13 @@ void init_march(MarchStruct &march, double*** S, PBData &pb, GridData&grid){
    march.dist = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
    march.status = cmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
    march.extend = new double ***[1];
+
    march.extend[0] = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
    march.nval = 1;
-   march.dorig = S;
-   march.eorig = new double***[1];
-   march.eorig[0] = pb.psi;
-   march.tol = 1.0e-14;
+
+   march.dorig = S; // surface
+
+   march.tol = 1.0e-12;
    (march.heap).head = NULL;
    (march.heap).tail = NULL;
    (march.heap).loc = heapmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
