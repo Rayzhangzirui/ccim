@@ -1265,11 +1265,7 @@ void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &bu
    
    free_matrix(G,2*grid.dim-1,2*grid.dim-1);
 
-   if(a){
-    cim345(A, b, Dusmall, buildsize, index, a, gamma, S, pb, grid);
-   }else{
-    cim345(A, b, Dusmall, buildsize, index, gamma, S, pb, grid);
-   }
+   cim345(A, b, Dusmall, buildsize, index, a, gamma, S, pb, grid);
    
    globdist = tempglobdist;
   

@@ -1534,3 +1534,213 @@ double getexactradius(double thetime, double radius0, double x0, double tol, int
 
 
 
+// approximate tion of u value
+double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
+                int *index, int rstar, int sstar, double alpha, int mid, 
+                double ***S,
+                GridData grid)
+{
+   int i, s, N = 2*mid, tindex[grid.dim], sindex[grid.dim];
+   double value = u0, thesign;
+
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 0;
+   while (sindex[0] <= N)
+   {
+      for (s = 0; s < grid.dim; s++)
+         tindex[s] = index[s]-mid+sindex[s];
+      if (evalarray(S,tindex) < 0.0)
+         thesign = -1.0;
+      else
+         thesign = 1.0;
+      value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,thesign,grid);
+
+      (sindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
+      {
+         sindex[i] = 0;
+         (sindex[i-1])++;
+      }
+   }
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = mid;
+
+   if (evalarray(S,index) < 0.0)
+      thesign = -1.0;
+   else
+      thesign = 1.0;
+   for (s = 0; s < grid.dim; s++)
+   {
+      value += uxcoef[s]*getDu(index,s,rstar,sstar,alpha,thesign,grid);
+      value += uxxcoef[s]*getD2u(index,s,s,rstar,sstar,alpha,thesign,grid);
+   }
+
+   return value;
+}
+
+
+double evalcoef(double u0, double ***ucoef, double *uxxcoef, int *index, double ***S, 
+                GridData grid)
+{
+// only for mid = 1
+   int i, s, tindex[grid.dim], sindex[grid.dim];
+   double value = u0;
+
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 0;
+   while (sindex[0] < 3)
+   {
+      for (s = 0; s < grid.dim; s++)
+         tindex[s] = index[s]-1+sindex[s];
+      if (evalarray(S,tindex) < 0.0)
+         value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,-1,grid);
+      else
+         value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,1,grid);
+
+      (sindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && sindex[i] >= 3; i--)
+      {
+         sindex[i] = 0;
+         (sindex[i-1])++;
+      }
+   }
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 1;
+
+   if (evalarray(S,index) < 0.0)
+      for (s = 0; s < grid.dim; s++)
+         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,-1,grid);
+   else
+      for (s = 0; s < grid.dim; s++)
+         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,1,grid);
+
+   return value;
+}
+
+double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
+                double **jumpuxxcoef,
+               int *index, int rstar, int sstar, double alpha, 
+                double ***S, GridData grid)
+{
+   int i, s, tindex[grid.dim], sindex[grid.dim];
+   double value = u0;
+
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 0;
+   while (sindex[0] < 5)
+   {
+      for (s = 0; s < grid.dim; s++)
+         tindex[s] = index[s]-2+sindex[s];
+      if (evalarray(S,tindex) < 0.0)
+         value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,-1,grid);
+      else
+         value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,1,grid);
+
+      (sindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && sindex[i] >= 5; i--)
+      {
+         sindex[i] = 0;
+         (sindex[i-1])++;
+      }
+   }
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 2;
+
+   if (evalarray(S,index) < 0.0)
+      for (s = 0; s < grid.dim; s++)
+         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,-1,grid);
+   else
+      for (s = 0; s < grid.dim; s++)
+         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,1,grid);
+
+   if (evalarray(S,index) < 0.0)
+      for (s = 0; s < grid.dim; s++)
+         value += uxcoef[s]*getDu(index,s,0,0,0.0,-1,grid);
+   else
+      for (s = 0; s < grid.dim; s++)
+         value += uxcoef[s]*getDu(index,s,0,0,0.0,1,grid);
+
+   for (i = 0; i < grid.dim; i++)
+      for (s = i; s < grid.dim; s++)
+         value += jumpuxxcoef[i][s]*(getD2u(index,i,s,rstar,sstar,alpha,1,grid)-
+                                     getD2u(index,i,s,rstar,sstar,alpha,-1,grid));
+
+   return value;
+}
+
+
+
+
+double evalcoef(double u0, double ***ucoef, double *uxcoef,
+                double *uxxcoef, 
+                int *index, int rstar, int sstar, double alpha, int mid, 
+                double thesign, GridData grid)
+{
+   int i, s, N = 2*mid, tindex[grid.dim], sindex[grid.dim];
+   double value = u0;
+
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 0;
+   while (sindex[0] <= N)
+   {
+      for (s = 0; s < grid.dim; s++)
+         tindex[s] = index[s]-mid+sindex[s];
+      value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,thesign,grid);
+
+      (sindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
+      {
+         sindex[i] = 0;
+         (sindex[i-1])++;
+      }
+   }
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = mid;
+
+   for (s = 0; s < grid.dim; s++)
+   {
+      value += uxcoef[s]*getDu(index,s,rstar,sstar,alpha,thesign,grid);
+      value += uxxcoef[s]*getD2u(index,s,s,rstar,sstar,alpha,thesign,grid);
+   }
+
+   return value;
+}
+
+
+
+//uxx include cross derivative
+double evalcoef(double u0, double ***ucoef, double *uxcoef, 
+                double **uxxcoef, 
+                int *index, int rstar, int sstar, double alpha, int mid, 
+                double thesign, GridData grid)
+{
+   int i, s, t, N = 2*mid, tindex[grid.dim], sindex[grid.dim];
+   double value = u0;
+
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = 0;
+   while (sindex[0] <= N)
+   {
+      for (s = 0; s < grid.dim; s++)
+         tindex[s] = index[s]-mid+sindex[s];
+      value += evalarray(ucoef,sindex)*getu(tindex,0,0,0.0,thesign,grid);
+
+      (sindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
+      {
+         sindex[i] = 0;
+         (sindex[i-1])++;
+      }
+   }
+   for (s = 0; s < grid.dim; s++)
+      sindex[s] = mid;
+
+   for (s = 0; s < grid.dim; s++)
+   {
+      value += uxcoef[s]*getDu(index,s,rstar,sstar,alpha,thesign,grid);
+      for (t = 0; t < grid.dim; t++)
+         value += uxxcoef[s][t]*getD2u(index,s,t,rstar,sstar,alpha,thesign,grid);
+   }
+
+   return value;
+}

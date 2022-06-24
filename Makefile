@@ -1,8 +1,10 @@
 HOSTNAME = $(shell echo $$HOSTNAME)
 
 CC=g++ -std=c++11 
+# CC=mpic++ -std=c++11 
 
 HYPRE_DIR = /Users/zzirui/hypre-2.11.2/src/hypre
+# HYPRE_DIR = /Users/Ray/project/hypre/src/hypre
 HYPRE_LIBS     = -L$(HYPRE_DIR)/lib -lHYPRE -lm
 
 CINCLUDES = -I$(HYPRE_DIR)/include
