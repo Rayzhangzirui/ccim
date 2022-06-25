@@ -737,9 +737,21 @@ char getcim5D2(double ***D2ucoef, double *D2uxcoef, double *D2uxxcoef, int m, in
 }
 
 
+/*
 
-// get [Du] in rstar dim, cim12.pdf p27
-// Du-[r] = NxNxN D1ucoeff[r] u + 1x3 D1uxcoef[r] ux + 1x3 D1uxxcoef[r] uxx + 3x3 D1jumpuxxcoef [uxx]
+Input: 
+Du- in terms of (const, u-val, Du, principal D2u, jumpD2u (can have mixed))
+Du-_r = D1ucoef[r][:sindex] u_:sindex +  D1uxcoef[r][:s] Du_:s + D1uxxcoef[r][:s] D2u_:ss + D1jumpuxxcoef[r][:m][:n] jumpD2u_:m:n
+
+Output:
+get jumpDu_rstar at interface in dim rstar direction sstar
+jumpDu_rstar = u0 + ucoef[:sindex] u_:sindex +  uxcoef[:s] Du_:s + uxxoef[:s] D2u_:ss + jumpuxxcoef[:m][:n] jumpD2u_:m:n
+
+
+Method:
+jumpDu depends on Du- and interface condition, cim12.pdf p27
+
+*/
 void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoef, 
                      double **jumpuxxcoef, int *index, int rstar, int sk, double alpha, 
                      int thesign, double *normal, double *tangent, int mid, 
@@ -1215,20 +1227,22 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       free_matrix(bcoef[r],N,N,N);
 }
 
-// with a [DDu_{rstar}] = u0 + ucoef NxNxN u-value + uxcoef Du_{1,2,3} + uxxcoef 1x3 DDu_{1,2,3}
-// recast jumpuxxcoeff to ucoef, uxcoef and uxxcoef
+
+
 
 /*
-get Du- between index[][][] and index[rstar+sstar][][] 
-in dim-r, Du-[r] = u0[r] +  sum ucoef[r][index] u[index] + sum uxcoef[r][0:2] Du + sum uxxoef[r][0:2] DDu
+solve the linear system of (mixed) jumpD2u, rhs only involve const, u-val, Du, principal D2u
+only jumpD2u_rstar,rstar is needed as output
+recast jumpuxxcoeff to ucoef, uxcoef and uxxcoef
 
-[DDu_{rstar}]
+jumpD1u_rstar might depends on (mixed) jumpD2u, back sub to eliminate it
+
 output:
-u0[r] = const term
-ucoef[i][j][k] = coefs of u[i][j][k], i,j,k in [N]
-uxcoeff[i] = coefs of Du[i], i in [dim]
-uxxoef[i] = coefs of D2u[i][i], i in [dim]
+(1) jumpD2u_rstar,rstar = u0 + ucoef[:sindex] u_sindex + uxcoef[:s] Du_:s + uxxcoef[:s] D2u_:ss
 
+(3) back substitution to eliminate  D1jumpuxxcoef, D2jumpuxxcoef, jumpD1jumpuxxcoef in the input
+
+after this call, every thing depends on const, u, D1u, principle D2u,                      
 
 called with
 getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
@@ -1238,24 +1252,17 @@ getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
                              D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
                              jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);
 
-input: all in terms of const, u, D1u, D2u[i][i], jumpD2u[i][i], no mixed derivative
-(1) approximation of Du-[r] at interface
-D1ucoef[r][(sk+1)/2]
-D1uxcoef[r][(sk+1)/2]
-D1uxxcoef[r][(sk+1)/2]
-D1jumpuxxcoef
-(2) approximation of D2u- at interface
-D2u
-D2ucoef
-D2uxcoef
-D2uxxcoef
-D2jumpuxxcoef
-(2) approximation of jumpD1u[rstar] at interface 
-jumpD1u
-jumpD1ucoef
-jumpD1uxcoef
-jumpD1uxxcoef
-jumpD1jumpuxxcoef
+
+Input: all in terms of const, u, D1u, principle D2u, (mixed) jumpD2u
+
+(1) approximation of Du- at interface in dim rstar direction sstar
+Du-_r = D1u[r] + D1ucoef[r][:sindex] u_sindex +  D1uxcoef[r][:s] D1u_:s +  D1uxxcoef[r][:s] D2u_:ss +  D1jumpuxxcoef[r][:m][:n] jumpD2u_:m:n
+
+(2) approximation of D2u- at grid point for all pairs of m,n
+D2u_mn = D2u[m][n] + D2ucoef[m][n][:sindex] u_:sindex + D2uxcoef[m][n][:s] Du_:s + D2uxxcoef[m][n][:s] D2u_:ss + D2jumpuxxcoef[m][n] jumpD2u_mn
+
+(3) approximation of jumpD1u at interface 
+jumpD1u_rstar = jumpD1u + jumpD1ucoef[:sindex] u_:sindex + jumpD1uxcoef[:s] Du_:s + jumpD1uxxcoef[:s] D2u_:ss + jumpD1jumpuxxcoef[:m][:n] jumpD2u_:m:n
 */
 
 
@@ -1680,17 +1687,37 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
 }
 
 
+
+
+/*
+after getting the coupling matrx
+if  gamma[r][s] == 1, there is interface in dim r, s side
+
+to reconstruct u- 
+u- = u_index + (alpha[r][s] h) u_r + 1/2 (alpha[r][s] h) u_rr + O(h^3)
+Du_r = ux[r] + uxcoef[:sindex] u_:sindex
+D2u_rr = D2u[r][r] + D2ucoef[r][r][:sindex] u_:sindex
+
+to reconstruct Du_t- at dim r direction s
+after getcim345jumpuxx, we have
+Du-_t = D1u[r][s][t] + D1ucoef[r][s][t][:sindex] u_:sindex + D1uxcoef[r][s][t][:s] Du_:s + D1uxxcoef[r][s][t][:s] D2u_:ss
+backsub Du_:s and D2u_:ss by u-val
+
+*/
 void addtostorage( StorageStruct* &Dusmall, int &buildsize, 
    int mid, int *index,int gamma[][2], double**alpha, 
    double* ux, double**** uxcoef, 
-   double*** D1u,double****** D1ucoef, double**** D1uxcoef, double**** D1uxxcoef,
+   double*** D1u,double*** *** D1ucoef, double**** D1uxcoef, double**** D1uxxcoef,
    double** D2u, double***** D2ucoef, GridData &grid)
 {
    int sindex[grid.dim];
    int rindex[grid.dim];
    int N = 2*mid;
    int Narray[grid.dim];
-   memset(Narray,N,sizeof(Narray));
+
+   for (int r = 0; r < grid.dim; r++)
+      Narray[r] = N;
+
    double tol = 1.0e-14;
    for (int r = 0; r < grid.dim; r++)
       for (int sk = -1; sk <= 1; sk += 2)
@@ -1756,9 +1783,10 @@ void addtostorage( StorageStruct* &Dusmall, int &buildsize,
                Dusmall[buildsize].info[0] = sub2ind(index,grid.nx,grid.dim);
                Dusmall[buildsize].info[1] = r;
                Dusmall[buildsize].info[2] = sk;
-               Dusmall[buildsize].info[3] = t;
+               Dusmall[buildsize].info[3] = t; // which component of gradient
                Dusmall[buildsize].mid = mid;
 
+               // constant term
                value = D1u[r][(sk+1)/2][t];
                for (int m = 0; m < grid.dim; m++)
                   value += D1uxcoef[r][(sk+1)/2][t][m]*ux[m]+
@@ -1766,6 +1794,7 @@ void addtostorage( StorageStruct* &Dusmall, int &buildsize,
                if (fabs(value) > tol)
                   sparseorder(-1,Dusmall[buildsize].head,value);
 
+               // u-val term
                for (int s = 0; s < grid.dim; s++)
                   sindex[s] = 0;
                while (sindex[0] <= N)
@@ -2075,7 +2104,8 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
             sindex[r] = mid;
          }
 
-   // store ux as function of u-value in Dusmall
+   // store D2uxx as function of u-value in Dusmall
+   // ux const term, uxcoef = coef of u
    double ux[grid.dim], ****uxcoef;
    uxcoef = new double ***[grid.dim];
    for (r = 0; r < grid.dim; r++)
@@ -2119,11 +2149,11 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
       if (value != 0.0)
          sparse2(index,tindex,A,value,grid);
 
-      // D2u[n][n] in terms of u-val
+      // D2u_nn = ... + D2ucoef[n][n][sindex] u_sindex 
       for (n = 0; n < grid.dim; n++)
          setvalarray(D2ucoef[n][n],sindex,temp[n]);
 
-      // Du[n] in terms of u-val
+      // Du_n =  ... + Du[n][sindex] u_sindex
       for (n = 0; n < grid.dim; n++)
          setvalarray(uxcoef[n],sindex,temp[n+grid.dim]);
 
@@ -2143,8 +2173,7 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
       sparse2(index,index,A,value,grid);
 
 // storing uint info
-   addtostorage( Dusmall, buildsize, 
-    mid,  index, gamma, alpha, 
+   addtostorage( Dusmall, buildsize, mid, index, gamma, alpha, 
     ux,  uxcoef, 
     D1u, D1ucoef,  D1uxcoef,  D1uxxcoef,
     D2u,  D2ucoef, grid);
@@ -2202,6 +2231,11 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
 }
 
 /*
+approximate (mixed) D2u at grid point in terms of const, u-val, Du, principle D2u, (mixed) jumpD2u
+D2u_mn = u0 + u[sindex] u_sindex + uxcoef[:s] Du_s + uxxcoef[:s] D2u_ss + jumpuxxcoef jumpD2u_mn
+
+acutally u0 always 0
+
 used when with globdist = 1, otherwise use [getcim345D2u]
 
 in the first pass, perm=0, rstart = sstar = 0, 
@@ -2756,27 +2790,30 @@ void getcim345Du(double &uint, double *Du, int *index, int rstar, int sstar,
 
 
 /*
-get Du- between index[][][] and index[rstar+sstar][][] 
-in dim-r, Du-[r] = u0[r] +  sum ucoef[r][index] u[index] + sum uxcoef[r][0:2] Du + sum uxxoef[r][0:2] DDu
 
-output:
-u0[r] = Du-[r] const term
-ucoef[r][i][j][k] = Du-[r] as u[i][j][k], i,j,k in [N]
-uxcoeff[r][i] = Du-[r] as Du[i], i in [dim]
-uxxoef[r][i] = Du-[r] as D2u[i][i], i in [dim]
-jumpuxx[r][m][n] = Du-[r] as jump of D2u[m][n], m,n in [N]
+Notation: :s means summation over s, Du_s means partial derivative
+
+Input:
+called after getcim345D2u, in which we obtained
+D2u_mn = D2u[m][n] + D2ucoef[m][n][sindex] u_sindex + D2uxcoef[m][n][:s] Du_s + D2uxxcoef[m][n][:s] D2u_ss + D2jumpuxxcoef[m][n] jumpD2u_mn
+
+Output:
+get Du-, i.e. Du at interface dim rstar direction star in terms of (const, u-val, Du, principal D2u, jumpD2u (can have mixed))
+component r
+Du-_r = u0[r] +  ucoef[r][:index] u_:index +  uxcoef[r][:s] Du_:s + uxxoef[r][:s] D2u_:ss + jumpuxxcoef[r][:m][:n] jumpD2u_:m:n
+
+Method:
+start with taylor, t-component of Du-, interface location in dim rstar direction star
+Du-_t = Du_t + alpha h D2u_rstar,t
+then substitute D2u_rstar,t
+
+actually u0 always 0, because D2u always 0 (no constant term involved when approximating D2u)
 
 called with
 getcim345Du(D1u[r][(sk+1)/2],D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
             D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,index,r,sk,
             alpha[r][(sk+1)/2],thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,
             D2jumpuxxcoef,mid,grid);
-input:
-D2u[m][n]: const term of D2u[m][n]
-D2ucoef[m][n][i][j][k]: D2u[m][n] as nbr u-val 
-D2uxcoef[m][n][i]: D2u[m][n] as Du[i]
-D2uxxcoef[m][n][i]: D2u[m][n] as D2u[i][i]
-D2jumpuxxcoef[m][n] = D2u[m][n] as jump of D2u[m][n]
 */
 
 void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef,
