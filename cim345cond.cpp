@@ -580,14 +580,9 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
           jumpD2uxxcoef[grid.dim];
    jumpD2ucoef = matrix(N,N,N);
 
-   double ux[grid.dim], ****uxcoef;
-   uxcoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-      uxcoef[r] = matrix(N,N,N);
-
    char yesD2[grid.dim][grid.dim];
    
-   if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+   if (memcmp(index, eindex, grid.dim))
    {
       cout << "S" << endl;
       for (t = -1; t <= 1; t++) 
@@ -668,7 +663,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
             D1uxcoef[r][(sk+1)/2] = matrix(grid.dim-1,grid.dim-1);
             D1uxxcoef[r][(sk+1)/2] = matrix(grid.dim-1,grid.dim-1);
 
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            if (memcmp(index, eindex, grid.dim))
             {
                cout<<endl<<"dim = "<<r <<" sk = "<<sk << endl;
             }
@@ -684,7 +679,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                      getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
                                       D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
                                       m,n,index,r,sk,mid,S,grid);
-                  if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+                  if (memcmp(index, eindex, grid.dim))
                   {
                      cout <<"computed D2u in ("<< m<<","<<n<<") plane" << endl;
                      cout << " apprx = "
@@ -711,7 +706,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                         alpha[r][(sk+1)/2],thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,
                         D2jumpuxxcoef,mid,grid);
             double rhs = 0.0;
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            if (memcmp(index, eindex, grid.dim))
             {
                cout << "computed Du" << endl;
                for (m = 0; m < grid.dim; m++)
@@ -743,7 +738,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                             normal,tangent,mid,D1ucoef[r][(sk+1)/2],
                             D1uxcoef[r][(sk+1)/2],D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,
                             S,pb,grid);
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            if (memcmp(index, eindex, grid.dim))
             {
                double x[grid.dim];
                sub2coord(x,index,grid);
@@ -795,7 +790,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                              jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);  
             }
             
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            if (memcmp(index, eindex, grid.dim))
             {
                cout << "computed jump in D2u = "
                     << evalcoef(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,0,0,
@@ -957,7 +952,7 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                tempsign = 1.0;
             exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
                                            getu(tempindex,0,0,0.0,tempsign,grid);
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            if (memcmp(index, eindex, grid.dim))
             {
                double somezeros[grid.dim];
                for (m = 0; m < grid.dim; m++)
@@ -985,7 +980,8 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
                                                      0.5*beta*beta*jumpD2uxcoef[m])+
                                                     sk*D1uxcoef[r][(sk+1)/2][r][m]/
                                                     grid.dx[r];// coeff of u_x from [u_xx] [u_x]
-            if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+            
+            if (memcmp(index, eindex, grid.dim))
             {
                exactres = exactd[grid.dim*(sk+1)/2+r];
                for (m = 0; m < 2*grid.dim; m++)
@@ -1063,9 +1059,8 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
             sindex[r] = mid;
          }
 
-   double uxval[grid.dim], uxxval[grid.dim]; // for chekcing Dusmall
-
-   if (index[0] == eindex[0] && index[1] == eindex[1] && index[2] == eindex[2])
+   // print G matrix, exact rhs
+   if (memcmp(index, eindex, grid.dim))
    {
       cout<<endl<<"G matrix"<<endl;
       for (m = 0; m < 2*grid.dim; m++)
@@ -1141,9 +1136,6 @@ void gmatrix(double **G, int *index, int gamma[][2], double ***S, double***a, PB
 
    free_matrix(jumpD2ucoef,N,N,N);
 
-   for (r = 0; r < grid.dim; r++)
-      free_matrix(uxcoef[r],N,N,N);
-   delete [] uxcoef;
 }
 
 // estimate condition number

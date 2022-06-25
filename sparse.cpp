@@ -414,6 +414,7 @@ void sparseorder(int row, int col, SparseElt** &A, double value)
 
 // used in AMGsmall, A is the left most node for a row corresponding to A[tindex]
 // roc is column index,
+//
 // used in cim small data structure
 // A is head of smaller storagestruct
 void sparseorder(int roc, SparseElt* &A, double value)

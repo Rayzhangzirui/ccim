@@ -5,6 +5,10 @@
 #include "input.h"
 #include "sparse.h"
 
+
+// Dusmall array of StorageStruct
+//
+
 struct StorageStruct
 {
    int *info;

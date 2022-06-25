@@ -1337,6 +1337,7 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       Dtaudot[1] += Dtau[n]*tangent1[n]; //Dtaudot[1] = Dtau tangent1
       Dtaudot[2] += Dtau[n]*tangent2[n]; //Dtaudot[2] = Dtau tangent2
    }
+
 // form matrix
    for (n = 0; n < grid.dim; n++)
       two2one[n][n] = n;
@@ -1678,16 +1679,147 @@ void getcim345jumpuxx(double &u0, double ***ucoef, double *uxcoef, double *uxxco
       free_matrix(bcoef[r],N,N,N);
 }
 
+
+void addtostorage( StorageStruct* &Dusmall, int &buildsize, 
+   int mid, int *index,int gamma[][2], double**alpha, 
+   double* ux, double**** uxcoef, 
+   double*** D1u,double****** D1ucoef, double**** D1uxcoef, double**** D1uxxcoef,
+   double** D2u, double***** D2ucoef, GridData &grid)
+{
+   int sindex[grid.dim];
+   int rindex[grid.dim];
+   int N = 2*mid;
+   int Narray[grid.dim];
+   memset(Narray,N,sizeof(Narray));
+   double tol = 1.0e-14;
+   for (int r = 0; r < grid.dim; r++)
+      for (int sk = -1; sk <= 1; sk += 2)
+         if (gamma[r][(sk+1)/2] == 1)
+         {
+            newstorage(Dusmall[buildsize]);
+            Dusmall[buildsize].info[0] = sub2ind(index,grid.nx,grid.dim);
+            Dusmall[buildsize].info[1] = r;
+            Dusmall[buildsize].info[2] = sk;
+            Dusmall[buildsize].info[3] = -1;
+            Dusmall[buildsize].mid = mid;
+            double value = sk*alpha[r][(sk+1)/2]*grid.dx[r]*ux[r];
+            if (globintorder == 3)
+               value += 0.5*(alpha[r][(sk+1)/2]*grid.dx[r])*
+                            (alpha[r][(sk+1)/2]*grid.dx[r])*D2u[r][r];
+            sparseorder(-1,Dusmall[buildsize].head,value);
+            
+            for (int s = 0; s < grid.dim; s++)
+               sindex[s] = 0;
+            while (sindex[0] <= N)
+            {
+               int t;
+               for (t = 0; t < grid.dim && sindex[t] == mid; t++);
+               if (t >= grid.dim)
+                  value = 1.0;
+               else
+                  value = 0.0;
+               value += sk*alpha[r][(sk+1)/2]*grid.dx[r]*evalarray(uxcoef[r],sindex);
+               if (globintorder == 3)
+                  value += 0.5*(alpha[r][(sk+1)/2]*grid.dx[r])*
+                               (alpha[r][(sk+1)/2]*grid.dx[r])*
+                               evalarray(D2ucoef[r][r],sindex);
+               if (fabs(value) > tol)
+               {
+                  if (globsmall == 1)
+                     sparseorder(sub2ind(sindex,Narray,grid.dim),Dusmall[buildsize].head,
+                                 value);
+                  else if (globsmall == 2)
+                  {
+                     for (int s = 0; s < grid.dim; s++)
+                        rindex[s] = index[s]+sindex[s]-mid;
+                     sparseorder(sub2ind(rindex,grid.nx,grid.dim),
+                                 Dusmall[buildsize].head,value);
+                  }
+               }
+   
+               (sindex[grid.dim-1])++;
+               for (int i = grid.dim-1; i > 0 && sindex[i] > N; i--)
+               {
+                  sindex[i] = 0;
+                  (sindex[i-1])++;
+               }
+            }
+            for (int s = 0; s < grid.dim; s++)
+               sindex[s] = mid;
+
+            buildsize++;
+
+// storing Du info
+            for (int t = 0; t < grid.dim; t++)
+            {
+               newstorage(Dusmall[buildsize]);
+               Dusmall[buildsize].info[0] = sub2ind(index,grid.nx,grid.dim);
+               Dusmall[buildsize].info[1] = r;
+               Dusmall[buildsize].info[2] = sk;
+               Dusmall[buildsize].info[3] = t;
+               Dusmall[buildsize].mid = mid;
+
+               value = D1u[r][(sk+1)/2][t];
+               for (int m = 0; m < grid.dim; m++)
+                  value += D1uxcoef[r][(sk+1)/2][t][m]*ux[m]+
+                           D1uxxcoef[r][(sk+1)/2][t][m]*D2u[m][m];
+               if (fabs(value) > tol)
+                  sparseorder(-1,Dusmall[buildsize].head,value);
+
+               for (int s = 0; s < grid.dim; s++)
+                  sindex[s] = 0;
+               while (sindex[0] <= N)
+               {
+                  value = evalarray(D1ucoef[r][(sk+1)/2][t],sindex);
+                  for (int m = 0; m < grid.dim; m++)
+                     value += D1uxcoef[r][(sk+1)/2][t][m]*evalarray(uxcoef[m],sindex)+
+                              D1uxxcoef[r][(sk+1)/2][t][m]*
+                              evalarray(D2ucoef[m][m],sindex);
+                  if (fabs(value) > tol)
+                  {
+                     if (globsmall == 1)
+                        sparseorder(sub2ind(sindex,Narray,grid.dim),
+                                    Dusmall[buildsize].head,value);
+                     else if (globsmall == 2)
+                     {
+                        for (int s = 0; s < grid.dim; s++)
+                           rindex[s] = index[s]+sindex[s]-mid;
+                        sparseorder(sub2ind(rindex,grid.nx,grid.dim),
+                                    Dusmall[buildsize].head,value);
+                     }
+                  }
+
+                  (sindex[grid.dim-1])++;
+                  for (int i = grid.dim-1; i > 0 && sindex[i] > N; i--)
+                  {
+                     sindex[i] = 0;
+                     (sindex[i-1])++;
+                  }
+               }
+               for (int s = 0; s < grid.dim; s++)
+                  sindex[s] = mid;
+
+               buildsize++;
+            }
+         }
+}
+
+
+
+
 // with ***a, 
 void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize, 
             int *index, double ***a, int gamma[][2], double ***S, PBData &pb, 
             GridData &grid)
 {
+   double **G;
+
+
    int r, s, t, i, j, m, n, sk, mid = 2, N = 2*mid;
    int rindex[grid.dim], tindex[grid.dim], sindex[grid.dim], Narray[grid.dim];
    double d0[2*grid.dim];
    double ***dcoef[2*grid.dim];
-   double **LU, **G, value;
+   double **LU,  value;
    int PLR[2*grid.dim], PLC[2*grid.dim];
    double **alpha = matrix(grid.dim-1,1), beta, normal[grid.dim], tangent[grid.dim];
    double ethere, ehere;
@@ -1743,10 +1875,6 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
           jumpD2uxxcoef[grid.dim];
    jumpD2ucoef = matrix(N,N,N);
 
-   double ux[grid.dim], ****uxcoef;
-   uxcoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-      uxcoef[r] = matrix(N,N,N);
 
    char yesD2[grid.dim][grid.dim];
    
@@ -1947,16 +2075,27 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
             sindex[r] = mid;
          }
 
+   // store ux as function of u-value in Dusmall
+   double ux[grid.dim], ****uxcoef;
+   uxcoef = new double ***[grid.dim];
+   for (r = 0; r < grid.dim; r++)
+      uxcoef[r] = matrix(N,N,N);
+
+
 // solve for uxx and put in matrix
    gecp0(LU,PLR,PLC,G,2*grid.dim-1,2*grid.dim-1);
    forwardbacksub0(temp,d0,LU,PLR,PLC,2*grid.dim-1);
    value = 0.0;
+   // constant term in D2u[n][n] (first dim term), put to rhs
    for (n = 0; n < grid.dim; n++)
       value += ehere*temp[n];
-//   setvalarray(b,index,evalarray(b,index)+value);
    setvalarray(b,index,getf(index,0,0,0.0,thesign,pb,grid)+value);
+
+   // const term for D2u[j][j]
    for (j = 0; j < grid.dim; j++)
       D2u[j][j] = temp[j];
+
+   // const term for Du[j]
    for (j = 0; j < grid.dim; j++)
       ux[j] = temp[j+grid.dim];
 
@@ -1966,8 +2105,11 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
       sindex[s] = 0;
    while (sindex[0] <= N)
    {
+      // temp is vector for u[sindex]
       for (n = 0; n < 2*grid.dim; n++)
          temp[n] = evalarray(dcoef[n],sindex);
+
+      // A(index, tindex) = value
       forwardbacksub0(temp,temp,LU,PLR,PLC,2*grid.dim-1);
       for (s = 0; s < grid.dim; s++)
          tindex[s] = index[s]-mid+sindex[s];
@@ -1977,8 +2119,11 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
       if (value != 0.0)
          sparse2(index,tindex,A,value,grid);
 
+      // D2u[n][n] in terms of u-val
       for (n = 0; n < grid.dim; n++)
          setvalarray(D2ucoef[n][n],sindex,temp[n]);
+
+      // Du[n] in terms of u-val
       for (n = 0; n < grid.dim; n++)
          setvalarray(uxcoef[n],sindex,temp[n+grid.dim]);
 
@@ -1998,116 +2143,11 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
       sparse2(index,index,A,value,grid);
 
 // storing uint info
-   double tol = 1.0e-14;
-   for (r = 0; r < grid.dim; r++)
-      for (sk = -1; sk <= 1; sk += 2)
-         if (gamma[r][(sk+1)/2] == 1)
-         {
-            newstorage(Dusmall[buildsize]);
-            Dusmall[buildsize].info[0] = sub2ind(index,grid.nx,grid.dim);
-            Dusmall[buildsize].info[1] = r;
-            Dusmall[buildsize].info[2] = sk;
-            Dusmall[buildsize].info[3] = -1;
-            Dusmall[buildsize].mid = mid;
-            value = sk*alpha[r][(sk+1)/2]*grid.dx[r]*ux[r];
-            if (globintorder == 3)
-               value += 0.5*(alpha[r][(sk+1)/2]*grid.dx[r])*
-                            (alpha[r][(sk+1)/2]*grid.dx[r])*D2u[r][r];
-            sparseorder(-1,Dusmall[buildsize].head,value);
-            
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = 0;
-            while (sindex[0] <= N)
-            {
-               for (t = 0; t < grid.dim && sindex[t] == mid; t++);
-               if (t >= grid.dim)
-                  value = 1.0;
-               else
-                  value = 0.0;
-               value += sk*alpha[r][(sk+1)/2]*grid.dx[r]*evalarray(uxcoef[r],sindex);
-               if (globintorder == 3)
-                  value += 0.5*(alpha[r][(sk+1)/2]*grid.dx[r])*
-                               (alpha[r][(sk+1)/2]*grid.dx[r])*
-                               evalarray(D2ucoef[r][r],sindex);
-               if (fabs(value) > tol)
-               {
-                  if (globsmall == 1)
-                     sparseorder(sub2ind(sindex,Narray,grid.dim),Dusmall[buildsize].head,
-                                 value);
-                  else if (globsmall == 2)
-                  {
-                     for (s = 0; s < grid.dim; s++)
-                        rindex[s] = index[s]+sindex[s]-mid;
-                     sparseorder(sub2ind(rindex,grid.nx,grid.dim),
-                                 Dusmall[buildsize].head,value);
-                  }
-               }
-   
-               (sindex[grid.dim-1])++;
-               for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-               {
-                  sindex[i] = 0;
-                  (sindex[i-1])++;
-               }
-            }
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = mid;
-
-            buildsize++;
-
-// storing Du info
-            for (t = 0; t < grid.dim; t++)
-            {
-               newstorage(Dusmall[buildsize]);
-               Dusmall[buildsize].info[0] = sub2ind(index,grid.nx,grid.dim);
-               Dusmall[buildsize].info[1] = r;
-               Dusmall[buildsize].info[2] = sk;
-               Dusmall[buildsize].info[3] = t;
-               Dusmall[buildsize].mid = mid;
-
-               value = D1u[r][(sk+1)/2][t];
-               for (m = 0; m < grid.dim; m++)
-                  value += D1uxcoef[r][(sk+1)/2][t][m]*ux[m]+
-                           D1uxxcoef[r][(sk+1)/2][t][m]*D2u[m][m];
-               if (fabs(value) > tol)
-                  sparseorder(-1,Dusmall[buildsize].head,value);
-
-               for (s = 0; s < grid.dim; s++)
-                  sindex[s] = 0;
-               while (sindex[0] <= N)
-               {
-                  value = evalarray(D1ucoef[r][(sk+1)/2][t],sindex);
-                  for (m = 0; m < grid.dim; m++)
-                     value += D1uxcoef[r][(sk+1)/2][t][m]*evalarray(uxcoef[m],sindex)+
-                              D1uxxcoef[r][(sk+1)/2][t][m]*
-                              evalarray(D2ucoef[m][m],sindex);
-                  if (fabs(value) > tol)
-                  {
-                     if (globsmall == 1)
-                        sparseorder(sub2ind(sindex,Narray,grid.dim),
-                                    Dusmall[buildsize].head,value);
-                     else if (globsmall == 2)
-                     {
-                        for (s = 0; s < grid.dim; s++)
-                           rindex[s] = index[s]+sindex[s]-mid;
-                        sparseorder(sub2ind(rindex,grid.nx,grid.dim),
-                                    Dusmall[buildsize].head,value);
-                     }
-                  }
-
-                  (sindex[grid.dim-1])++;
-                  for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-                  {
-                     sindex[i] = 0;
-                     (sindex[i-1])++;
-                  }
-               }
-               for (s = 0; s < grid.dim; s++)
-                  sindex[s] = mid;
-
-               buildsize++;
-            }
-         }
+   addtostorage( Dusmall, buildsize, 
+    mid,  index, gamma, alpha, 
+    ux,  uxcoef, 
+    D1u, D1ucoef,  D1uxcoef,  D1uxxcoef,
+    D2u,  D2ucoef, grid);
 
    free_matrix(alpha,grid.dim-1,1);
    free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
