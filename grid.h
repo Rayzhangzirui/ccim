@@ -36,8 +36,10 @@ inline void init_grid(GridData &grid, int nx, double a){
    grid.t = 0.0;
    grid.tfinal = globtime;
 
-  grid.radius = RADIUS; // current radius for sphere
-  grid.radius0 = RADIUS; // initial radius for sphere
+   grid.radius = RADIUS; // current radius for sphere
+   grid.radius0 = RADIUS; // initial radius for sphere
+
+
 
 
   // if(globgridperturb){

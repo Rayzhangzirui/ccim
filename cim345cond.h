@@ -8,7 +8,6 @@
 #include "grid.h"
 #include <vector>
 
-void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData& grid);
 
 void checkcim345DuAll(double ***u, double ***S, PBData &pb, GridData &grid);
 

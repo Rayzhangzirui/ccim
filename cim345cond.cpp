@@ -10,65 +10,7 @@
 using namespace std;
 
 
-void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData &grid){
-   double exactvn;
-   if (globtestnum == 0){
-      exactvn = 4.0*grid.radius/((1.0+grid.radius*grid.radius)*
-                                 (1.0+grid.radius*grid.radius));
-   }
-   else if (globtestnum == 1){
-      exactvn = 2.0*(1.0-pb.epsilonp/pb.epsilonm)*0.5*
-                exp(2.0*(1.0-pb.epsilonp/pb.epsilonm)*grid.t);
-   }
-   else if (globtestnum == 2){
-      exactvn = 2.0*grid.radius*exp(grid.radius*grid.radius)*
-                (1.0-pb.epsilonp/pb.epsilonm);
-   }
-   else if (globtestnum == 3 || globtestnum == 4){
-      exactvn = (1.0-pb.epsilonp/pb.epsilonm)*grid.radius/
-                sqrt(grid.radius*grid.radius+fabs(1.0-pb.epsilonp/pb.epsilonm));
-   }
-   else{
-      cerr<<"invalid motion test"<<endl;
-      exit(1);
-   }      
 
-
-   vector<double> vnAll;
-   vector<double> vnInterface;
-   array<double,3> xAll; // coordinate of max vn extended
-   array<double,3> xInterface; // coordinate of max vn interface
-   double maxvnAll = 0; // max vn extended
-   double maxvnInterface = 0; // max vn interface
-   for(int i = 0; i <= grid.nx[0]; i++){
-      for(int j = 0; j <= grid.nx[1]; j++){
-         for(int k = 0; k <= grid.nx[2]; k++){
-            array<int,3> x = {i, j, k};
-            double absvn = abs(vn[i][j][k]);
-            vnAll.push_back(absvn);
-            if(absvn > maxvnAll){
-               maxvnAll = absvn;
-               xAll = sub2coord(array<int,3>{i,j,k},grid);
-            }
-            
-            if(nearinterface(x, S, grid)){
-               vnInterface.push_back(absvn);
-               if(absvn > maxvnInterface){
-                  maxvnInterface = absvn;
-                  xInterface = sub2coord(array<int,3>{i,j,k},grid);
-               }
-
-            }
-         }
-      }
-   }
-   printf("abs(exactvn) = %f\n", abs(exactvn));
-   printf("vn interface mean %f, variance %f, rmse %f\n", mean(vnAll), variance(vnAll), rmse(vnAll, abs(exactvn)));
-   printf("maxvn interface %f at (%f,%f,%f)\n",maxvnInterface, xInterface[0], xInterface[1], xInterface[2]);
-   printf("vn extend mean %f, variance %f, rmse %f\n", mean(vnInterface), variance(vnInterface), rmse(vnInterface, abs(exactvn)));
-   printf("maxvn extend %f at (%f,%f,%f)\n",maxvnAll, xAll[0], xAll[1], xAll[2]);
-   
-}
 
 
 // output ux at grid point and Du at interface

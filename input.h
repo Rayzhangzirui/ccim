@@ -47,12 +47,13 @@ void init_surf(double ***S, double radius, GridData &grid, int surfopt);
 void init_surf_protein_paper(double ***S, GridData& grid);
 
 
+
 void checkanswer(double ***u, double ***S, GridData &grid);
+void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData& grid);
+double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,GridData &grid);
 
 
-
-
-
+void setgriddt(PBData &pb, GridData &grid);
 
 // perturb surface, move interface away from grid point
 void perturbelt(double ***S, int *index, double tol);
@@ -63,7 +64,6 @@ void perturbelt(double ***S, int *index, double tol, PBData &pb);
 void perturb(double ***S, double tol, PBData &pb, GridData &grid);
 
 
-double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,GridData &grid);
 
 
 
@@ -89,6 +89,9 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef,
 double evalcoef(double u0, double ***ucoef, double *uxcoef, double **uxxcoef, 
                 int *index, int rstar, int sstar, double alpha, int mid, 
                 double thesign, GridData grid);
+
+
+
 
 
 #endif

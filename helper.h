@@ -69,9 +69,6 @@ double field_max_diff(double ***f1, double ***f2, GridData &grid);
 
 void write_field(std::string fname,double ***matrix, GridData &grid);
 
-//calculate exact u
-void get_exact_u(double ***u, double *** surf, GridData &grid);
-
 // print row by col matrix
 template<typename T>
 void printMat(int row, int col, const T &m){

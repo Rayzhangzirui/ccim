@@ -34,25 +34,6 @@ double field_max_diff(double ***f1, double ***f2, GridData &grid){
 }
 
 
-void get_exact_u(double ***u, double *** surf, GridData &grid){
-   array<double,3> origin = {0,0,0};
-
-   for(int i = 0; i <= grid.nx[0]; i++){
-      for(int j = 0; j <= grid.nx[1]; j++){
-         for(int k = 0; k <= grid.nx[2]; k++){
-            array<double,3> x = sub2coord(array<int,3> {i,j,k}, grid);
-            double r = dist(x, origin);
-            if(surf[i][j][k] <= 0.0){
-               u[i][j][k] = 1.0/(1.0 + pow(r,2));
-            }else{
-               u[i][j][k] = -1.0/(1.0 + pow(r,2));
-            }
-
-         }
-      }
-   }
-}
-
 void write_field(string fname, double ***matrix, GridData &grid){
    ofstream outputfile(fname);
    for (int i=0;i<=grid.nx[0];i++){

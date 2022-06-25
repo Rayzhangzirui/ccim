@@ -26,7 +26,7 @@ void solvepde(double*** S, double ***a,StorageStruct* &Dusmall,int& smallsize, P
 	clearfourd(tmp.fourd,tmp.fdstatus,tmp.Nfd,grid);
 }
 
-
+// rhs of phi_t = - vn |grad phi|
 void rhsvngrad(double*** rhs, double*** u, MarchStruct &march, PBData &pb, GridData &grid){
 	int r, i, s;
 	int tindex[3], rindex[3];
@@ -86,23 +86,30 @@ void rhsvngrad(double*** rhs, double*** u, MarchStruct &march, PBData &pb, GridD
    }
 }
 
-
+// euler step of u_t = - vn |grad u|, u is level set function
+//  u = u - dt rhs
 void eulerstep(double*** u, double ***rhs, double dt, GridData &grid){
 	int i;
 	int tindex[grid.dim];
 	for (i = 0; i < grid.dim; i++)
          tindex[i] = 0;
-      while (tindex[0] <= grid.nx[0])
+   while (tindex[0] <= grid.nx[0])
+   {
+      setvalarray(u,tindex,evalarray(u,tindex)+grid.dt*evalarray(rhs,tindex));
+
+      (tindex[grid.dim-1])++;
+      for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
       {
-         setvalarray(u,tindex,evalarray(u,tindex)+grid.dt*evalarray(rhs,tindex));
-   
-         (tindex[grid.dim-1])++;
-         for (i = grid.dim-1; i > 0 && tindex[i] > grid.nx[i]; i--)
-         {
-            tindex[i] = 0;
-            (tindex[i-1])++;
-         }
+         tindex[i] = 0;
+         (tindex[i-1])++;
       }
+   }
+
+   // update time, update exact radius, update dt
+   grid.t += grid.dt;
+   grid.radius = getexactradius(grid.t, grid.radius0, grid.radius, 1.0e-14,100,grid);
+   if (grid.t+grid.dt > grid.tfinal)
+   	grid.dt = grid.tfinal-grid.t;
 }
 
 int main(int argc, char* argv[])
@@ -115,9 +122,10 @@ int main(int argc, char* argv[])
 	GridData grid;
 	init_grid(grid, GRIDNUM, 1.0);
 
-	
 	PBData pb;
 	init_PBData(pb, grid, EPSILONP, EPSILONM);
+
+	setgriddt(pb,grid);
 
 	// create initial surface
 	double ***S = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
@@ -133,11 +141,7 @@ int main(int argc, char* argv[])
 	MarchStruct march;
 	init_march(march, S, pb, grid);
 
-	
-	march.dorig = S;
-
-
-	for (int step = 1; step <= runStep && grid.tfinal-grid.t > 1.0e-14; step++)
+	for (int step = 1; step <= runStep && grid.tfinal-grid.t > 1.0e-12; step++)
 	{
 		
 		cout << "\nSTEP = " << step << " and time = " << grid.t << endl;
@@ -160,6 +164,7 @@ int main(int argc, char* argv[])
 
 
 		cout << "Exact radius = " << grid.radius << endl;
+		checkwithexactvn(march.extend[0], S, pb, grid); // check vn with exact
 		checkwithexact(S, grid.radius, grid); // check radius with exact
 		
 	}	

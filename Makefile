@@ -7,9 +7,7 @@ HYPRE_DIR = /Users/zzirui/hypre-2.11.2/src/hypre
 # HYPRE_DIR = /Users/Ray/project/hypre/src/hypre
 HYPRE_LIBS     = -L$(HYPRE_DIR)/lib -lHYPRE -lm
 
-CINCLUDES = -I$(HYPRE_DIR)/include
-CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
-CFLAGS    = $(OPTS) $(CINCLUDES) $(CDEFS) 
+HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
 
 debug=1
 $(info    debug is $(debug))
@@ -39,30 +37,22 @@ epde: epde.o $(COMMON) storage.o hypresolver.o ccim.o solver.o icim.o
 motion: motion.o $(COMMON) hypresolver.o solver.o $(MOTION) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-# cim.o: cim.cpp
-# 	$(CC) $(OPT) -c $<
-
-# motion.o: motion.cpp
-# 	$(CC) $(OPT) -c $<
-# epde.o: epde.cpp
-# 	$(CC) $(OPT) -c $<
-
-# motion.o: motion.cpp
-# 	$(CC) $(OPT) -c $<
-
 hypresolver.o: hypresolver.cpp hypresolver.h
-	$(CC) $(OPT) $(CFLAGS) -c $<
+	$(CC) $(OPT) $(HYPRE_INC) -c $<
 
 # %.o: %.cpp %.h
 # 	$(CC) $(OPT) -c $< 
 
 
+# makefile header dependency
+# answer by Sophie https://stackoverflow.com/questions/2394609/makefile-header-dependencies?noredirect=1&lq=1
+# https://codereview.stackexchange.com/questions/2547/makefile-dependency-generation/11109#11109
 srcs = $(wildcard *.cpp)
 objs = $(srcs:.cpp=.o)
 deps = $(srcs:.cpp=.d)
 
 %.o: %.cpp
-	$(CC) -MMD -MP -c $< -o $@
+	$(CC) $(OPT) -MMD -MP -c $< -o $@
 
 
 .PHONY: clean
