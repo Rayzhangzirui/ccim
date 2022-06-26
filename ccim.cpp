@@ -2104,8 +2104,8 @@ void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &builds
             sindex[r] = mid;
          }
 
-   // store D2uxx as function of u-value in Dusmall
-   // ux const term, uxcoef = coef of u
+   // store D2u_rr as function of u-value in Dusmall
+   // ux = const term, uxcoef = coef of u
    double ux[grid.dim], ****uxcoef;
    uxcoef = new double ***[grid.dim];
    for (r = 0; r < grid.dim; r++)
@@ -2431,10 +2431,7 @@ void getcim345Du(double &uint, double *Du, int *index, int rstar, int sstar,
    jumpD2ucoef = matrix(N,N,N);
 
    char yesD2[grid.dim][grid.dim];
-   int eindex[grid.dim];
-   eindex[0] = 17;
-   eindex[1] = 5;
-   eindex[2] = 19;
+
 
    for (r = 0; r < grid.dim; r++)
       rindex[r] = index[r];

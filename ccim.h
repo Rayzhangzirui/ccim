@@ -67,4 +67,11 @@ void getcim345Du(double *u0, double ****ucoef, double **uxcoef, double **uxxcoef
 void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, 
                    int &smallsize, double ***a, double ***S, PBData &pb, 
                    GridData &grid);
+
+void addtostorage( StorageStruct* &Dusmall, int &buildsize, 
+   int mid, int *index,int gamma[][2], double**alpha, 
+   double* ux, double**** uxcoef, 
+   double*** D1u,double*** *** D1ucoef, double**** D1uxcoef, double**** D1uxxcoef,
+   double** D2u, double***** D2ucoef, GridData &grid);
+
 #endif

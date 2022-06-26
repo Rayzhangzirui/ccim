@@ -90,5 +90,8 @@ inline void setvalarray(double **A, int *index, double value)
    A[index[0]][index[1]] = value;
 }
 
+inline int equal(int a[], int b[]){
+   return a[0]==b[0] && a[1]==b[1] && a[2]==b[2];
+}
 
 #endif
