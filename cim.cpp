@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 			advance(S,pb,march,tmp,grid);
 		else
 		{
-			geta(a,pb.psi,S,pb,grid);
+			geta(a,S,pb,grid);
 			advance(S,a,pb,march,tmp,grid);
 		}
 		

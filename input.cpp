@@ -14,7 +14,6 @@ double DBC(double *x, int thedim, double thetime)
 // usually assume boundary uses outside(plus side) 
    if (globtestnum == 0)
    {
-      
       double value = 0.0;
       
       for (int j = 0; j < thedim; j++)
@@ -157,7 +156,6 @@ double getf(double *x, double thesign, PBData &pb, GridData &grid){
 double getf(int *index, int rstar, int sstar, double alpha, double thesign, PBData &pb, 
             GridData &grid)
 {
-    double value = 0.0;
     double x[grid.dim];
     sub2coord(x,index,grid);
     x[rstar] += sstar*alpha*grid.dx[rstar];
@@ -238,7 +236,6 @@ double getu(double* x, double thesign, GridData &grid)
 
 double getu(int *index, int rstar, int sstar, double alpha, double thesign, GridData &grid)
 {
-    double value = 0.0;
     double x[grid.dim];
     sub2coord(x,index,grid);
     x[rstar] += sstar*alpha*grid.dx[rstar];
@@ -323,101 +320,18 @@ double getDu(double *x, int s, double thesign, GridData &grid)
    }
 
 
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
+   cerr << "undefined Du" << endl;
+   exit(-1);
    return 0.0;
 }
 
 double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, 
              GridData &grid)
 {
-   if (globtestnum == 0)
-   {
-      int r;
-      double x[grid.dim], value, radius2;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      if (thesign < 0.0)
-      {
-         value = -2.0*x[s]/((1.0+radius2)*(1.0+radius2));
-      }
-      else
-      {
-         value = 2.0*x[s]/((1.0+radius2)*(1.0+radius2));
-      }
-   
-      return value;
-   }
-   else if (globtestnum == 1)
-   {
-      int r;
-      double x[grid.dim], value;
-      double epsp = EPSILONP, epsm = EPSILONM;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      if (thesign < 0.0)
-         value = 2.0*epsp/epsm*x[s];
-      else
-         value = 2.0*x[s];
-   
-      return value;
-   }
-   else if (globtestnum == 2)
-   {
-      int r;
-      double x[grid.dim], value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-
-      if (thesign < 0.0)
-         value = 2.0*epsp/epsm*x[s]*exp(epsp/epsm*radius2-
-                                        (epsp/epsm-1.0)*grid.radius*grid.radius);
-      else
-         value = 2.0*x[s]*exp(radius2);
-   
-      return value;
-   }
-   else if (globtestnum == 3 || globtestnum == 4)
-   {
-      int r;
-      double x[grid.dim], value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-      double A = 1.0, B = fabs(1.0-epsp/epsm), 
-             C = epsp/epsm, D = grid.radius*grid.radius*(1.0-epsp/epsm)+B;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-
-      if (thesign < 0.0)
-         value = C*x[s]/sqrt(C*radius2+D);
-      else
-         value = A*x[s]/sqrt(A*radius2+B);
-   
-      return value;
-   }
-   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10)
-   {  
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      double value;
-      return getDuTest(x,s,thesign);
-   }
-
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
-   return 0.0;
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   return getDu(x, s, thesign,grid);
 }
 
 double getD2u(double *x, int r, int s, double thesign, GridData &grid)
@@ -520,135 +434,21 @@ double getD2u(double *x, int r, int s, double thesign, GridData &grid)
       return getD2uTest(x,r,s,thesign);
    }
 
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
+   cerr << "undefined getD2u" << endl;
+   exit(-1);
    return 0.0;
 }
 
 double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, 
               double thesign, GridData &grid)
 {
-   if (globtestnum == 0)
-   {
-      int t;
-      double x[grid.dim], value, radius2;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (t = 0; t < grid.dim; t++)
-         radius2 += x[t]*x[t];
-      if (thesign < 0.0)
-         if (r == s)
-            value = 8.0*x[r]*x[r]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2))-
-                    2.0/((1.0+radius2)*(1.0+radius2));
-         else
-            value = 8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
-      else
-         if (r == s)
-            value = -8.0*x[r]*x[r]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2))+
-                     2.0/((1.0+radius2)*(1.0+radius2));
-         else
-            value = -8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   return getD2u(x, r, s, thesign,grid);
    
-      return value;
-   }
-   else if (globtestnum == 1)
-   {
-      double x[grid.dim], value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-
-      if (r == s)
-         if (thesign < 0.0)
-            value = 2.0*epsp/epsm;
-         else
-            value = 2.0;
-      else
-         value = 0.0;
-   
-      return value;
-   }
-   else if (globtestnum == 2)
-   {
-      double x[grid.dim], value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-      int t;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (t = 0; t < grid.dim; t++)
-         radius2 += x[t]*x[t];
-
-      if (r == s)
-         if (thesign < 0.0)
-            value = (2.0*epsp/epsm+4.0*(epsp/epsm)*(epsp/epsm)*x[r]*x[r])*
-                    exp(epsp/epsm*radius2-(epsp/epsm-1.0)*grid.radius*grid.radius);
-         else
-            value = (2.0+4.0*x[r]*x[r])*exp(radius2);
-      else
-         if (thesign < 0.0)
-            value = 4.0*(epsp/epsm)*(epsp/epsm)*x[r]*x[s]*
-                    exp(epsp/epsm*radius2-(epsp/epsm-1.0)*grid.radius*grid.radius);
-         else
-            value = 4.0*x[r]*x[s]*exp(radius2);
-   
-      return value;
-   }
-   else if (globtestnum == 3 || globtestnum == 4)
-   {
-      double x[grid.dim], value, radius2;
-      double epsp = EPSILONP, epsm = EPSILONM;
-      int t;
-      double A = 1.0, B = fabs(1.0-epsp/epsm), 
-             C = epsp/epsm, D = grid.radius*grid.radius*(1.0-epsp/epsm)+B;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (t = 0; t < grid.dim; t++)
-         radius2 += x[t]*x[t];
-
-      if (thesign < 0.0)
-      {
-         value = -C*x[r]*x[s]/(C*radius2+D);
-         if (r == s)
-            value += 1.0;
-         value *= C/sqrt(C*radius2+D);
-      }
-      else
-      {
-         value = -A*x[r]*x[s]/(A*radius2+B);
-         if (r == s)
-            value += 1.0;
-         value *= A/sqrt(A*radius2+B);
-      }
-   
-      return value;
-   }
-   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10)
-   {
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-
-      return getD2uTest(x,r,s,thesign);
-   }
-
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
-   return 0.0;
 }
 
-//double getf(double ***f, int index, int rstar, int sstar, double alpha, double thesign, 
-//            GridData &grid)
-//{
-//   int r, rindex[grid.dim];
-//
-//   for (r = 0; r < grid.dim; r++)
-//      rindex[r] = index[r];
-//   rindex[rstar] += sstar;
-//
-//   return (1.0-alpha)*evalarray(f,index)+alpha*evalarray(f,rindex);
-//}
 
 double geta(double *x, double thesign, PBData& pb, GridData& grid){
   if (globtesta == 1){
@@ -678,11 +478,12 @@ double geta(double *x, double thesign, PBData& pb, GridData& grid){
 
   }else{
     cerr<<"unkown option for a";
-    exit(2);
+    exit(-1);
    }
+   return 0;
 }
 
-void geta(double ***a, double ***u, double ***S, PBData &pb, GridData &grid)
+void geta(double ***a, double ***S, PBData &pb, GridData &grid)
 {
   for (int i = 0; i <= grid.nx[0]; i++){
     for (int j = 0; j <= grid.nx[1]; j++){
@@ -695,10 +496,9 @@ void geta(double ***a, double ***u, double ***S, PBData &pb, GridData &grid)
       }
     }
   }
-   
 }
 
-double gettau(double *x, PBData &pb, GridData &grid)
+double gettau(double *x, GridData &grid)
 {
    if (globtestnum == 0)
    {
@@ -731,36 +531,13 @@ double gettau(double *x, PBData &pb, GridData &grid)
 void gettau(double &tau, int *index, int rstar, int sstar, double alpha, 
             GridData &grid)
 {
-   if (globtestnum == 0)
-   {
-      int r;
-      double x[grid.dim], valuep, valuem, radius2;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-   
-      valuep = -1.0/(1.0+radius2);
-      valuem = 1.0/(1.0+radius2);
-      tau = valuep-valuem;
-   }
-   else if (globtestnum == 1)
-      tau = 0.0;
-   else if (globtestnum == 2)
-      tau = 0.0;
-   else if (globtestnum == 3 || globtestnum == 4)
-      tau = 0.0;
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      tau = gettauTest(x);
-    }
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   tau = gettau(x, grid);
 }
 
-void getDtau(double *Dtau, double *x, PBData &pb, GridData &grid)
+void getDtau(double *Dtau, double *x, GridData &grid)
 {
    int r, s;
   
@@ -796,44 +573,13 @@ void getDtau(double *Dtau, double *x, PBData &pb, GridData &grid)
 void getDtau(double *Dtau, int *index, int rstar, int sstar, double alpha, 
              GridData &grid)
 {
-   int r, s;
-  
-   if (globtestnum == 0)
-   {
-      double x[grid.dim], valuep, valuem, radius2;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-   
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-   
-      for (s = 0; s < grid.dim; s++)
-      {
-         valuep = 2.0*x[s]/((1.0+radius2)*(1.0+radius2));
-         valuem = -2.0*x[s]/((1.0+radius2)*(1.0+radius2));
-         Dtau[s] = valuep-valuem;
-      }
-   }
-   else if (globtestnum == 1)
-      for (s = 0; s < grid.dim; s++)
-         Dtau[s] = 0.0;
-   else if (globtestnum == 2)
-      for (s = 0; s < grid.dim; s++)
-         Dtau[s] = 0.0;
-   else if (globtestnum == 3 || globtestnum == 4)
-      for (s = 0; s < grid.dim; s++)
-         Dtau[s] = 0.0;
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      getDtauTest(Dtau,x);
-    }
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   getDtau(Dtau,x, grid);
 }
 
-void getD2tau(double **D2tau, double *x, PBData &pb, GridData &grid)
+void getD2tau(double **D2tau, double *x, GridData &grid)
 {
    int r, s, t;
 
@@ -859,86 +605,48 @@ void getD2tau(double **D2tau, double *x, PBData &pb, GridData &grid)
          }
    }
    else if (globtestnum == 1)
+   {
       for (r = 0; r < grid.dim; r++)
          for (s = r; s < grid.dim; s++)
          {
             D2tau[r][s] = 0.0;
             D2tau[s][r] = D2tau[r][s];
          }
-   else if (globtestnum == 2)
+   }
+   else if (globtestnum == 2){
       for (r = 0; r < grid.dim; r++)
          for (s = r; s < grid.dim; s++)
          {
             D2tau[r][s] = 0.0;
             D2tau[s][r] = D2tau[r][s];
          }
-   else if (globtestnum == 3 || globtestnum == 4)
+   }
+   else if (globtestnum == 3 || globtestnum == 4){
       for (r = 0; r < grid.dim; r++)
          for (s = r; s < grid.dim; s++)
          {
             D2tau[r][s] = 0.0;
             D2tau[s][r] = D2tau[r][s];
          }
+   }
   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
     getD2tauTest(D2tau, x);
   }
+  else{
+   cerr << "undefiend sigma" << endl;
+   exit(-1); 
+  }
+  
 }
 
 void getD2tau(double **D2tau, int *index, int rstar, int sstar, double alpha, 
               GridData &grid)
 {
-   int r, s, t;
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   getD2tau(D2tau, x, grid);
 
-   if (globtestnum == 0)
-   {
-      double x[grid.dim], valuep, valuem, radius2;
-
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      for (r = 0; r < grid.dim; r++)
-         for (s = r; s < grid.dim; s++)
-         {
-            valuep = -8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
-            valuem = 8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
-            if (s == r)
-            {
-               valuep += 2.0/((1.0+radius2)*(1.0+radius2));
-               valuem += -2.0/((1.0+radius2)*(1.0+radius2));
-            }
-            D2tau[r][s] = valuep-valuem;
-            D2tau[s][r] = D2tau[r][s];
-         }
-   }
-   else if (globtestnum == 1)
-      for (r = 0; r < grid.dim; r++)
-         for (s = r; s < grid.dim; s++)
-         {
-            D2tau[r][s] = 0.0;
-            D2tau[s][r] = D2tau[r][s];
-         }
-   else if (globtestnum == 2)
-      for (r = 0; r < grid.dim; r++)
-         for (s = r; s < grid.dim; s++)
-         {
-            D2tau[r][s] = 0.0;
-            D2tau[s][r] = D2tau[r][s];
-         }
-    else if (globtestnum == 3 || globtestnum == 4)
-      for (r = 0; r < grid.dim; r++)
-         for (s = r; s < grid.dim; s++)
-         {
-            D2tau[r][s] = 0.0;
-            D2tau[s][r] = D2tau[r][s];
-         }
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      getD2tauTest(D2tau, x);
-    }
 }
 
 double getsigma(double *x, double *normal, PBData &pb, GridData &grid)
@@ -971,43 +679,18 @@ double getsigma(double *x, double *normal, PBData &pb, GridData &grid)
       return getsigmaTest(x,normal,pb);
     }
 
-   cout << "NOT SUPPOSED TO BE HERE" << endl;
+   cerr << "undefiend sigma" << endl;
+   exit(-1);
    return 0.0;
 }
 
 void getsigma(double &sigma, int *index, int rstar, int sstar, double alpha, 
               double *normal, PBData &pb, GridData &grid)
 {
-   if (globtestnum == 0)
-   {
-      int r, s;
-      double x[grid.dim], gradp[grid.dim], gradm[grid.dim], radius2;
-   
-      sigma = 0.0;
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      for (r = 0; r < grid.dim; r++)
-      {
-         gradp[r] = 2.0*x[r]/((1.0+radius2)*(1.0+radius2));
-         gradm[r] = -2.0*x[r]/((1.0+radius2)*(1.0+radius2));
-         sigma += (pb.epsilonp*gradp[r]-pb.epsilonm*gradm[r])*normal[r];
-      }
-   }
-   else if (globtestnum == 1)
-      sigma = 0.0;
-   else if (globtestnum == 2)
-      sigma = 0.0;
-   else if (globtestnum == 3 || globtestnum == 4)
-      sigma = 0.0;
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
-      double x[grid.dim];
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      sigma = getsigmaTest(x,normal,pb);
-    }
+   double x[grid.dim];
+   sub2coord(x,index,grid);
+   x[rstar] += sstar*alpha*grid.dx[rstar];
+   sigma = getsigma(x,normal,pb,grid);
 }
 
 void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBData &pb, 
@@ -1063,56 +746,11 @@ void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBDa
 void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha, 
               double *normal, double **Dnormal, PBData &pb, GridData &grid)
 {
-   int r, s, t;
-  
-   if (globtestnum == 0)
-   {
-      double x[grid.dim], gradp[grid.dim], gradm[grid.dim], D2p[grid.dim][grid.dim],
-             D2m[grid.dim][grid.dim], radius2;
 
-      sub2coord(x,index,grid);
-      x[rstar] += sstar*alpha*grid.dx[rstar];
-      radius2 = 0.0;
-      for (r = 0; r < grid.dim; r++)
-         radius2 += x[r]*x[r];
-      for (r = 0; r < grid.dim; r++)
-      {
-         gradp[r] = 2.0*x[r]/((1.0+radius2)*(1.0+radius2));
-         gradm[r] = -2.0*x[r]/((1.0+radius2)*(1.0+radius2));
-         for (s = 0; s < grid.dim; s++)
-         {
-            D2p[r][s] = -8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
-            D2m[r][s] = 8.0*x[r]*x[s]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2));
-            if (s == r)
-            {
-               D2p[r][s] += 2.0/((1.0+radius2)*(1.0+radius2));
-               D2m[r][s] += -2.0/((1.0+radius2)*(1.0+radius2));
-            }
-         }
-      }
-      for (r = 0; r < grid.dim; r++)
-      {
-         Dsigma[r] = 0.0;
-         for (s = 0; s < grid.dim; s++)
-            Dsigma[r] += (pb.epsilonp*gradp[s]-pb.epsilonm*gradm[s])*Dnormal[s][r]+
-                         (pb.epsilonp*D2p[r][s]-pb.epsilonm*D2m[r][s])*normal[s];
-      }
-   }
-   else if (globtestnum == 1)
-      for (r = 0; r < grid.dim; r++)
-         Dsigma[r] = 0.0;
-   else if (globtestnum == 2)
-      for (r = 0; r < grid.dim; r++)
-         Dsigma[r] = 0.0;
-   else if (globtestnum == 3 || globtestnum == 4)
-      for (r = 0; r < grid.dim; r++)
-         Dsigma[r] = 0.0;
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
       double x[grid.dim];
       sub2coord(x,index,grid);
       x[rstar] += sstar*alpha*grid.dx[rstar];
-      getDsigmaTest(Dsigma, x, normal, Dnormal, pb);
-    }
+      getDsigma(Dsigma, x, normal, Dnormal, pb, grid);
 }
 
 

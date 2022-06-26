@@ -4,49 +4,49 @@
 #include "grid.h"
 #include "pb.h"
 
+// to define the PDE, need DBC, f, epsilonp/m, a, sigma, tau 
+// sigma, tau is function smoothly extended off the interface, also need Dtau, D2tau, Dsigma
 
 double DBC(double *x, int thedim, double thetime);
+
 double getf(double *x, double thesign, PBData &pb, GridData &grid);
-double getf(int *index, int rstar, int sstar, double alpha, double thesign, PBData &pb, 
-            GridData &grid);
+double getf(int *index, int rstar, int sstar, double alpha, double thesign, PBData &pb, GridData &grid);
+
+double geta(double *x, double thesign, PBData& pb, GridData& grid);
+void geta(double ***a, double ***S, PBData &pb, GridData &grid);
+
+double gettau(double *x, GridData &grid);
+void gettau(double &tau, int *index, int rstar, int sstar, double alpha, GridData &grid);
+
+void getDtau(double *Dtau, double *x, GridData &grid);
+void getDtau(double *Dtau, int *index, int rstar, int sstar, double alpha, GridData &grid);
+
+void getD2tau(double **D2tau, double *x, GridData &grid);
+void getD2tau(double **D2tau, int *index, int rstar, int sstar, double alpha, GridData &grid);
+
+double getsigma(double *x, double *normal, PBData &pb, GridData &grid);
+void getsigma(double &sigma, int *index, int rstar, int sstar, double alpha, double *normal, PBData &pb, GridData &grid);
+
+void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBData &pb, GridData &grid);
+void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha, double *normal, double **Dnormal, PBData &pb, GridData &grid);
+
+
+// for testing, known u, 
 double getu(double *x, double thesign, GridData &grid);
 double getu(int *index, int rstar, int sstar, double alpha, double thesign, GridData &grid);
+
 double getDu(double *x, int s, double thesign, GridData &grid);
-double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, 
-             GridData &grid);
+double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, GridData &grid);
+
 double getD2u(double *x, int r, int s, double thesign, GridData &grid);
-double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, 
-              double thesign, GridData &grid);
-//double getf(double ***f, int index, int rstar, int sstar, double alpha, double thesign, 
-//GridData &grid);
-double geta(double *x, double thesign, PBData& pb, GridData& grid);
-void geta(double ***a, double ***u, double ***S, PBData &pb, GridData &grid);
-double gettau(double *x, PBData &pb, GridData &grid);
-void gettau(double &tau, int *index, int rstar, int sstar, double alpha, 
-            GridData &grid);
-void getDtau(double *Dtau, double *x, PBData &pb, GridData &grid);
-void getDtau(double *Dtau, int *index, int rstar, int sstar, double alpha, 
-             GridData &grid);
-void getD2tau(double **D2tau, double *x, PBData &pb, GridData &grid);
-void getD2tau(double **D2tau, int *index, int rstar, int sstar, double alpha, 
-              GridData &grid);
-double getsigma(double *x, double *normal, PBData &pb, GridData &grid);
-void getsigma(double &sigma, int *index, int rstar, int sstar, double alpha, 
-              double *normal, PBData &pb, GridData &grid);
-void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBData &pb, 
-               GridData &grid);
-void getDsigma(double *Dsigma, int *index, int rstar, int sstar, double alpha, 
-              double *normal, double **Dnormal, PBData &pb, GridData &grid);
+double getD2u(int *index, int r, int s, int rstar, int sstar, double alpha, double thesign, GridData &grid);
 
 double getexactnormalTest(double *x, int r);
 
 
 // initialize surface
 void init_surf(double ***S, double radius, GridData &grid, int surfopt);
-
 void init_surf_protein_paper(double ***S, GridData& grid);
-
-
 
 void checkanswer(double ***u, double ***S, GridData &grid);
 void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData& grid);

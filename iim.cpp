@@ -3728,9 +3728,9 @@ void getinterfaceinfo(double *normal, double *tangent1, double *tangent2, double
 //      }
 
    jumpfe = getf(x,1,pb,grid)/pb.epsilonp-getf(x,-1,pb,grid)/pb.epsilonm;
-   tau = gettau(x,pb,grid);
-   getDtau(Dtau,x,pb,grid);
-   getD2tau(D2tau,x,pb,grid);
+   tau = gettau(x,grid);
+   getDtau(Dtau,x,grid);
+   getD2tau(D2tau,x,grid);
    sigma = getsigma(x,normal,pb,grid);
    getDsigma(Dsigma,x,normal,Dn,pb,grid);
 

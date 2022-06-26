@@ -1,5 +1,5 @@
 // ==== from CIM paper
-inline double getfPaper(double *x, int thesign, PBData &pb){
+inline double getfPaper(double *x, double thesign, PBData &pb){
 	double value;
 	
 	if(thesign > 0){
@@ -10,7 +10,7 @@ inline double getfPaper(double *x, int thesign, PBData &pb){
 	return value;
 }
 
-inline double getuPaper(double *x, int thesign){
+inline double getuPaper(double *x, double thesign){
 	double value;
 	if(thesign > 0){
 		value = pow(x[0],4) + x[0]*x[1] + pow(x[1],4) + x[0]*pow(x[2],2) + cos(2*x[0] \
@@ -23,7 +23,7 @@ inline double getuPaper(double *x, int thesign){
 }
 
 
-inline double getDuPaper(double *x, int s, int thesign){
+inline double getDuPaper(double *x, int s, double thesign){
 	double value;
 	if(thesign>0){
 		if(s==0)
@@ -43,7 +43,7 @@ inline double getDuPaper(double *x, int s, int thesign){
 	return value;
 }
 
-inline double getD2uPaper(double *x, int r, int s, int thesign){
+inline double getD2uPaper(double *x, int r, int s, double thesign){
 	double value;
 	if (thesign>0){
 		if(r==0&& s == 0)
@@ -147,7 +147,7 @@ inline void getDsigmaPaper(double *Dsigma, double *x, double *normal, double **D
 }
 
 // === Torus from Li-tien
-inline double getfTorus(double *x, int thesign, PBData &pb){
+inline double getfTorus(double *x, double thesign, PBData &pb){
 	double value;
 	
 	if(thesign > 0){
@@ -160,7 +160,7 @@ inline double getfTorus(double *x, int thesign, PBData &pb){
 	return value;
 }
 
-inline double getuTorus(double *x, int thesign){
+inline double getuTorus(double *x, double thesign){
 	double value;
 	if(thesign > 0){
 		value = cos(x[0]) * cos(x[1]) * cos(x[2]);
@@ -170,7 +170,7 @@ inline double getuTorus(double *x, int thesign){
 	return value;
 }
 
-inline double getDuTorus(double *x, int s, int thesign){
+inline double getDuTorus(double *x, int s, double thesign){
 	double value;
 	if(thesign>0){
 		if(s==0)
@@ -190,7 +190,7 @@ inline double getDuTorus(double *x, int s, int thesign){
 	return value;
 }
 
-inline double getD2uTorus(double *x, int r, int s, int thesign){
+inline double getD2uTorus(double *x, int r, int s, double thesign){
 	double value;
 	if (thesign>0){
 		if(r==0&& s == 0)
@@ -288,16 +288,17 @@ inline void getDsigmaTorus(double *Dsigma, double *x, double *normal, double **D
 											 (pb.epsilonp*D2p[r][s]-pb.epsilonm*D2m[r][s])*normal[s];
       }
 }
+
 // === simple function 1
 // #define SIMPLE1
 #ifdef SIMPLE1
 // up(x,y,z) = x^2, um(x,y,z) = -x^2
-inline double getuSimple(double *x, int thesign){
+inline double getuSimple(double *x, double thesign){
 	return x[0] * x[0] * ((thesign>0)?1:-1);
 }
 
 // lap up = 2, lap(um) = -2;
-inline double getfSimple(double *x, int thesign, PBData &pb){
+inline double getfSimple(double *x, double thesign, PBData &pb){
 	if (thesign>0){
 		return - pb.epsilonp * 2;
 	}else{
@@ -307,7 +308,7 @@ inline double getfSimple(double *x, int thesign, PBData &pb){
 }
 
 // Dup(x,y,z) = [2x,0,0], Dum(x,y,z) = [-2x,0,0]
-inline double getDuSimple(double *x, int s, int thesign){
+inline double getDuSimple(double *x, int s, double thesign){
 	if (s != 0){
 		return 0;
 	}else{
@@ -316,7 +317,7 @@ inline double getDuSimple(double *x, int s, int thesign){
 	
 }
 // D2up(x,y,z)
-inline double getD2uSimple(double *x, int r, int s, int thesign){
+inline double getD2uSimple(double *x, int r, int s, double thesign){
 	if(r == 0 && s == 0){
 		return 2  * ((thesign>0)?1:-1);
 	}else{
@@ -351,7 +352,7 @@ inline void getD2tauSimple(double **D2tau, double *x){
 #else // use simple2
 
 // simple function 2 : x^2 + y^2 + z^2 + x y + xz + yz (sign)
-inline double getuSimple(double *x, int thesign){
+inline double getuSimple(double *x, double thesign){
 	double sign =  (thesign>0)? 1.0:-1.0;
 	return sign*(pow(x[0],2) + x[0]*x[1] + pow(x[1],2) + x[0]*x[2] + x[1]*x[2] + pow(x[2],2)) ;
 }
@@ -360,7 +361,7 @@ inline double gettauSimple(double *x){
 	return 2*pow(x[0],2) + 2*x[0]*x[1] + 2*pow(x[1],2) + 2*x[0]*x[2] + 2*x[1]*x[2] + 2*pow(x[2],2);
 }
 
-inline double getfSimple(double *x, int thesign, PBData &pb){
+inline double getfSimple(double *x, double thesign, PBData &pb){
 	if (thesign>0){
 		return  - 6 * pb.epsilonp;
 	}else{
@@ -370,7 +371,7 @@ inline double getfSimple(double *x, int thesign, PBData &pb){
 }
 
 // Dup(x,y,z) = [2 x y^2,2 y x^2,0], Dum(x,y,z) = - Dup
-inline double getDuSimple(double *x, int s, int thesign){
+inline double getDuSimple(double *x, int s, double thesign){
 	
 	if (thesign>0){
 		if(s==0)
@@ -391,7 +392,7 @@ inline double getDuSimple(double *x, int s, int thesign){
 }
 
 // D2up(x,y,z) 
-inline double getD2uSimple(double *x, int r, int s, int thesign){
+inline double getD2uSimple(double *x, int r, int s, double thesign){
 	double d2u[3][3] = {{2,1,1},{1,2,1},{1,1,2}};
 	return ((thesign>0)?1.0:-1.0)*d2u[r][s];
 }
@@ -452,7 +453,7 @@ inline void getDsigmaSimple(double *Dsigma, double *x, double *normal, double **
 
 
 // === interface to tryvn.C
-inline double getfTest(double *x, int thesign, PBData &pb){
+inline double getfTest(double *x, double thesign, PBData &pb){
 	if (globtestnum == 11){
 		return getfPaper(x, thesign, pb);
 	}
@@ -465,7 +466,7 @@ inline double getfTest(double *x, int thesign, PBData &pb){
 	}
 }
 
-inline double getuTest(double *x, int thesign){
+inline double getuTest(double *x, double thesign){
 	if (globtestnum == 11){
 		return getuPaper(x, thesign);
 	}
@@ -479,7 +480,7 @@ inline double getuTest(double *x, int thesign){
 }
 
 
-inline double getDuTest(double *x, int s, int thesign){
+inline double getDuTest(double *x, int s, double thesign){
 	if (globtestnum == 11){
 		return getDuPaper(x, s, thesign);
 	}
@@ -492,7 +493,7 @@ inline double getDuTest(double *x, int s, int thesign){
 	}
 }
 
-inline double getD2uTest(double *x, int r, int s, int thesign){
+inline double getD2uTest(double *x, int r, int s, double thesign){
 	if (globtestnum == 11){
 		return getD2uPaper(x, r, s, thesign);
 	}

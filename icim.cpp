@@ -2401,7 +2401,7 @@ void GetRowRhs(double &u, double &h, Vector3d& ux, Vector3d& normal, double& sig
 				h = x[r] - xindex[r]; // distance to interface
 
 				sigma = getsigma(x.data(), normal.data(), pb, grid);
-				tau = gettau(x.data(), pb, grid);
+				tau = gettau(x.data(), grid);
 
 				ComputeByExtrapolate(u, ux, u_ghost, sign_surf, S, idx_other, r, -s, 1.0 - alpha, grid);
 			}
