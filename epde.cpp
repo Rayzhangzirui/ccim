@@ -109,7 +109,8 @@ int main(int argc, char* argv[])
         free_matrix(psi_true, grid.nx[0],grid.nx[1],grid.nx[2]);
 
     }
-    if (globcim == 345) {
+
+    if (globcim == 345 || globcim == 6) {
         linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
 
         LinearSolver(pb.psi, tmp.A, tmp.b, a, S, grid, grid.N, tollinsolve, pb,tmp);

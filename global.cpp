@@ -12,6 +12,7 @@ double globerrvec[3], globerrvec2[3], globerrvec3[3], globerrvec4[3];
 int globerrmx[3][3]; // glboerrmx[r] index of max err u_rr
 
 char globorder = 2, globintorder = 3;
+
 // if globdist = 1, use getcim345D2udist, else getcim345D2u
 // note globdist == 1 means cim 3 po ints may use cim 5 differencing
 char globdist = 0, globdistvar = 1;
