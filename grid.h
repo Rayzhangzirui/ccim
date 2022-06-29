@@ -8,6 +8,7 @@ struct GridData
 {
    static const int dim = 3;
    int nx[dim];
+   int N;
    double a[dim], dx[dim];
    double dt, mindx, t, radius, maxvn, tfinal, radius0;
    double tol;
@@ -24,6 +25,7 @@ inline void init_grid(GridData &grid, int nx, double a){
    grid.nx[0] = nx; //number of cell
    grid.nx[1] = grid.nx[0];
    grid.nx[2] = grid.nx[0];
+   grid.N = grid.nx[0] * grid.nx[1] * grid.nx[2];
    grid.a[0] = -a;
    grid.a[1] = -a;
    grid.a[2] = -a;

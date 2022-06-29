@@ -3029,10 +3029,12 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
            << "   and " << count[4] << " cim4 pts, " << count[5] << " cim1 pts." 
            << endl;
 
+
 // Dusmall will hold more memory: smallsize; but actually use less: buildsize
    smallsize = buildsize;
    cout << "smallsize reduced to " << smallsize << endl;
 
+   
    thecount2 = 0;
    for (i = 0; i < smallsize; i++)
       for (SparseElt *current = Dusmall[i].head; current != NULL; 

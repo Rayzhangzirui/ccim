@@ -991,6 +991,7 @@ void cim2(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsiz
    delete [] Du;
    free_matrix(uint,grid.dim-1,4,4,4);
 }
+
 // Only difference is  ***aa
 void cim2(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize,
           int *index, double ***aa, int gamma[][2], double ***S, PBData &pb, 
@@ -1365,6 +1366,7 @@ void cim2(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsiz
    delete [] Du;
    free_matrix(uint,grid.dim-1,4,4,4);
 }
+
 
 
 /*

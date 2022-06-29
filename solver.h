@@ -10,7 +10,8 @@
 void gaussseidelsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
                       int numsteps, double ***S, PBData &pb);
 void gaussseidelsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
-                      int numsteps, double ***a, double ***S, PBData &pb);
+                      int numsteps,
+                       double ***a, double ***S, PBData &pb);
 void BICGSTAB(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 
               int numsteps, double tol, TempStruct &tmp);
 void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 

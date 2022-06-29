@@ -24,17 +24,17 @@ SOLVER = amg.o gmres.o solver.o hypresolver.o
 
 METHOD = cim12.o iim.o icim.o cim345cond.o ccim.o
 
-COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o pb.o helper.o
+COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o pb.o helper.o storage.o
 
 MOTION = storage.o march.o getvn.o
 
 cim: cim.o $(COMMON) tryvn.o  advance.o $(SOLVER) $(METHOD) $(MOTION)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-epde: epde.o $(COMMON) storage.o hypresolver.o ccim.o solver.o icim.o
+epde: epde.o $(COMMON) $(SOLVER) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
-motion: motion.o $(COMMON) hypresolver.o solver.o $(MOTION) $(METHOD)
+motion: motion.o $(COMMON)  $(SOLVER) $(MOTION) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 hypresolver.o: hypresolver.cpp hypresolver.h

@@ -26,6 +26,8 @@ void init_march(MarchStruct &march, double*** S, PBData &pb, GridData&grid){
    (march.heap).loc = heapmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
    (march.heap).dim = grid.dim;
    march.pb = pb;
+
+   march.smallsize = 0;
 }
 
 // fast marching

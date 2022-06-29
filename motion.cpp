@@ -15,16 +15,22 @@ using namespace std;
 
 
 
-void solvepde(double*** S, double ***a,StorageStruct* &Dusmall,int& smallsize, PBData &pb, GridData &grid){
+void solvepde(double*** S, double ***a, StorageStruct* &Dusmall,int& smallsize, PBData &pb, GridData &grid){
 	TempStruct tmp;//sparse matrix solver
 	init_TempStruct(tmp, grid);
 	
-	linearsystemcim345(tmp.A,tmp.b,Dusmall,smallsize,a,S,pb,grid);
+	linearsystemcim345(tmp.A,tmp.b, Dusmall,smallsize,a,S,pb,grid);
 
 	HypreSolve(pb.psi, tmp.A, tmp.b, grid, S, pb);
 
+	if (globcheck){
+		checkanswer(pb.psi,S,grid);
+		checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);	
+		exit(1);
+	}
 	clearfourd(tmp.fourd,tmp.fdstatus,tmp.Nfd,grid);
 }
+
 
 // rhs of phi_t = - vn |grad phi|
 void rhsvngrad(double*** rhs, double*** u, MarchStruct &march, PBData &pb, GridData &grid){
@@ -135,8 +141,6 @@ int main(int argc, char* argv[])
 
 	double ***rhs = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
 	
-	StorageStruct *Dusmall;
-	int smallsize = 0;
 
 	MarchStruct march;
 	init_march(march, S, pb, grid);
@@ -149,10 +153,7 @@ int main(int argc, char* argv[])
 		if (globperturb == 0)
 			perturb(S,grid.tol,pb,grid);
 
-		solvepde(S, a, Dusmall, smallsize, pb, grid);
-
-		march.Dusmall = Dusmall;
-		march.smallsize = smallsize;
+		solvepde(S, a, march.Dusmall, march.smallsize, pb, grid);
 
 		fmarch(march,-1.0,grid);
 
@@ -166,7 +167,6 @@ int main(int argc, char* argv[])
 		cout << "Exact radius = " << grid.radius << endl;
 		checkwithexactvn(march.extend[0], S, pb, grid); // check vn with exact
 		checkwithexact(S, grid.radius, grid); // check radius with exact
-		
 	}	
 
 	

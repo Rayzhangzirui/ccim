@@ -49,6 +49,11 @@ int getstoragesize(double ***S, GridData &grid)
    return 4*count;
 }
 
+
+// look up info in array of Dusmall using binary search
+// info  = [ind, r, sk, t] all are ordered
+// ind is ordered, 0 to N^3, r from 0 to 2, sk -1 1, t 0 to 2 
+// Dusmall[s].N = 4 
 int findinstorage(int *info, StorageStruct *Dusmall, int smallsize)
 {
    int r;
@@ -69,79 +74,23 @@ int findinstorage(int *info, StorageStruct *Dusmall, int smallsize)
    {
       int loc, halfsize = (int) (smallsize-1)/2;
 
+
       for (r = 0; r < Dusmall[halfsize].N && info[r] == Dusmall[halfsize].info[r]; r++);
+
+      // if r == 4, then found match
+      // 
       if (r == Dusmall[halfsize].N || info[r] <= Dusmall[halfsize].info[r])
-         loc = findinstorage(info,Dusmall,halfsize+1); 
+         loc = findinstorage(info, Dusmall, halfsize+1); 
       else
       {
          loc = findinstorage(info,&(Dusmall[halfsize+1]),smallsize-(halfsize+1)); 
          loc += halfsize+1;
       }
-/*
-      for (r = 0; r < Dusmall[loc].N && info[r] == Dusmall[loc].info[r]; r++);
-      if (r >= Dusmall[loc].N);
-      else
-      {
-         cout << "Error: not in storage " << info[0] << " " << info[1] << " " 
-              << info[2] << " " << info[3] <<  endl;
-         exit(1);
-      }
-*/
-
       return loc;
    }
 }
 
-void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
-                     int mid, StorageStruct *Dusmall, int smallsize, double ***u, 
-                     double ***S, PBData &pb, GridData &grid)
-{
-// just like getinterfaceDu
-   int i, r, t, loc, N = 2*mid; 
-   int info[Dusmall[0].N], Narray[grid.dim], sindex[grid.dim], tindex[grid.dim];
-   double value;
-   SparseElt *current;
 
-   for (r = 0; r < grid.dim; r++)
-      Narray[r] = N;
-
-   info[0] = sub2ind(index,grid.nx,grid.dim);
-   info[1] = rstar;
-   info[2] = sstar;
-
-   for (t = -1; t < grid.dim; t++)
-   {
-      info[3] = t;
-      value = 0.0;
-
-      loc = findinstorage(info,Dusmall,smallsize);
-//      cout << info[0] << " " << info[1] << " " << info[2] << " " << info[3] << endl;
-//      cout << "loc = " << loc << endl;
-
-      for (current = Dusmall[loc].head; current != NULL; current = (*current).next)
-      {
-         if ((*current).cindex >= 0)
-         {
-            if (globsmall == 1)
-            {
-               ind2sub(sindex,(*current).cindex,Narray,grid.dim);
-               for (r = 0; r < grid.dim; r++)
-                  tindex[r] = index[r]+sindex[r]-mid;
-            }
-            else if (globsmall == 2)
-               ind2sub(tindex,(*current).cindex,grid.nx,grid.dim);
-            value += (*current).val*evalarray(u,tindex);
-         }
-         else
-            value += (*current).val;
-      }
-
-      if (t < 0)
-         uint = value;
-      else
-         Du[t] = value;
-   }
-}
 // no parameter for mid, used in cim
 void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
                      StorageStruct *Dusmall, int smallsize, double ***u, double ***S, 
@@ -192,6 +141,7 @@ void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
          Du[t] = value;
    }
 }
+
 
 void clearstorage(StorageStruct* &Dusmall, int &smallsize)
 {

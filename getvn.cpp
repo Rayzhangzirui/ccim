@@ -121,39 +121,14 @@ double getheatvn(double ***u, double ***S, int *index, int rstar, int sstar,
    else
       thesign = 1.0;
 
-//   double maxuinterr = 0.0, uhere2, uthere2, Duhere2[grid.dim], Duthere2[grid.dim], 
-//          maxDuerr[grid.dim];
 
-//   for (r = 0; r < grid.dim; r++)
-//      maxDuerr[r] = 0.0;
-//   getinterfaceDu(uhere2,Duhere2,index,rstar,sstar,u,S,pb,grid);
-//   evalfromstorage(uhere,Duhere,index,rstar,sstar,mid,Dusmall,smallsize,u,S,pb,grid);
    evalfromstorage(uhere,Duhere,index,rstar,sstar,Dusmall,smallsize,u,S,pb,grid);
-//   if (fabs(uhere2-uhere) > maxuinterr)
-//      maxuinterr = fabs(uhere2-uhere);
-//   for (r = 0; r < grid.dim; r++)
-//      if (fabs(Duhere2[r]-Duhere[r]) > maxDuerr[r])
-//         maxDuerr[r] = fabs(Duhere2[r]-Duhere[r]);
+
    for (r = 0; r < grid.dim; r++)
       rindex[r] = index[r];
    rindex[rstar] = index[rstar]+sstar;
-//   getinterfaceDu(uthere2,Duthere2,rindex,rstar,-sstar,u,S,pb,grid);
-//   evalfromstorage(uthere,Duthere,rindex,rstar,-sstar,mid,Dusmall,smallsize,u,S,pb,
-//                   grid);
+
    evalfromstorage(uthere,Duthere,rindex,rstar,-sstar,Dusmall,smallsize,u,S,pb,grid);
-//   if (fabs(uthere2-uthere) > maxuinterr)
-//      maxuinterr = fabs(uthere2-uthere);
-//   for (r = 0; r < grid.dim; r++)
-//      if (fabs(Duthere2[r]-Duthere[r]) > maxDuerr[r])
-//         maxDuerr[r] = fabs(Duthere2[r]-Duthere[r]);
-//   if (maxuinterr > 1.0e-11 || maxDuerr[0] > 1.0e-11 || maxDuerr[1] > 1.0e-11 || 
-//       maxDuerr[2] > 1.0e-11)
-//   {
-//      cout << "maxuinterr = " << maxuinterr << endl;
-//      cout << "maxDuerr = " << maxDuerr[0] << " " << maxDuerr[1] << " " << maxDuerr[2] 
-//           << endl;
-//      getchar();
-//   }
 
    getinterfaceinfo(alpha,tangent,normal,S,index,rindex,grid);
 
@@ -180,24 +155,6 @@ double getheatvn(double ***u, double ***S, int *index, int rstar, int sstar,
    if (fabs(exactvn-vn) > grid.maxvn)
    {
       grid.maxvn = fabs(exactvn-vn);
-/*
-      cout << grid.maxvn << endl;
-      cout << fabs(Duhere[0]-getDu(index,0,rstar,sstar,alpha,thesign,grid)) << " "
-           << fabs(Duhere[1]-getDu(index,1,rstar,sstar,alpha,thesign,grid)) << " "
-           << fabs(Duhere[2]-getDu(index,2,rstar,sstar,alpha,thesign,grid)) << endl;
-      cout << fabs(Duthere[0]-getDu(index,0,rstar,sstar,alpha,-thesign,grid)) << " "
-           << fabs(Duthere[1]-getDu(index,1,rstar,sstar,alpha,-thesign,grid)) << " "
-           << fabs(Duthere[2]-getDu(index,2,rstar,sstar,alpha,-thesign,grid)) << endl;
-      cout << vn << " " << (getDu(index,0,rstar,sstar,alpha,1.0,grid)-
-                            getDu(index,0,rstar,sstar,alpha,-1.0,grid))*normal[0]+
-                           (getDu(index,1,rstar,sstar,alpha,1.0,grid)-
-                            getDu(index,1,rstar,sstar,alpha,-1.0,grid))*normal[1]+
-                           (getDu(index,2,rstar,sstar,alpha,1.0,grid)-
-                            getDu(index,2,rstar,sstar,alpha,-1.0,grid))*normal[2] << " "
-           << " " << 2.0*(1.0-pb.epsilonp/pb.epsilonm)*0.5*
-                     exp(2.0*(1.0-pb.epsilonp/pb.epsilonm)*grid.t) << endl;
-      getchar();
-*/
    }
 
    return vn;

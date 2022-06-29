@@ -238,6 +238,7 @@ static struct option long_options[] = {
       printf ("Non-option argument %s\n", argv[optind]);
    
    if (globtestnum == 4){
+      printf("test with a\n");
       globtesta = 1;
    }
 

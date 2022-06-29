@@ -455,6 +455,7 @@ void BICGSTAB(double ***x, SparseElt2**** &A, double ***b, GridData &grid,
    removefourd(p,tmp.fourd,tmp.fdstatus,tmp.Nfd);
    removefourd(v,tmp.fourd,tmp.fdstatus,tmp.Nfd);
 }
+
 // In BICGSTABsmall, at interior point, the coefficients are not added into the sparsematrix
 // only difference happens when doing matrix multiplication Ax,
 // At an interior point index, A(index) = NULL, need to calculate A(index) x directly without looking for next elemeent
@@ -516,6 +517,7 @@ void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid,
          (tindex[i-1])++;
       }
    }
+   
    bnorm = sqrt(bnorm);
    residual = sqrt(residual)/bnorm;
    cout << "   residual = " << residual << endl;
@@ -688,6 +690,10 @@ void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid,
    removefourd(p,tmp.fourd,tmp.fdstatus,tmp.Nfd);
    removefourd(v,tmp.fourd,tmp.fdstatus,tmp.Nfd);
 }
+
+
+
+
 
 // with a
 void BICGSTABsmall(double ***x, SparseElt2**** &A, double ***b, GridData &grid, 

@@ -22,9 +22,6 @@ void newstorage(StorageStruct &Dusmall);
 int getstoragesize(double ***S, GridData &grid);
 int findinstorage(int *info, StorageStruct *Dusmall, int smallsize);
 void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
-                     int mid, StorageStruct *Dusmall, int smallsize, double ***u, 
-                     double ***S, PBData &pb, GridData &grid);
-void evalfromstorage(double &uint, double *Du, int *index, int rstar, int sstar,
                      StorageStruct *Dusmall, int smallsize, double ***u, double ***S, 
                      PBData &pb, GridData &grid);
 

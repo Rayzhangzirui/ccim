@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
 	// }
 
 	double ***a = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
+	geta(a, S, pb, grid);
 
 	// check initial error in radius
 	checkwithexact(S, grid.radius,grid);

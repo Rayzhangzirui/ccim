@@ -8,6 +8,7 @@
 using namespace std;
 
 #include "extratest.h"
+#include "customtest.h"
 
 double DBC(double *x, int thedim, double thetime)
 {
@@ -51,8 +52,12 @@ double DBC(double *x, int thedim, double thetime)
          value += x[j]*x[j];
    
       return sqrt(value+fabs(1.0-epsp/epsm));
-   }else if(globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
+   }
+   else if(globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
       return getuTest(x,1);
+   }
+   else if(globtestnum == 9){
+      return dbc_custom(x,thedim,0);
    }
 
    return 0.0;
@@ -133,7 +138,12 @@ double getf(double *x, double thesign, PBData &pb, GridData &grid){
    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10)
    {  
       value = getfTest(x,thesign,pb);
-   }else{
+   }
+   else if (globtestnum == 9)
+   {  
+      value = getf_custom(x,thesign,pb, grid);
+   }
+   else{
       cerr<<"undefined globtestnum in getf"<<endl;
       exit(1);
    }
@@ -462,7 +472,7 @@ double geta(double *x, double thesign, PBData& pb, GridData& grid){
   
   }else if (globtesta == 2){
     // used in globtestnum = 0, motion
-    assert(globtestnum == 0 && "globesta 1 goes with globtestnum 11");
+    assert(globtestnum == 0 && "globesta 1 goes with globtestnum 0");
     double r2 = pow(x[0],2) + pow(x[1],2) + pow(x[2],2);
     if (thesign < 0.0)
       return pb.epsilonm * sin(r2);
@@ -477,8 +487,7 @@ double geta(double *x, double thesign, PBData& pb, GridData& grid){
         return pb.epsilonp * (cos(x[2]) + exp(- x[1] * x[1]) + pow(x[0],3));
 
   }else{
-    cerr<<"unkown option for a";
-    exit(-1);
+    return 0;
    }
    return 0;
 }
@@ -519,9 +528,11 @@ double gettau(double *x, GridData &grid)
       return 0.0;
    else if (globtestnum == 3 || globtestnum == 4)
       return 0.0;
-    else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
+   else if (globtestnum == 9)
+      return gettau_custom(x,grid);
+   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10)
       return gettauTest(x);
-    }
+   
       
 
    cout << "NOT SUPPOSED TO BE HERE" << endl;
@@ -565,6 +576,8 @@ void getDtau(double *Dtau, double *x, GridData &grid)
    else if (globtestnum == 3 || globtestnum == 4)
       for (s = 0; s < grid.dim; s++)
          Dtau[s] = 0.0;
+   else if (globtestnum == 9)
+      getDtau_custom(Dtau,x,grid);
     else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
       getDtauTest(Dtau,x);
     }
@@ -576,7 +589,7 @@ void getDtau(double *Dtau, int *index, int rstar, int sstar, double alpha,
    double x[grid.dim];
    sub2coord(x,index,grid);
    x[rstar] += sstar*alpha*grid.dx[rstar];
-   getDtau(Dtau,x, grid);
+   getDtau(Dtau, x, grid);
 }
 
 void getD2tau(double **D2tau, double *x, GridData &grid)
@@ -629,6 +642,9 @@ void getD2tau(double **D2tau, double *x, GridData &grid)
             D2tau[s][r] = D2tau[r][s];
          }
    }
+   else if (globtestnum == 9){
+    getD2tau_custom(D2tau, x, grid);
+  }
   else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
     getD2tauTest(D2tau, x);
   }
@@ -675,6 +691,9 @@ double getsigma(double *x, double *normal, PBData &pb, GridData &grid)
       return 0.0;
    else if (globtestnum == 3 || globtestnum == 4)
       return 0.0;
+   else if (globtestnum == 9){
+      return getsigma_custom(x,normal,pb,grid);
+    }
     else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
       return getsigmaTest(x,normal,pb);
     }
@@ -738,6 +757,9 @@ void getDsigma(double *Dsigma, double *x, double *normal, double **Dnormal, PBDa
    else if (globtestnum == 3 || globtestnum == 4)
       for (r = 0; r < grid.dim; r++)
          Dsigma[r] = 0.0;
+   else if (globtestnum == 9){
+      getDsigma_custom(Dsigma, x, normal, Dnormal, pb, grid);
+    }
     else if (globtestnum == 12 ||globtestnum == 11 || globtestnum == 10){
       getDsigmaTest(Dsigma, x, normal, Dnormal, pb);
     }

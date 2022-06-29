@@ -10,12 +10,15 @@ void init_TempStruct(TempStruct &tmp, GridData &grid){
    tmp.Nfd = 10;
    tmp.fourd = new double ***[tmp.Nfd];
    tmp.fdstatus = new char[tmp.Nfd];
+   
    for (int i = 0; i < tmp.Nfd; i++)
    {
       tmp.fourd[i] = NULL;
       tmp.fdstatus[i] = 0;
    }
-   tmp.A = sparseelt2ptrmatrix(grid.nx[0],grid.nx[1],grid.nx[2]); // A is 3d array,each is a pointer to sparseelt
+
+   tmp.A = sparseelt2ptrmatrix(grid.nx[0],grid.nx[1],grid.nx[2]); // A is 3d array,each is a pointer to sparseelt2
+   
    if (globlinsolve == 1){
       tmp.M = sparseelt2ptrmatrix(grid.nx[0],grid.nx[1],grid.nx[2]);
    }
@@ -339,8 +342,9 @@ void outputsparsesmall(ofstream& outfile, SparseElt2 ****A, double ***S, PBData 
 
 
 // used to store matrix in iterative matrix solver
-// fdstatus is array of size Nfd, initialized to be 0 
-// fdstatus == 0 means no memory allocated; 1 means memory allocated and temporary;
+// fdstatus is array of size Nfd, initialized to be 0. 
+// 0 means no memory allocated;
+// 1 means memory allocated and temporary;
 // 2 means memory already in use
 double ***setfourd(double ****fourd, char *fdstatus, int Nfd, GridData &grid)
 {
