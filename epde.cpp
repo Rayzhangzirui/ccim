@@ -20,11 +20,11 @@ void LinearSolver(double ***x, SparseElt2**** &A, double ***b, double ***a, doub
 
     switch (globlinsolve){
         case 0:
-            strcpy(name, "bicgstab");
+            strcpy(name, "BICGSTAB");
             BICGSTABsmall(x,A, b, grid, numsteps, tollinsolve, a, u, pb,tmp);
             break;
         case 1:
-            strcpy(name, "ilu-bicgstab");
+            strcpy(name, "preconditioned BICGSTAB");
             ILUsmall(tmp.M, A, grid, a, u,pb);
       
             prerightBICGSTABsmall(x, A, b, tmp.M, grid, numsteps, tollinsolve, a, u, pb,tmp);
@@ -32,7 +32,7 @@ void LinearSolver(double ***x, SparseElt2**** &A, double ***b, double ***a, doub
             gaussseidelsmall(x,A, b, grid,globGSsmooth,a,u,pb);
             break;
         case 2:
-            strcpy(name, "my-amg");
+            strcpy(name, "AMG");
             AMGsmall3(x, A, b, grid, 2, 0, grid.nx[0], numsteps, tollinsolve, a, u, pb);
             break;
         case 4:
@@ -50,7 +50,7 @@ void LinearSolver(double ***x, SparseElt2**** &A, double ***b, double ***a, doub
             exit(1);
     }
     clock_t cend = clock ();
-    printf("%s clock time = %f (s).\n", name, (double) (cend-cstart)/CLOCKS_PER_SEC );
+    printf("%s clock time = %f \n", name, (double) (cend-cstart)/CLOCKS_PER_SEC );
 }
 
 int main(int argc, char* argv[])
@@ -115,10 +115,14 @@ int main(int argc, char* argv[])
 
         LinearSolver(pb.psi, tmp.A, tmp.b, a, S, grid, grid.N, tollinsolve, pb,tmp);
         
-        checkanswer(pb.psi,S,grid);
-        checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);
-    }
 
+        if (globtestnum == 9){
+            globtestnum = 0;
+        }
+        
+        checkanswer(pb.psi,S,grid);
+        checkDuStorage(pb.psi, Dusmall, smallsize, S, pb, grid);    
+    }
 
 
     

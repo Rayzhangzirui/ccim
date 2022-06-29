@@ -44,6 +44,7 @@ int globcim = 345;
 // 4: cim 3 and cim 4
 // 5: cim 3 and cim 5
 // 345: cim 3 and combination of cim 4 and cim 5
+// 6: cim based on estimated condition number 
 // 0: iim
 
 double tollinsolve = 1e-8; // tolerance of linear solver
@@ -59,10 +60,12 @@ int globperturb = 0;
 // 0: CIM perturbation
 // n > 0: pertrubation using status for maximum of n steps 
 // -1: no perturbation
+
 int globsmall = 1;
 // 0: not storing info for Du
 // 1: storing info for Du in local index
 // 2: storing info for Du in global index
+
 int GRIDNUM = 30;//global grid number
 int eindex[3] = {-1,-1,-1};
 double EPSILONP = 80.0;

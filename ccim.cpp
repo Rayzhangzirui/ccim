@@ -1834,403 +1834,6 @@ void addtostorage( StorageStruct* &Dusmall, int &buildsize,
          }
 }
 
-
-
-
-// with ***a, 
-void cim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &buildsize, 
-            int *index, double ***a, int gamma[][2], double ***S, PBData &pb, 
-            GridData &grid)
-{
-   double **G;
-
-
-   int r, s, t, i, j, m, n, sk, mid = 2, N = 2*mid;
-   int rindex[grid.dim], tindex[grid.dim], sindex[grid.dim], Narray[grid.dim];
-   double d0[2*grid.dim];
-   double ***dcoef[2*grid.dim];
-   double **LU,  value;
-   int PLR[2*grid.dim], PLC[2*grid.dim];
-   double **alpha = matrix(grid.dim-1,1), beta, normal[grid.dim], tangent[grid.dim];
-   double ethere, ehere;
-   double temp[2*grid.dim];
-   double sigma, tau, Dsigma[grid.dim], Dtau[grid.dim], thesign;
-
-            double exactd[2*grid.dim], exactres, tempsign;
-            int tempindex[grid.dim];
-
-   for (r = 0; r < grid.dim; r++)
-      Narray[r] = N;
-
-   double ***D1u, ******D1ucoef, ****D1uxcoef, ****D1uxxcoef, ***D1jumpuxxcoef;
-   D1u = new double **[grid.dim];
-   D1ucoef = new double *****[grid.dim];
-   D1uxcoef = new double ***[grid.dim];
-   D1uxxcoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-   {
-      D1u[r] = new double *[2];
-      D1ucoef[r] = new double ****[2];
-      D1uxcoef[r] = new double **[2];
-      D1uxxcoef[r] = new double **[2];
-      for (s = 0; s <= 1; s++)
-      {
-         D1u[r][s] = NULL;
-         D1ucoef[r][s] = NULL;
-         D1uxcoef[r][s] = NULL;
-         D1uxxcoef[r][s] = NULL;
-      }
-   }
-   D1jumpuxxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-   
-   double **D2u, *****D2ucoef, ***D2uxcoef, ***D2uxxcoef, **D2jumpuxxcoef;
-   D2u = matrix(grid.dim-1,grid.dim-1);
-   D2ucoef = new double ****[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-   {
-      D2ucoef[r] = new double ***[grid.dim];
-      for (s = 0; s < grid.dim; s++)
-         D2ucoef[r][s] = matrix(N,N,N);
-   }
-   D2uxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-   D2uxxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-   D2jumpuxxcoef = matrix(grid.dim-1,grid.dim-1);
-
-   double jumpD1u = 0.0, ***jumpD1ucoef, jumpD1uxcoef[grid.dim], 
-          jumpD1uxxcoef[grid.dim], **jumpD1jumpuxxcoef;
-   jumpD1ucoef = matrix(N,N,N);
-   jumpD1jumpuxxcoef = matrix(grid.dim-1,grid.dim-1);
-
-   double jumpD2u = 0.0, ***jumpD2ucoef, jumpD2uxcoef[grid.dim], 
-          jumpD2uxxcoef[grid.dim];
-   jumpD2ucoef = matrix(N,N,N);
-
-
-   char yesD2[grid.dim][grid.dim];
-   
-
-   value = 0.0;
-
-   LU = matrix(2*grid.dim-1,2*grid.dim-1);
-   G = matrix(2*grid.dim-1,2*grid.dim-1);
-   for (r = 0; r < 2*grid.dim; r++)
-      dcoef[r] = matrix(N,N,N);
-
-   if (evalarray(S,index) < 0.0)
-   {
-      ehere = pb.epsilonm;
-      ethere = pb.epsilonp;
-      thesign = -1.0;
-   }
-   else
-   {
-      ehere = pb.epsilonp;
-      ethere = pb.epsilonm;
-      thesign = 1.0;
-   }
-
-   for (m = 0; m < grid.dim; m++)
-      for (n = m+1; n < grid.dim; n++)
-      {
-// yesD2 only defined for m < n
-         yesD2[m][n] = 0;
-         if (!globdist)
-            getcim345D2u(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],D2uxxcoef[m][n],
-                         D2jumpuxxcoef[m][n],yesD2[m][n],m,n,index,0,0,mid,S,grid);
-         else
-            getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],D2uxxcoef[m][n],
-                             D2jumpuxxcoef[m][n],yesD2[m][n],m,n,index,0,0,mid,S,grid);
-      }
-
-   for (r = 0; r < grid.dim; r++)
-      rindex[r] = index[r];
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-   for (r = 0; r < grid.dim; r++)
-      for (sk = -1; sk <= 1; sk += 2)
-         if (gamma[r][(sk+1)/2] == 1)
-         {
-            D1u[r][(sk+1)/2] = new double[grid.dim];
-            D1ucoef[r][(sk+1)/2] = new double ***[grid.dim];
-            for (t = 0; t < grid.dim; t++)
-               D1ucoef[r][(sk+1)/2][t] = matrix(N,N,N);
-            D1uxcoef[r][(sk+1)/2] = matrix(grid.dim-1,grid.dim-1);
-            D1uxxcoef[r][(sk+1)/2] = matrix(grid.dim-1,grid.dim-1);
-
-            for (m = 0; m < grid.dim; m++)
-               for (n = m+1; n < grid.dim; n++)
-               {
-                  if (!globdist)
-                     getcim345D2u(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
-                                  D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
-                                  m,n,index,r,sk,mid,S,grid);
-                  else
-                     getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
-                                      D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
-                                      m,n,index,r,sk,mid,S,grid);
-               }
-            
-            rindex[r] = index[r]+sk;
-// getting interface info
-            getinterfaceinfo(alpha[r][(sk+1)/2],tangent,normal,S,index,rindex,grid);
-            beta = 1.0-alpha[r][(sk+1)/2];
-// get derivatives
-//            cout << "getting Du" << endl;
-            getcim345Du(D1u[r][(sk+1)/2],D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
-                        D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,index,r,sk,
-                        alpha[r][(sk+1)/2],thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,
-                        D2jumpuxxcoef,mid,grid);
-            double rhs = 0.0;
-// getting jump of uxx in r
-            gettau(tau,index,r,sk,alpha[r][(sk+1)/2],grid);
-//            cout << "getting jump Du" << endl;
-            getcim345jumpux(jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef,
-                            jumpD1jumpuxxcoef,index,r,sk,alpha[r][(sk+1)/2],thesign,
-                            normal,tangent,mid,D1ucoef[r][(sk+1)/2],
-                            D1uxcoef[r][(sk+1)/2],D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,
-                            S,pb,grid);
-//            cout << "getting jump D2u" << endl;
-            getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
-                             alpha[r][(sk+1)/2],thesign,normal,mid,a,D1u[r][(sk+1)/2],
-                             D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
-                             D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,
-                             D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
-                             jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);
-// form d0 and dcoef's rth entry 
-            d0[grid.dim*(sk+1)/2+r] = thesign*(tau/(grid.dx[r]*grid.dx[r])+
-                                               sk*beta*jumpD1u/grid.dx[r]+
-                                               0.5*beta*beta*jumpD2u)-
-                                      sk*D1u[r][(sk+1)/2][r]/grid.dx[r];
-            exactd[grid.dim*(sk+1)/2+r] = d0[grid.dim*(sk+1)/2+r];
-
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = 0;
-            while (sindex[0] <= N)
-            {
-               setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                           thesign*(sk*beta*evalarray(jumpD1ucoef,sindex)/grid.dx[r]+
-                                    0.5*beta*beta*evalarray(jumpD2ucoef,sindex))-
-                           sk*evalarray(D1ucoef[r][(sk+1)/2][r],sindex)/grid.dx[r]);
-               for (m = 0; m < grid.dim; m++)
-                  tempindex[m] = index[m]+sindex[m]-mid;
-               if (evalarray(S,tempindex) < 0.0)
-                  tempsign = -1.0;
-               else
-                  tempsign = 1.0;
-               exactd[grid.dim*(sk+1)/2+r] += evalarray(dcoef[grid.dim*(sk+1)/2+r],
-                                                        sindex)*
-                                              getu(tempindex,0,0,0.0,tempsign,grid);
-   
-               (sindex[grid.dim-1])++;
-               for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-               {
-                  sindex[i] = 0;
-                  (sindex[i-1])++;
-               }
-            }
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = mid;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                        evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)-
-                        1.0/(grid.dx[r]*grid.dx[r]));
-            for (m = 0; m < grid.dim; m++)
-               tempindex[m] = index[m]+sindex[m]-mid;
-            if (evalarray(S,tempindex) < 0.0)
-               tempsign = -1.0;
-            else
-               tempsign = 1.0;
-            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(tempindex,0,0,0.0,tempsign,grid);
-            sindex[r] = mid+sk;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                        evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)+
-                        1.0/(grid.dx[r]*grid.dx[r]));
-            for (m = 0; m < grid.dim; m++)
-               tempindex[m] = index[m]+sindex[m]-mid;
-            if (evalarray(S,tempindex) < 0.0)
-               tempsign = -1.0;
-            else
-               tempsign = 1.0;
-            exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(tempindex,0,0,0.0,tempsign,grid);
-            sindex[r] = mid;
-// form matrix's rth row
-            for (m = 0; m < grid.dim; m++)
-               G[grid.dim*(sk+1)/2+r][m] = -thesign*
-                                           (sk*beta*jumpD1uxxcoef[m]/grid.dx[r]+
-                                            0.5*beta*beta*jumpD2uxxcoef[m])+
-                                           sk*D1uxxcoef[r][(sk+1)/2][r][m]/grid.dx[r];
-
-            G[grid.dim*(sk+1)/2+r][r] += 0.5*(beta*beta-alpha[r][(sk+1)/2]*
-                                                        alpha[r][(sk+1)/2]);
-            for (m = 0; m < grid.dim; m++)
-               G[grid.dim*(sk+1)/2+r][m+grid.dim] = -thesign*
-                                                    (sk*beta*jumpD1uxcoef[m]/grid.dx[r]+
-                                                     0.5*beta*beta*jumpD2uxcoef[m])+
-                                                    sk*D1uxcoef[r][(sk+1)/2][r][m]/
-                                                    grid.dx[r];
-            rindex[r] = index[r];
-         }
-         else
-         {
-// if interior point
-            d0[grid.dim*(sk+1)/2+r] = 0.0;
-            exactd[grid.dim*(sk+1)/2+r] = d0[grid.dim*(sk+1)/2+r];
-            for (s = 0; s < 2*grid.dim; s++)
-               G[grid.dim*(sk+1)/2+r][s] = 0.0;
-            G[grid.dim*(sk+1)/2+r][r] = 0.5;
-            G[grid.dim*(sk+1)/2+r][grid.dim+r] = sk/grid.dx[r];
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = 0;
-            while (sindex[0] <= N)
-            {
-               setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,0.0);
-   
-               (sindex[grid.dim-1])++;
-               for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-               {
-                  sindex[i] = 0;
-                  (sindex[i-1])++;
-               }
-            }
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = mid;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,-1.0/(grid.dx[r]*grid.dx[r]));
-            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(index,0,0,0.0,thesign,grid);
-            sindex[r] = mid+sk;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,1.0/(grid.dx[r]*grid.dx[r]));
-            exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(index,r,sk,1.0,thesign,grid);
-            sindex[r] = mid;
-         }
-
-   // store D2u_rr as function of u-value in Dusmall
-   // ux = const term, uxcoef = coef of u
-   double ux[grid.dim], ****uxcoef;
-   uxcoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-      uxcoef[r] = matrix(N,N,N);
-
-
-// solve for uxx and put in matrix
-   gecp0(LU,PLR,PLC,G,2*grid.dim-1,2*grid.dim-1);
-   forwardbacksub0(temp,d0,LU,PLR,PLC,2*grid.dim-1);
-   value = 0.0;
-   // constant term in D2u[n][n] (first dim term), put to rhs
-   for (n = 0; n < grid.dim; n++)
-      value += ehere*temp[n];
-   setvalarray(b,index,getf(index,0,0,0.0,thesign,pb,grid)+value);
-
-   // const term for D2u[j][j]
-   for (j = 0; j < grid.dim; j++)
-      D2u[j][j] = temp[j];
-
-   // const term for Du[j]
-   for (j = 0; j < grid.dim; j++)
-      ux[j] = temp[j+grid.dim];
-
-   for (s = 0; s < grid.dim; s++)
-      tindex[s] = index[s];
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = 0;
-   while (sindex[0] <= N)
-   {
-      // temp is vector for u[sindex]
-      for (n = 0; n < 2*grid.dim; n++)
-         temp[n] = evalarray(dcoef[n],sindex);
-
-      // A(index, tindex) = value
-      forwardbacksub0(temp,temp,LU,PLR,PLC,2*grid.dim-1);
-      for (s = 0; s < grid.dim; s++)
-         tindex[s] = index[s]-mid+sindex[s];
-      value = 0.0;
-      for (n = 0; n < grid.dim; n++)
-         value -= ehere*temp[n];
-      if (value != 0.0)
-         sparse2(index,tindex,A,value,grid);
-
-      // D2u_nn = ... + D2ucoef[n][n][sindex] u_sindex 
-      for (n = 0; n < grid.dim; n++)
-         setvalarray(D2ucoef[n][n],sindex,temp[n]);
-
-      // Du_n =  ... + Du[n][sindex] u_sindex
-      for (n = 0; n < grid.dim; n++)
-         setvalarray(uxcoef[n],sindex,temp[n+grid.dim]);
-
-      (sindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-      {
-         sindex[i] = 0;
-         (sindex[i-1])++;
-      }
-   }
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-
-// add value of a to diagonals
-   value = evalarray(a,index);
-   if (value != 0.0)
-      sparse2(index,index,A,value,grid);
-
-// storing uint info
-   addtostorage( Dusmall, buildsize, mid, index, gamma, alpha, 
-    ux,  uxcoef, 
-    D1u, D1ucoef,  D1uxcoef,  D1uxxcoef,
-    D2u,  D2ucoef, grid);
-
-   free_matrix(alpha,grid.dim-1,1);
-   free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
-   free_matrix(G,2*grid.dim-1,2*grid.dim-1);
-   for (r = 0; r < 2*grid.dim; r++)
-      free_matrix(dcoef[r],N,N,N);
-
-   for (r = 0; r < grid.dim; r++)
-      for (sk = -1; sk <= 1; sk += 2)
-         if (gamma[r][(sk+1)/2] == 1)
-         {
-            delete [] D1u[r][(sk+1)/2];
-            for (t = 0; t < grid.dim; t++)
-               free_matrix(D1ucoef[r][(sk+1)/2][t],N,N,N);
-            delete [] D1ucoef[r][(sk+1)/2];
-            free_matrix(D1uxcoef[r][(sk+1)/2],grid.dim-1,grid.dim-1);
-            free_matrix(D1uxxcoef[r][(sk+1)/2],grid.dim-1,grid.dim-1);
-         }
-   for (r = 0; r < grid.dim; r++)
-   {
-      delete [] D1u[r];
-      delete [] D1ucoef[r];
-      delete [] D1uxcoef[r];
-      delete [] D1uxxcoef[r];
-   }
-   delete [] D1u;
-   delete [] D1ucoef;
-   delete [] D1uxcoef;
-   delete [] D1uxxcoef;
-   free_matrix(D1jumpuxxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-
-   free_matrix(D2u,grid.dim-1,grid.dim-1);
-   for (r = 0; r < grid.dim; r++)
-   {
-      for (s = 0; s < grid.dim; s++)
-         free_matrix(D2ucoef[r][s],N,N,N);
-      delete [] D2ucoef[r];
-   }
-   delete [] D2ucoef;
-   free_matrix(D2uxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-   free_matrix(D2uxxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-   free_matrix(D2jumpuxxcoef,grid.dim-1,grid.dim-1);
-
-   free_matrix(jumpD1ucoef,N,N,N);
-   free_matrix(jumpD1jumpuxxcoef,grid.dim-1,grid.dim-1);
-
-   free_matrix(jumpD2ucoef,N,N,N);
-
-   for (r = 0; r < grid.dim; r++)
-      free_matrix(uxcoef[r],N,N,N);
-   delete [] uxcoef;
-}
-
 /*
 approximate (mixed) D2u at grid point in terms of const, u-val, Du, principle D2u, (mixed) jumpD2u
 D2u_mn = u0 + u[sindex] u_sindex + uxcoef[:s] Du_s + uxxcoef[:s] D2u_ss + jumpuxxcoef jumpD2u_mn
@@ -2976,13 +2579,7 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
       }
       else if (thestatus >= 2 && thestatus <=4)
       {        
-       if(globcim==6){
          cim345cond(A,b,Dusmall,buildsize,tindex,a,gamma,S,pb,grid);  
-       } else {
-         cim345(A,b,Dusmall,buildsize,tindex,a,gamma,S,pb,grid);  
-       }
-       
-       
          (count[thestatus])++;
       } 
       else if (thestatus == 5)
@@ -3052,505 +2649,6 @@ void linearsystemcim345(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall,
 }
 
 
-
-
-
-// output ux at grid point and Du at interface
-// modifed from getcim345Du, add *ux as argument
-void getcim345DuAll(double &uint, double *ux, double *Du, int *index, int rstar, int sstar,
-                 double ***u, double ***S, PBData &pb, GridData &grid)
-{
-   int r, s, t, i, m, n, sk, mid = 2, N = 2*mid;
-   int rindex[grid.dim], tindex[grid.dim], sindex[grid.dim];
-   double d0[2*grid.dim];
-   double ***dcoef[2*grid.dim];
-   double **LU, **G;
-   int gamma[grid.dim][2];
-   int PLR[2*grid.dim], PLC[2*grid.dim];
-   double alpha, beta, normal[grid.dim], tangent[grid.dim];
-   double ethere, ehere;
-   double temp[2*grid.dim];
-   double sigma, tau, Dsigma[grid.dim], Dtau[grid.dim], thesign;
-
-   double D1u[grid.dim], ****D1ucoef, **D1uxcoef, **D1uxxcoef, 
-          ***D1jumpuxxcoef;
-   D1ucoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-      D1ucoef[r] = matrix(N,N,N);
-   D1uxcoef = matrix(grid.dim-1,grid.dim-1);
-   D1uxxcoef = matrix(grid.dim-1,grid.dim-1);
-   D1jumpuxxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-
-   double finalalpha, finalD1u[grid.dim], ****finalD1ucoef, **finalD1uxcoef, 
-          **finalD1uxxcoef;
-   finalD1ucoef = new double ***[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-      finalD1ucoef[r] = matrix(N,N,N);
-   finalD1uxcoef = matrix(grid.dim-1,grid.dim-1);
-   finalD1uxxcoef = matrix(grid.dim-1,grid.dim-1);
-
-   double **D2u, *****D2ucoef, ***D2uxcoef, ***D2uxxcoef, **D2jumpuxxcoef;
-   D2u = matrix(grid.dim-1,grid.dim-1);
-   D2ucoef = new double ****[grid.dim];
-   for (r = 0; r < grid.dim; r++)
-   {
-      D2ucoef[r] = new double ***[grid.dim];
-      for (s = 0; s < grid.dim; s++)
-         D2ucoef[r][s] = matrix(N,N,N);
-   }
-   D2uxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-   D2uxxcoef = matrix(grid.dim-1,grid.dim-1,grid.dim-1);
-   D2jumpuxxcoef = matrix(grid.dim-1,grid.dim-1);
-
-   double jumpD1u = 0.0, ***jumpD1ucoef, jumpD1uxcoef[grid.dim], 
-          jumpD1uxxcoef[grid.dim], **jumpD1jumpuxxcoef;
-   jumpD1ucoef = matrix(N,N,N);
-   jumpD1jumpuxxcoef = matrix(grid.dim-1,grid.dim-1);
-
-   double jumpD2u = 0.0, ***jumpD2ucoef, jumpD2uxcoef[grid.dim], 
-          jumpD2uxxcoef[grid.dim];
-   jumpD2ucoef = matrix(N,N,N);
-
-   char yesD2[grid.dim][grid.dim];
-   
-   for (r = 0; r < grid.dim; r++)
-      rindex[r] = index[r];
-   for (r = 0; r < grid.dim; r++)
-   {
-      for (s = -1; s <= 1; s += 2)
-      {
-         rindex[r] = min(max(index[r]+s,0),grid.nx[r]);
-         if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)
-            gamma[r][(s+1)/2] = 1;
-         else
-            gamma[r][(s+1)/2] = 0;//gamma[r][s=0] = dim r, s=-1, has interface
-      }
-      rindex[r] = index[r];
-   }
-
-   LU = matrix(2*grid.dim-1,2*grid.dim-1);
-   G = matrix(2*grid.dim-1,2*grid.dim-1);
-   for (r = 0; r < 2*grid.dim; r++)
-      dcoef[r] = matrix(N,N,N);
-
-   if (evalarray(S,index) < 0.0)
-   {
-      ehere = pb.epsilonm;
-      ethere = pb.epsilonp;
-      thesign = -1.0;
-   }
-   else
-   {
-      ehere = pb.epsilonp;
-      ethere = pb.epsilonm;
-      thesign = 1.0;
-   }
-   // get approximation of D2u at index
-   for (m = 0; m < grid.dim; m++)
-      for (n = m+1; n < grid.dim; n++)
-      {
-         yesD2[m][n] = 0;
-         if (!globdist)
-            getcim345D2u(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],D2uxxcoef[m][n],
-                         D2jumpuxxcoef[m][n],yesD2[m][n],m,n,index,0,0,mid,S,grid);
-         else
-            getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],D2uxxcoef[m][n],
-                             D2jumpuxxcoef[m][n],yesD2[m][n],m,n,index,0,0,mid,S,grid);
-      }
-
-   for (r = 0; r < grid.dim; r++)
-      rindex[r] = index[r];
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-   for (r = 0; r < grid.dim; r++)
-      for (sk = -1; sk <= 1; sk += 2)
-         if (gamma[r][(sk+1)/2] == 1)
-         {
-//            cout << "r = " << r << " " << sk << endl;
-//            cout << "getting D2u" << endl;
-            for (m = 0; m < grid.dim; m++)
-               for (n = m+1; n < grid.dim; n++)
-                  if (!globdist)
-                     getcim345D2u(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
-                                  D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
-                                  m,n,index,r,sk,mid,S,grid);
-                  else
-                     getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
-                                      D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
-                                      m,n,index,r,sk,mid,S,grid);
-            
-            rindex[r] = index[r]+sk;
-// getting interface info
-            getinterfaceinfo(alpha,tangent,normal,S,index,rindex,grid);
-            beta = 1.0-alpha;
-// get derivatives
-//            cout << "getting Du" << endl;
-            getcim345Du(D1u,D1ucoef,D1uxcoef,D1uxxcoef,D1jumpuxxcoef,index,r,sk,alpha,
-                        thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,D2jumpuxxcoef,mid,grid);
-// getting jump of uxx in r
-            gettau(tau,index,r,sk,alpha,grid);
-//            cout << "getting jump Du" << endl;
-            getcim345jumpux(jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef,
-                            jumpD1jumpuxxcoef,index,r,sk,alpha,thesign,normal,tangent,
-                            mid,D1ucoef,D1uxcoef,D1uxxcoef,D1jumpuxxcoef,S,pb,grid);
-//            cout << "getting jump D2u" << endl;
-            getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
-                             alpha,thesign,normal,mid,D1u,D1ucoef,D1uxcoef,D1uxxcoef,
-                             D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,D2uxxcoef,D2jumpuxxcoef,
-                             jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef,
-                             jumpD1jumpuxxcoef,S,pb,grid);
-            if (r == rstar && sk == sstar)
-            {
-               finalalpha = alpha;
-
-               for (s = 0; s < grid.dim; s++)
-                  finalD1u[s] = D1u[s];
-
-               for (s = 0; s < grid.dim; s++)
-                  sindex[s] = 0;
-               while (sindex[0] <= N)
-               {
-                  for (s = 0; s < grid.dim; s++)
-                     setvalarray(finalD1ucoef[s],sindex,evalarray(D1ucoef[s],sindex));
-
-                  (sindex[grid.dim-1])++;
-                  for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-                  {
-                     sindex[i] = 0;
-                     (sindex[i-1])++;
-                  }
-               }
-               for (s = 0; s < grid.dim; s++)
-                  sindex[s] = mid;
-
-               for (s = 0; s < grid.dim; s++)
-                  for (t = 0; t < grid.dim; t++)
-                  {
-                     finalD1uxcoef[s][t] = D1uxcoef[s][t];
-                     finalD1uxxcoef[s][t] = D1uxxcoef[s][t];
-                  }
-            }
-// form d0 and dcoef's rth entry 
-            d0[grid.dim*(sk+1)/2+r] = thesign*(tau/(grid.dx[r]*grid.dx[r])+
-                                               sk*beta*jumpD1u/grid.dx[r]+
-                                               0.5*beta*beta*jumpD2u)-
-                                      sk*D1u[r]/grid.dx[r];
-
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = 0;
-            while (sindex[0] <= N)
-            {
-               setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                           thesign*(sk*beta*evalarray(jumpD1ucoef,sindex)/grid.dx[r]+
-                                    0.5*beta*beta*evalarray(jumpD2ucoef,sindex))-
-                           sk*evalarray(D1ucoef[r],sindex)/grid.dx[r]);
-   
-               (sindex[grid.dim-1])++;
-               for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-               {
-                  sindex[i] = 0;
-                  (sindex[i-1])++;
-               }
-            }
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = mid;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                        evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)-
-                        1.0/(grid.dx[r]*grid.dx[r]));
-            sindex[r] = mid+sk;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
-                        evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)+
-                        1.0/(grid.dx[r]*grid.dx[r]));
-            sindex[r] = mid;
-// form matrix's rth row
-            for (m = 0; m < grid.dim; m++)
-               G[grid.dim*(sk+1)/2+r][m] = -thesign*
-                                           (sk*beta*jumpD1uxxcoef[m]/grid.dx[r]+
-                                            0.5*beta*beta*jumpD2uxxcoef[m])+
-                                           sk*D1uxxcoef[r][m]/grid.dx[r];
-            G[grid.dim*(sk+1)/2+r][r] += 0.5*(beta*beta-alpha*alpha);
-            for (m = 0; m < grid.dim; m++)
-               G[grid.dim*(sk+1)/2+r][m+grid.dim] = -thesign*
-                                                    (sk*beta*jumpD1uxcoef[m]/grid.dx[r]+
-                                                     0.5*beta*beta*jumpD2uxcoef[m])+
-                                                    sk*D1uxcoef[r][m]/grid.dx[r];
-            rindex[r] = index[r];
-         }
-         else
-         {
-// if interior point
-            d0[grid.dim*(sk+1)/2+r] = 0.0;
-            for (s = 0; s < 2*grid.dim; s++)
-               G[grid.dim*(sk+1)/2+r][s] = 0.0;
-            G[grid.dim*(sk+1)/2+r][r] = 0.5;
-            G[grid.dim*(sk+1)/2+r][grid.dim+r] = sk/grid.dx[r];
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = 0;
-            while (sindex[0] <= N)
-            {
-               setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,0.0);
-   
-               (sindex[grid.dim-1])++;
-               for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-               {
-                  sindex[i] = 0;
-                  (sindex[i-1])++;
-               }
-            }
-            for (s = 0; s < grid.dim; s++)
-               sindex[s] = mid;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,-1.0/(grid.dx[r]*grid.dx[r]));
-            sindex[r] = mid+sk;
-            setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,1.0/(grid.dx[r]*grid.dx[r]));
-            sindex[r] = mid;
-         }
-
-// solve for uxx and put in matrix
-   int j;
-   double uxx[grid.dim];
-
-   gecp0(LU,PLR,PLC,G,2*grid.dim-1,2*grid.dim-1);
-   forwardbacksub0(temp,d0,LU,PLR,PLC,2*grid.dim-1);
-   for (j = 0; j < grid.dim; j++)
-      uxx[j] = temp[j];
-   for (j = 0; j < grid.dim; j++)
-      ux[j] = temp[j+grid.dim];
-
-   for (s = 0; s < grid.dim; s++)
-      tindex[s] = index[s];
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = 0;
-   while (sindex[0] <= N)
-   {
-      for (n = 0; n < 2*grid.dim; n++)
-         temp[n] = evalarray(dcoef[n],sindex);
-      forwardbacksub0(temp,temp,LU,PLR,PLC,2*grid.dim-1);
-      for (s = 0; s < grid.dim; s++)
-         tindex[s] = index[s]-mid+sindex[s];
-      for (j = 0; j < grid.dim; j++)
-      {
-         uxx[j] += temp[j]*evalarray(u,tindex);
-         ux[j] += temp[j+grid.dim]*evalarray(u,tindex);
-      }
-
-      (sindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-      {
-         sindex[i] = 0;
-         (sindex[i-1])++;
-      }
-   }
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-
-   if (globintorder == 3)
-      uint = evalarray(u,index)+sstar*finalalpha*grid.dx[rstar]*ux[rstar]+
-             0.5*(finalalpha*grid.dx[rstar])*(finalalpha*grid.dx[rstar])*uxx[rstar];
-   else
-      uint = evalarray(u,index)+sstar*finalalpha*grid.dx[rstar]*ux[rstar];
-
-   for (s = 0; s < grid.dim; s++)
-      Du[s] = finalD1u[s];
-
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = 0;
-   while (sindex[0] <= N)
-   {
-      for (s = 0; s < grid.dim; s++)
-         tindex[s] = index[s]-mid+sindex[s];
-      for (s = 0; s < grid.dim; s++)
-         Du[s] += evalarray(finalD1ucoef[s],sindex)*evalarray(u,tindex);
-
-      (sindex[grid.dim-1])++;
-      for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
-      {
-         sindex[i] = 0;
-         (sindex[i-1])++;
-      }
-   }
-   for (s = 0; s < grid.dim; s++)
-      sindex[s] = mid;
-
-   for (s = 0; s < grid.dim; s++)
-      for (t = 0; t < grid.dim; t++)
-         Du[s] += finalD1uxcoef[s][t]*ux[t];
-
-   for (s = 0; s < grid.dim; s++)
-      for (t = 0; t < grid.dim; t++)
-         Du[s] += finalD1uxxcoef[s][t]*uxx[t];
-
-
-   free_matrix(LU,2*grid.dim-1,2*grid.dim-1);
-   free_matrix(G,2*grid.dim-1,2*grid.dim-1);
-   for (r = 0; r < 2*grid.dim; r++)
-      free_matrix(dcoef[r],N,N,N);
-
-   for (r = 0; r < grid.dim; r++)
-      free_matrix(D1ucoef[r],N,N,N);
-   delete [] D1ucoef;
-   free_matrix(D1uxcoef,grid.dim-1,grid.dim-1);
-   free_matrix(D1uxxcoef,grid.dim-1,grid.dim-1);
-   free_matrix(D1jumpuxxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-
-   for (r = 0; r < grid.dim; r++)
-      free_matrix(finalD1ucoef[r],N,N,N);
-   delete [] finalD1ucoef;
-   free_matrix(finalD1uxcoef,grid.dim-1,grid.dim-1);
-   free_matrix(finalD1uxxcoef,grid.dim-1,grid.dim-1);
-
-   free_matrix(D2u,grid.dim-1,grid.dim-1);
-   for (r = 0; r < grid.dim; r++)
-   {
-      for (s = 0; s < grid.dim; s++)
-         free_matrix(D2ucoef[r][s],N,N,N);
-      delete [] D2ucoef[r];
-   }
-   delete [] D2ucoef;
-   free_matrix(D2uxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-   free_matrix(D2uxxcoef,grid.dim-1,grid.dim-1,grid.dim-1);
-   free_matrix(D2jumpuxxcoef,grid.dim-1,grid.dim-1);
-
-   free_matrix(jumpD1ucoef,N,N,N);
-   free_matrix(jumpD1jumpuxxcoef,grid.dim-1,grid.dim-1);
-
-   free_matrix(jumpD2ucoef,N,N,N);
-}
-
-// check Du at gridpoint
-void checkcim345DuAll(double ***u, double ***S, PBData &pb, GridData &grid)
-{   
-   double uint, ux[grid.dim], Du[grid.dim]; //results from getcim345
-   
-   array<int,3> maxErrIdx;
-   array<int,3> maxErrItfIdx;
-   double maxErr; // maxErr at all grid point
-   double maxErrItf; // maxErr at grid point near interface
-   vector<double> sqrdCompErrAll; // vector of error component at all grid point
-   vector<double> sqrdCompErrItf; // vector of error component at grid point near interface
-   
-   double max_Dup_itf_err = 0.0;// error at interface plus side
-   array<int,3> max_Dup_itf_err_idx;
-
-   double max_Dup_itf_rel_err = 0.0;// relative error at interface plus side
-   array<int,3> max_Dup_itf_rel_err_idx;
-   
-   double max_Dum_itf_err = 0.0;// error at interface minus side
-   array<int,3> max_Dum_itf_err_idx;
-
-   double max_Dum_itf_rel_err = 0.0;// relative error at interface minus side
-   array<int,3> max_Dum_itf_rel_err_idx;
-   
-   // do not go through boundary
-   for(int i = 1; i < grid.nx[0]; i++){
-      for(int j = 1; j < grid.nx[1]; j++){
-         for(int k = 1; k < grid.nx[2]; k++){
-            int tindex[3] = {i,j,k};
-            int rindex[3] = {i,j,k};
-
-            int thestatus = getstatus5(S,tindex,grid);
-            double thesign = (evalarray(S,tindex) < 0.0)? -1.0 : 1.0;
-            
-            double alpha, tangent[grid.dim], normal[grid.dim];
-            if (thestatus>=2){ 
-               //cim point, find rstar and sstar
-               for (int r = 0; r < grid.dim; r++){
-                  for (int s = -1; s <= 1; s += 2){
-                     rindex[r] = tindex[r]+s;
-
-                     if ((evalarray(S,tindex) < 0.0)+(evalarray(S,rindex) < 0.0) == 1){
-                        
-                        getcim345DuAll(uint,ux,Du,tindex,r,s,u,S,pb,grid);
-                        
-                        getinterfaceinfo(alpha,tangent,normal,S,tindex,r,s,grid);
-                        
-                        //Du exact at interface
-                        array<double,3> du_itf_exact {getDu(tindex,0,r,s,alpha,thesign,grid),
-                                                getDu(tindex,1,r,s,alpha,thesign,grid),
-                                                getDu(tindex,2,r,s,alpha,thesign,grid)};
-                        double max_Du_itf_exact = max(max(fabs(du_itf_exact[0]),fabs(du_itf_exact[1])),fabs(du_itf_exact[2]));
-                        //Du at interface
-
-                        array<double,3> Du_itf_err =  { fabs(Du[0] - du_itf_exact[0]),
-                                                   fabs(Du[1] - du_itf_exact[1]),
-                                                   fabs(Du[2] - du_itf_exact[2])};
-                        double max_Du_itf_err = max(max(Du_itf_err[0],Du_itf_err[1]),Du_itf_err[2]);
-                        
-                        double Du_itf_rel_err = max_Du_itf_err/max_Du_itf_exact; //relative error
-                        
-                        if(thesign<0){
-                           max_Dum_itf_err = (max_Du_itf_err > max_Dum_itf_err)? max_Du_itf_err : max_Dum_itf_err;
-
-                           max_Dum_itf_err_idx = array<int,3>{i,j,k};
-
-                           max_Dum_itf_rel_err = (Du_itf_rel_err > max_Dum_itf_rel_err)? Du_itf_rel_err : max_Dum_itf_rel_err;
-                           max_Dum_itf_rel_err_idx = array<int,3>{i,j,k};
-                        }else{
-                           max_Dup_itf_err = (max_Du_itf_err > max_Dup_itf_err)? max_Du_itf_err : max_Dup_itf_err;
-                           max_Dup_itf_err_idx = array<int,3>{i,j,k};
-
-                           max_Dup_itf_rel_err = (Du_itf_rel_err > max_Dup_itf_rel_err)? Du_itf_rel_err : max_Dup_itf_rel_err;
-                           max_Dup_itf_rel_err_idx = array<int,3>{i,j,k};
-                        }
-                     }else{
-                        continue;
-                     }
-                  }//end of s loop
-                  rindex[r] = tindex[r];
-               }// end of r loop
-
-
-            }else if (thestatus == 1){ 
-               //interior, central differencing
-               ux[0] = (u[i+1][j][k] - u[i-1][j][k]) / (2*grid.dx[0]);
-               ux[1] = (u[i][j+1][k] - u[i][j-1][k]) / (2*grid.dx[1]);
-               ux[2] = (u[i][j][k+1] - u[i][j][k-1]) / (2*grid.dx[2]);
-
-            }else{
-               cerr<<"check Du unclassified"<<endl;
-               exit(1);
-            }
-
-            
-
-            double xerr = abs(ux[0] - getDu(tindex,0, 0, 0, 0.0, thesign, grid));
-            double yerr = abs(ux[1] - getDu(tindex,1, 0, 0, 0.0, thesign, grid));
-            double zerr = abs(ux[2] - getDu(tindex,2, 0, 0, 0.0, thesign, grid));
-            double tmpMaxErr = max(max(xerr,yerr),zerr);
-
-            if (tmpMaxErr>maxErr){
-               maxErr = tmpMaxErr;
-               maxErrIdx = array<int,3>{i,j,k};
-            }
-            sqrdCompErrAll.push_back(xerr);
-            sqrdCompErrAll.push_back(yerr);
-            sqrdCompErrAll.push_back(zerr);
-
-            if(thestatus>=2){
-               if (tmpMaxErr>maxErrItf){
-                  maxErrItf = tmpMaxErr;
-                  maxErrItfIdx = array<int,3>{i,j,k};
-               }
-               sqrdCompErrItf.push_back(xerr);
-               sqrdCompErrItf.push_back(yerr);
-               sqrdCompErrItf.push_back(zerr);
-               
-            }
-         }//end k
-      }// end j
-   }// end i
-    
-   cout<<"[checkcim345DuAll]"<<endl;
-   printf("max Du err All = %f at (%d,%d,%d)\n",maxErr,maxErrIdx[0],maxErrIdx[1],maxErrIdx[2]);
-   printf("max Du err Interface grid point = %f at (%d,%d,%d)\n",maxErrItf,maxErrItfIdx[0],maxErrItfIdx[1],maxErrItfIdx[2]);
-   printf("rmse Du err All = %f \n",rmse(sqrdCompErrAll));
-   printf("rmse Du err Interface grid point = %f \n",rmse(sqrdCompErrItf));
-
-   printf("max Du err negative interface = %f at (%d,%d,%d)\n", max_Dum_itf_err, max_Dum_itf_err_idx[0], max_Dum_itf_err_idx[1], max_Dum_itf_err_idx[2]);
-   printf("max Du err positive interface = %f at (%d,%d,%d)\n", max_Dup_itf_err, max_Dup_itf_err_idx[0], max_Dup_itf_err_idx[1], max_Dup_itf_err_idx[2]);
-
-   printf("max Du rel err negative interface = %f at (%d,%d,%d)\n", max_Dum_itf_rel_err, max_Dum_itf_rel_err_idx[0], max_Dum_itf_rel_err_idx[1], max_Dum_itf_rel_err_idx[2]);
-   printf("max Du rel err positive interface = %f at (%d,%d,%d)\n", max_Dup_itf_rel_err, max_Dup_itf_rel_err_idx[0], max_Dup_itf_rel_err_idx[1], max_Dup_itf_rel_err_idx[2]);
-}
 
 
 
@@ -3915,6 +3013,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                                                sk*beta*jumpD1u/grid.dx[r]+
                                                0.5*beta*beta*jumpD2u)-
                                       sk*D1u[r][(sk+1)/2][r]/grid.dx[r];
+            
             exactd[grid.dim*(sk+1)/2+r] = d0[grid.dim*(sk+1)/2+r];//constant part is exact
 
             for (s = 0; s < grid.dim; s++)
@@ -3932,9 +3031,12 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                   tempsign = -1.0;
                else
                   tempsign = 1.0;
-               exactd[grid.dim*(sk+1)/2+r] += evalarray(dcoef[grid.dim*(sk+1)/2+r],
-                                                        sindex)*
-                                              getu(tempindex,0,0,0.0,tempsign,grid);
+
+               if (equal(index,eindex))
+               {
+                  exactd[grid.dim*(sk+1)/2+r] += evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)*
+                                                             getu(tempindex,0,0,0.0,tempsign,grid);
+               }
    
                (sindex[grid.dim-1])++;
                for (i = grid.dim-1; i > 0 && sindex[i] > N; i--)
@@ -3955,20 +3057,29 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                tempsign = -1.0;
             else
                tempsign = 1.0;
-            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(tempindex,0,0,0.0,tempsign,grid);
+
+            if (equal(index,eindex)){
+               exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
+                                           getu(tempindex,0,0,0.0,tempsign,grid);   
+            }
+            
             sindex[r] = mid+sk;
             setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,
                         evalarray(dcoef[grid.dim*(sk+1)/2+r],sindex)+
                         1.0/(grid.dx[r]*grid.dx[r]));
             for (m = 0; m < grid.dim; m++)
                tempindex[m] = index[m]+sindex[m]-mid;
+            
             if (evalarray(S,tempindex) < 0.0)
                tempsign = -1.0;
             else
                tempsign = 1.0;
-            exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
+
+            if (equal(index,eindex)){
+               exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
                                            getu(tempindex,0,0,0.0,tempsign,grid);
+            }
+
             if (equal(index,eindex))
             {
                double somezeros[grid.dim];
@@ -4067,13 +3178,18 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
             for (s = 0; s < grid.dim; s++)
                sindex[s] = mid;
             setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,-1.0/(grid.dx[r]*grid.dx[r]));
-            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
-                                           getu(index,0,0,0.0,thesign,grid);
             sindex[r] = mid+sk;
             setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,1.0/(grid.dx[r]*grid.dx[r]));
+            sindex[r] = mid;
+
+            if (equal(index,eindex))
+            {
+            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
+                                           getu(index,0,0,0.0,thesign,grid);
             exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
                                            getu(index,r,sk,1.0,thesign,grid);
-            sindex[r] = mid;
+            }
+            
          }
 
    // print G matrix, exact rhs
@@ -4226,6 +3342,7 @@ void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &bu
     D2u,  D2ucoef,
     index,
     alpha,  gamma, S, a, pb, grid);
+
    double estcond0 = condest(G, 6);
 
 
@@ -4248,6 +3365,10 @@ void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &bu
        D2u,  D2ucoef,
        index,
        alpha,  gamma, S, a, pb, grid);   
+
+
+      // reset
+      globdist = tempglobdist;
    }
    
 
@@ -4392,8 +3513,6 @@ void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &bu
    delete [] D2ucoef;
 
 
-   // reset
-   globdist = tempglobdist;
   
 }
 
@@ -4556,122 +3675,4 @@ char yescim5D2All(vector<double***> &D2ucoefvec, vector<double*> &D2uxcoefvec, v
    
 }
 
-
-// get status of point index: 0 = boundary, 1 = interior, 2 = cim3, 3 = cim5, 4 = cim4, 5 = cim1
-int getstatus5debug(double ***S, int *index, GridData &grid)
-{
-   int r, sk, m, n, mid = 1, rindex[grid.dim], sk2[4];
-   int yesinterior, thecim, cimstatus[grid.dim][grid.dim];
-   double ***junk1, junk2[grid.dim], junk3[grid.dim];
-
-   for (r = 0; r < grid.dim; r++)
-      rindex[r] = index[r];
-   for (r = 0; r < grid.dim; r++)
-      for (sk = -1; sk <= 1; sk += 2)
-      {
-         rindex[r] = index[r]+sk;
-         if (rindex[r] < 0 || rindex[r] > grid.nx[r])
-            return 0;//if index is boundary
-         rindex[r] = index[r];
-      }
-
-   yesinterior = 1;
-   for (r = 0; r < grid.dim; r++)
-   {
-      for (sk = -1; sk <= 1; sk += 2)
-      {
-         rindex[r] = index[r]+sk;
-         if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1) // if near interface
-            yesinterior = 0;
-      }
-      rindex[r] = index[r];
-   }
-   if (yesinterior)
-      return 1;
-
-// old incorrect version returned cim 5 if cim 5 for any m and n 
-   junk1 = matrix(2,2,2);
-//   thecim = 3;
-   for (m = 0; m < grid.dim; m++)
-      for (n = m+1; n < grid.dim; n++)
-      {
-         cimstatus[m][n] = 3; 
-         if (!yessk2(sk2,m,n,index,S,grid))//if do not have usual mixed derivative
-         {
-
-            if (yescim5D2(junk1,junk2,junk3,m,n,index,mid,S,grid))//if has cim5 mixed derivative
-//               if (thecim == 3)
-//                  thecim = 5;
-               cimstatus[m][n] = 5; 
-            else 
-            {
-//               if (thecim == 3 || thecim == 5)
-//                  thecim = 4;
-               cimstatus[m][n] = 4; 
-               for (r = 0; r < grid.dim; r++)
-                  for (sk = -1; sk <= 1; sk += 2)
-                  {
-                     rindex[r] = index[r]+sk;
-                     if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1 &&
-                         !yessk2(sk2,m,n,rindex,S,grid))
-//                        thecim = 0;
-                        cout<<"m = "<<m<<", n = "<<n<<", r = "<<r<<", sk = "<<sk<<", cimstatus = "<<cimstatus[m][n]<<endl;
-                        cimstatus[m][n] = 0;
-                     rindex[r] = index[r];
-                  }
-            }
-         }
-      }
-   free_matrix(junk1,2,2,2);
-
-   for (m = 0; m < grid.dim; m++)
-      for (n = m+1; n < grid.dim; n++){
-         cout<<"m = "<<m<<", n = "<<n<<", cimstatus = "<<cimstatus[m][n]<<endl;
-      }
-
-
-
-   thecim = 3;
-   for (m = 0; m < grid.dim; m++)
-      for (n = m+1; n < grid.dim; n++)
-         if (cimstatus[m][n] == 0)
-            return 5;
-         else if (cimstatus[m][n] == 4)
-            thecim = 4;
-         else if (thecim == 3 && cimstatus[m][n] == 5)
-            thecim = 5;
-   
-   cout<<"thecim = "<<thecim<<endl;
-
-   if (thecim == 3)
-   {
-// second derivatives exhibit cim 3 structure but have to still check first derivatives
-      int count = 0;
-
-      for (r = 0; r < grid.dim; r++)
-         rindex[r] = index[r];
-      for (r = 0; r < grid.dim && count < 2; r++)
-      {
-         count = 0;
-         for (sk = -1; sk <= 1; sk += 2)
-         {
-            rindex[r] = index[r]+sk;
-            if ((evalarray(S,index) < 0.0)+(evalarray(S,rindex) < 0.0) == 1)//if change sign, count++
-               count++;
-         }
-         rindex[r] = index[r];
-      }
-      if (count < 2)
-         return 2;
-      else
-         thecim = 5;
-   }
-
-   if (thecim == 5)
-      return 3;
-   else if (thecim == 4)
-      return 4;
-   else
-      return 5; 
-}
 

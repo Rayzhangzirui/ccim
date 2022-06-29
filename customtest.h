@@ -29,6 +29,7 @@ double getf_custom(double *x, double thesign, PBData &pb, GridData &grid){
 				 (-8.0*x[r]*x[r]/((1.0+radius2)*(1.0+radius2)*(1.0+radius2))+
 				  2.0/((1.0+radius2)*(1.0+radius2)));
 	}
+	return value;
 }
 
 
@@ -95,8 +96,10 @@ double getsigma_custom(double *x, double *normal, PBData &pb, GridData &grid){
 	{
 		gradp[r] = 2.0*x[r]/((1.0+radius2)*(1.0+radius2));
 		gradm[r] = -2.0*x[r]/((1.0+radius2)*(1.0+radius2));
-	sigma += (pb.epsilonp*gradp[r]-pb.epsilonm*gradm[r])*normal[r];
+		sigma += (pb.epsilonp*gradp[r]-pb.epsilonm*gradm[r])*normal[r];
 	}
+
+	return sigma;
 }
 
 void getDsigma_custom(double *Dsigma, double *x, double *normal, double **Dnormal, PBData &pb, GridData &grid)
