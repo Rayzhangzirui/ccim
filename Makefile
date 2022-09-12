@@ -9,7 +9,7 @@ HYPRE_LIBS     = -L$(HYPRE_DIR)/lib -lHYPRE -lm
 
 HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
 
-debug=1
+debug=0
 $(info    debug is $(debug))
 $(info    CC is $(CC))
 
@@ -28,8 +28,6 @@ COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o 
 
 MOTION = storage.o march.o getvn.o
 
-cim: cim.o $(COMMON) tryvn.o  advance.o $(SOLVER) $(METHOD) $(MOTION)
-	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
 epde: epde.o $(COMMON) $(SOLVER) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 

@@ -86,8 +86,9 @@ double globtime = 0.1;
 
 // protein surface
 double ETA = 30.0;
-string PROTEINDIR = "/Users/zzirui/pbcim/protein_surf/";
-string PROJECTDIR = "/Users/zzirui/pbcim/";
+// files to store protein surface
+string PROTEINDIR = "/Users/zziruiadmin/projects/ccimproj/ccim/protein_surf/"; 
+string PROJECTDIR = "/Users/zziruiadmin/projects/ccimproj/ccim/";
 string PROTEINFILE = "mdm2.txt";
 
 

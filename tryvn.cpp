@@ -20,7 +20,7 @@
 #include "iim.h"
 #include "gmres.h"
 #include "cim12.h"
-#include "cim345cond.h"
+#include "ccim.h"
 #include "global.h"
 
 

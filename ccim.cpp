@@ -1847,7 +1847,7 @@ return perm=2 if there is usual mix Du, then second pass is skipped
 return perm=1 if have to use the other side, then in the second pass, location for interface is provided,  use rstar and sstar to find jumpuxxcoeff
 
 globdistvar = 1: 
-getsk2 with central diff > cim5 (triangle stencil) > getsk2 without central diff > sk2 on out-of-plane nbr point(prefer the side with central diff) > sk2 on the other side
+getsk2 with central diff (includeing rectangle) > cim5 (triangle stencil) > getsk2 without central diff > sk2 on out-of-plane nbr point(prefer the side with central diff) > sk2 on the other side
 globdistvar = 0: this is the same as [getcim345D2u]
 getsk2 (with or without central diff) > cim5 (triangle stencil) > sk2 on out-of-plane point(prefer the side with central diff) > sk2 on the other side
 */
@@ -3345,7 +3345,7 @@ void cim345cond(SparseElt2**** &A, double ***b, StorageStruct* &Dusmall, int &bu
 
    double estcond0 = condest(G, 6);
 
-
+   // if globcim == 6, i.e. with condition number, compute the other globdist,
    if (globcim == 6){
 
       globdist = 1 - globdist;   

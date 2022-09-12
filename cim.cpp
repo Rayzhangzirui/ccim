@@ -105,6 +105,7 @@ int main(int argc, char* argv[])
 
 	free_matrix(a,grid.nx[0],grid.nx[1],grid.nx[2]);
 	free_matrix(S,grid.nx[0],grid.nx[1],grid.nx[2]);
+	return 0;
 }
 
 

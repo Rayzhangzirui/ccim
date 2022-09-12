@@ -94,6 +94,7 @@ void rhsvngrad(double*** rhs, double*** u, MarchStruct &march, PBData &pb, GridD
 
 // euler step of u_t = - vn |grad u|, u is level set function
 //  u = u - dt rhs
+// also update t and exact radius
 void eulerstep(double*** u, double ***rhs, double dt, GridData &grid){
 	int i;
 	int tindex[grid.dim];
@@ -155,17 +156,18 @@ int main(int argc, char* argv[])
 
 		solvepde(S, a, march.Dusmall, march.smallsize, pb, grid);
 
+		// extend velocity, check vn
 		fmarch(march,-1.0,grid);
-
 		clearstorage(march.Dusmall, march.smallsize);
+		checkwithexactvn(march.extend[0], S, pb, grid); // check vn with exact
 
+		// rhs of level set equation
 		rhsvngrad(rhs, S, march, pb, grid);
 
 		eulerstep(S, rhs, grid.dt, grid);
 
 
 		cout << "Exact radius = " << grid.radius << endl;
-		checkwithexactvn(march.extend[0], S, pb, grid); // check vn with exact
 		checkwithexact(S, grid.radius, grid); // check radius with exact
 	}	
 
