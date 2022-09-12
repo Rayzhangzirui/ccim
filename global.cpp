@@ -217,10 +217,10 @@ static struct option long_options[] = {
                "-n --GRIDNUM\n"
                "-c --globcim\n"
                "-t --globtestnum: 10 = trig, 11 = cim paper>\n"
-               "-s --SURFOPT: 0 = circle, 1 = wierd torus, 11 = ellipsoid, 12 = donut, 13 = banana, 14 = 8 balls, 15 = peanut, 16 = popcorn\n"
-               "-a --globtesta, 0 = without\n"
-               "-l --globlinsolve, 0 = BICGSTAB, 1 = ILU BICGSTAB, 2 = AMG, 3 = GMRES\n"
-               "-k --globcheck, 1 = check convergence\n"
+               "-s --SURFOPT: 0 = circle, 1 = wierd torus, 11 = ellipsoid, 12 = donut, 13 = banana, 14 = 8 balls, 15 = peanut, 16 = popcorn, 20 = protien surface\n"
+               "-a --globtesta, 0 = without a term, 1 = with a term\n"
+               "-l --globlinsolve, 0 = BICGSTAB, 1 = ILU BICGSTAB, 2 = AMG, 4 = hypre-amg, 5 = hypre-ilu-bicgsta\n"
+               "-k --globcheck, 1 = check convergence, 0 = don't check convergence, used for motion computation\n"
                "-p --runStep, number of step\n"
                "-i --globtime, tfinal\n"
                "-h --globheatsmooth, number heatsmooth step\n"
@@ -231,9 +231,9 @@ static struct option long_options[] = {
                "-m --globwritemx, write coupling matrix\n"
                "-d --globdist, differencing method\n"
                "-S --globsmall, store in small structure\n"
-               "-R --radius <RADIUS>\n"
-               "-T --globgridperturb\n"
-               "-o --tollinsolve\n"
+               "-R --radius, radius of circle\n"
+               "-T --globgridperturb, 1 =  randomly shift grid\n"
+               "-o --tollinsolve, tolerance of linear system solver\n"
                "-f --PROTEINFILE\n");
                
              exit(-1);

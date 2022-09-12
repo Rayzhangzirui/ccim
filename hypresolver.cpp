@@ -2,6 +2,9 @@
 #include "helper.h"
 #include "global.h"
 #include "hypresolver.h"
+using namespace std;
+
+#if defined(USEHYPRE) 
 
 int printLevel = 0;
 /*
@@ -11,7 +14,7 @@ AMG solver, copy from ex5
 #include "HYPRE_krylov.h"
 #include "HYPRE.h"
 #include "HYPRE_parcsr_ls.h"
-using namespace std;
+
 
 
 void Copy3DArrayToHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
@@ -323,3 +326,12 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
 }
 
 
+#else
+
+void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
+{  
+   cerr<<"hypre not defined"<<endl;
+   exit(1);
+}
+
+#endif
