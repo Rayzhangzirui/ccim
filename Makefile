@@ -2,6 +2,7 @@ HOSTNAME = $(shell echo $$HOSTNAME)
 
 CC=g++ -std=c++11 
 # CC=mpic++ -std=c++11 
+# CC=mpicc -std=c++11 
 
 
 debug=0
@@ -15,12 +16,12 @@ else
 endif
 
 usehypre=1
-ifeq ($(usehypre), 1)
-	HYPRE_DIR = /Users/zzirui/hypre-2.11.2/src/hypre
-	HYPRE_LIBS = -L$(HYPRE_DIR)/lib -lHYPRE -lm
-	HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
-	OPT+=-DUSEHYPRE
-endif
+# ifeq ($(usehypre), 1)
+# 	HYPRE_DIR =  /Users/Ray/project/hypre/src/hypre
+# 	HYPRE_LIBS = -L$(HYPRE_DIR)/lib -lHYPRE -lm
+# 	HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
+# 	OPT+=-DUSEHYPRE
+# endif
 
 SOLVER = amg.o gmres.o solver.o hypresolver.o
 
@@ -30,10 +31,11 @@ COMMON = global.o matrix.o input.o sparse.o finitediff.o numerics.o interface.o 
 
 MOTION = storage.o march.o getvn.o
 
-
+# elliptic PDE solver
 epde: epde.o $(COMMON) $(SOLVER) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 
+# Motion under jump of normal derivative example
 motion: motion.o $(COMMON)  $(SOLVER) $(MOTION) $(METHOD)
 	$(CC) $(OPT) $(HYPRE_LIBS) -o $@ $^ 
 

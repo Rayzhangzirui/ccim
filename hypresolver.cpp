@@ -18,11 +18,12 @@ AMG solver, copy from ex5
 
 
 void Copy3DArrayToHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
+   HYPRE_BigInt row;
    for(int i = 0; i <= grid.nx[0]; i ++){
       for(int j = 0; j <= grid.nx[1]; j ++){
          for(int k = 0; k <= grid.nx[2]; k ++){
             Index ind = {i,j,k};
-            int row = sub2ind(ind.data(), grid.nx, grid.dim); //row number in matrix
+            row = sub2ind(ind.data(), grid.nx, grid.dim); //row number in matrix
             
             HYPRE_IJVectorSetValues(x, 1, &row, &sx[i][j][k]);
             
@@ -33,11 +34,12 @@ void Copy3DArrayToHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
 
 
 void Copy3DArrayFromHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
+   HYPRE_BigInt row;
    for(int i = 0; i <= grid.nx[0]; i ++){
       for(int j = 0; j <= grid.nx[1]; j ++){
          for(int k = 0; k <= grid.nx[2]; k ++){
             Index ind = {i,j,k};
-            int row = sub2ind(ind.data(), grid.nx, grid.dim); //row number in matrix
+            row = sub2ind(ind.data(), grid.nx, grid.dim); //row number in matrix
             
             HYPRE_IJVectorGetValues(x, 1, &row, &sx[i][j][k]);
          }
@@ -139,7 +141,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
                else
                   ehere = pb.epsilonp;
 
-               int row = sub2ind(index.data(), grid.nx, grid.dim); //row number in matrix
+               HYPRE_BigInt row = sub2ind(index.data(), grid.nx, grid.dim); //row number in matrix
                
                HYPRE_IJVectorSetValues(x, 1, &row, &sx[i][j][k]); // at interior points, initial x is 0
                HYPRE_IJVectorSetValues(b, 1, &row, &sb[i][j][k]); // 
@@ -150,7 +152,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
                   // set value at boundary
                   double value = 1;
                   
-                  int ncols = 1;
+                  HYPRE_BigInt ncols = 1;
                   HYPRE_IJMatrixAddToValues(A, 1, &ncols, &row, &row, &value);
 
                   HYPRE_IJVectorSetValues(x, 1, &row, &sb[i][j][k]); // set exact
@@ -163,7 +165,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
                      value += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
                   }
                   
-                  int ncols = 1;
+                  HYPRE_BigInt ncols = 1;
                   // set diagonal
                   HYPRE_IJMatrixAddToValues(A, 1, &ncols, &row, &row, &value);
                   
@@ -173,8 +175,8 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
                         Index rindex = index;
                         rindex[m] = index[m] + n;
                         
-                        int col = sub2ind(rindex.data(),grid.nx,grid.dim);
-                        int ncols = 1;
+                        HYPRE_BigInt col = sub2ind(rindex.data(),grid.nx,grid.dim);
+                        HYPRE_BigInt ncols = 1;
                         value = -ehere/(grid.dx[m]*grid.dx[m]);
                         HYPRE_IJMatrixAddToValues(A, 1, &ncols, &row, &col, &value);
                      }
@@ -187,8 +189,8 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
                   // interface points
                   SparseElt2 *current2;
                   for (current2 = evalarray(sA,index.data()); current2 != NULL; current2 = (*current2).next){
-                     int col = sub2ind((*current2).cindex,grid.nx,grid.dim);
-                     int ncols = 1;
+                     HYPRE_BigInt col = sub2ind((*current2).cindex,grid.nx,grid.dim);
+                     HYPRE_BigInt ncols = 1;
                      
                      HYPRE_IJMatrixAddToValues(A, 1, &ncols, &row, &col, &((*current2).val));
                   }
@@ -231,7 +233,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
    /* AMG */
    if (globlinsolve == 4)
    {
-      int num_iterations;
+      HYPRE_Int num_iterations;
       double final_res_norm;
 
       /* Create solver */
@@ -270,7 +272,7 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
       HYPRE_BoomerAMGDestroy(solver);
    }else if(globlinsolve == 5){
       // BICGSTAB with Euclid
-      int num_iterations;
+      HYPRE_Int num_iterations;
       double final_res_norm;
 
       /* Create solver */

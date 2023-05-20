@@ -5,7 +5,7 @@
 #include "matrix.h"
 #include "global.h"
 
-#include <omp.h>
+// #include <omp.h>
 #include <array>
 #include <vector>
 #include <random>
