@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
     //  perturbstatus(S,grid.tol,globperturb,pb,grid);
 
     double ***a = matrix(grid.nx[0],grid.nx[1],grid.nx[2]);
+    geta(a, S, pb, grid);
 
     StorageStruct *Dusmall;
     int smallsize = 0;

@@ -1,7 +1,9 @@
 HOSTNAME = $(shell echo $$HOSTNAME)
 
-CC=g++ -std=c++11 
-# CC=mpic++ -std=c++11 
+# CC=g++ -std=c++11 
+
+#needed for hypre
+CC=mpic++ -std=c++11
 # CC=mpicc -std=c++11 
 
 
@@ -16,12 +18,12 @@ else
 endif
 
 usehypre=1
-# ifeq ($(usehypre), 1)
-# 	HYPRE_DIR =  /Users/Ray/project/hypre/src/hypre
-# 	HYPRE_LIBS = -L$(HYPRE_DIR)/lib -lHYPRE -lm
-# 	HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
-# 	OPT+=-DUSEHYPRE
-# endif
+ifeq ($(usehypre), 1)
+	HYPRE_DIR =  /Users/Ray/project/ccimproj/hypre/src/hypre
+	HYPRE_LIBS = -L$(HYPRE_DIR)/lib -lHYPRE -lm
+	HYPRE_INC = -I$(HYPRE_DIR)/include -DHAVE_CONFIG_H -DHYPRE_TIMING
+	OPT+=-DUSEHYPRE
+endif
 
 SOLVER = amg.o gmres.o solver.o hypresolver.o
 
