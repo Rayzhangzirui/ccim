@@ -48,6 +48,7 @@ double getexactnormalTest(double *x, int r);
 void init_surf(double ***S, double radius, GridData &grid, int surfopt);
 void init_surf_protein_paper(double ***S, GridData& grid);
 
+
 void checkanswer(double ***u, double ***S, GridData &grid);
 void checkwithexactvn(double ***vn, double ***S, PBData &pb, GridData& grid);
 double getexactradius(double thetime, double radius0, double x0, double tol, int Nstep,GridData &grid);

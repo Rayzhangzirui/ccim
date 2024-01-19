@@ -173,11 +173,11 @@ static struct option long_options[] = {
             break;
 
          case 'M':
-            EPSILONM = atoi(optarg);
+            EPSILONM = atof(optarg);
          break;
 
          case 'P':
-            EPSILONP = atoi(optarg);
+            EPSILONP = atof(optarg);
          break;
 
          case 'r':

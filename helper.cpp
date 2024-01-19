@@ -60,6 +60,8 @@ void print_surf(double ***S, int* index, int m){
    }
 }
 
+
+
 void print_surf(double ***S, array<int,3> ind, int m){
   print_surf(S, ind.data(), m);
 }
@@ -81,7 +83,49 @@ void print_surf(char ***S, array<int,3> ind, int m){
   print_surf(S, ind.data(), m);
 }
 
+void print_interface_info(double ***S, GridData &grid){
+   // find the minimum distance to grid points
+   double min_alpha = 1e9;
+   double min_dist = 1e9;
+   double tangent[3];
+   double normal[3];
 
+   int num = 0;
+   for(int i = 0; i <= grid.nx[0]; i ++){
+	   for(int j = 0; j <= grid.nx[1]; j ++){
+	      for(int k = 0; k <= grid.nx[2]; k ++){
+            Index index = {i, j, k};
+            if(nearinterface(index, S, grid)){
+               // For interface points
+               for(int rstar = 0; rstar < 3; rstar ++){
+                  for(int sstar = -1; sstar <=1; sstar+=2){
+                     // get direction of interface
+                     Index rindex = index;
+                     rindex[rstar] += sstar;
+
+                     if(!SameSide(S, index, rindex )){
+                        double alpha;
+                        double tangent[3], normal[3];
+                        Vector3d exact_Du = {0,0,0};
+                        
+                        getinterfaceinfo(alpha,tangent,normal,S,index.data(),rindex.data(),grid);
+
+                        double dist = alpha * grid.dx[rstar];
+
+                        if (alpha < min_alpha){
+                           min_alpha = alpha;   
+                           min_dist = dist;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   cout<<"min_alpha "<<min_alpha<<endl;
+   cout<<"min_dist "<<min_dist<<endl;
+}
 
 
 // void init_surf_perturb(double ***S, double radius, GridData &grid, int opt, PBData &pb, double tol){

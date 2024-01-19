@@ -150,12 +150,12 @@ double getf(double *x, double thesign, PBData &pb, GridData &grid){
 
 
    // with a term
-  if(globtesta == 0){
-    // without a term
-     value+=0.0;
-  }else{
-    value += geta(x, thesign, pb, grid) * getu(x,thesign, grid);
-  }
+   if(globtesta == 0){
+   // without a term
+      value+=0.0;
+   }else{
+      value += geta(x, thesign, pb, grid) * getu(x,thesign, grid);
+   }
     
     
   return value;
@@ -482,9 +482,9 @@ double geta(double *x, double thesign, PBData& pb, GridData& grid){
   }else if(globtesta == 3){
     assert(globtestnum == 11 && "globesta 3 goes with globtestnum 11");
     if (thesign < 0.0)
-        return pb.epsilonm * (sin(x[0]) + exp(x[1] * x[1]) + pow(x[2],3));
+        return pb.epsilonm * (sin(x[0]) + exp(x[1] * x[1]));
     else
-        return pb.epsilonp * (cos(x[2]) + exp(- x[1] * x[1]) + pow(x[0],3));
+        return pb.epsilonp * (cos(x[2]) + exp(- x[1] * x[1]));
 
   }else{
     return 0;
@@ -930,6 +930,8 @@ void init_surf(double ***S, double radius, GridData &grid, int opt){
       cerr<<"invalid surface option";
       exit(1);
    }
+
+   print_interface_info(S,grid);
 }
 
 

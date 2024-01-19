@@ -5,6 +5,6 @@
 #include "pb.h"
 #include "sparse.h"
 
-void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb);
+void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb, double ***a);
 
 #endif

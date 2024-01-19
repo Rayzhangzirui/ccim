@@ -143,6 +143,7 @@ void print_surf(double ***S, array<int,3> ind, int m);
 void print_surf(char ***S, int* index, int m);
 void print_surf(char ***S, array<int,3> ind, int m);
 
+void print_interface_info(double ***S, GridData &grid);
 
 vector<vector<double> > randmx(int m, int n);
 vector<double> randmx(int n);

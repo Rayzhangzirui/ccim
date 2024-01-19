@@ -37,11 +37,11 @@ void LinearSolver(double ***x, SparseElt2**** &A, double ***b, double ***a, doub
             break;
         case 4:
             strcpy(name, "hypre-amg");
-            HypreSolve(x, A, b,  grid, u, pb);
+            HypreSolve(x, A, b,  grid, u, pb, a);
             break;
         case 5:
             strcpy(name, "hypre-ilu-bicgstab");
-            HypreSolve(x, A, b,  grid, u, pb);
+            HypreSolve(x, A, b,  grid, u, pb, a);
             break;
 
 

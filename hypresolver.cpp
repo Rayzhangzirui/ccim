@@ -4,7 +4,7 @@
 #include "hypresolver.h"
 using namespace std;
 
-#if defined(USEHYPRE) 
+// #if defined(USEHYPRE) 
 
 int printLevel = 0;
 /*
@@ -50,7 +50,7 @@ void Copy3DArrayFromHypre(double ***sx, HYPRE_IJVector &x, GridData &grid){
 
 
 
-void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
+void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb, double ***a)
 {
    int i;
    int myid, num_procs;
@@ -160,10 +160,14 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
 
                }else if (evalarray(sA,index.data()) == NULL){
                   // interior points
+                  // standard 7 point stencil
                   double value = 0;
                   for (int m = 0; m < grid.dim; m++){
                      value += 2.0*ehere/(grid.dx[m]*grid.dx[m]);
                   }
+
+                  // add a term
+                  value += a[i][j][k];
                   
                   HYPRE_BigInt ncols = 1;
                   // set diagonal
@@ -328,12 +332,12 @@ void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, 
 }
 
 
-#else
+// #else
 
-void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
-{  
-   cerr<<"hypre not defined"<<endl;
-   exit(1);
-}
+// void HypreSolve(double ***sx, SparseElt2**** &sA, double ***sb, GridData &grid, double ***S, PBData &pb)
+// {  
+//    cerr<<"hypre not defined"<<endl;
+//    exit(1);
+// }
 
-#endif
+// #endif
