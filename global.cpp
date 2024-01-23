@@ -92,7 +92,7 @@ string PROJECTDIR = "/Users/zziruiadmin/projects/ccimproj/ccim/";
 string PROTEINFILE = "mdm2.txt";
 
 
-bool globgridperturb = false;
+int globgridperturb = 0;
 
 void cmdLine(int argc, char *argv[]){
 
@@ -232,7 +232,7 @@ static struct option long_options[] = {
                "-d --globdist, differencing method\n"
                "-S --globsmall, store in small structure\n"
                "-R --radius, radius of circle\n"
-               "-T --globgridperturb, 1 =  randomly shift grid\n"
+               "-T --globgridperturb, 0 = no shift, >0 = seed for random shift\n"
                "-o --tollinsolve, tolerance of linear system solver\n"
                "-f --PROTEINFILE\n");
                

@@ -83,7 +83,7 @@ extern std::string PROJECTDIR ;
 extern std::string PROTEINFILE ;
 
 
-extern bool globgridperturb;
+extern int globgridperturb;
 
 
 

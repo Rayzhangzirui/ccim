@@ -4,6 +4,9 @@
 #include "global.h"
 
 
+#include <random>
+
+
 struct GridData
 {
    static const int dim = 3;
@@ -44,15 +47,15 @@ inline void init_grid(GridData &grid, int nx, double a){
 
 
 
-  // if(globgridperturb){
-  //   std::default_random_engine generator(std::random_device{}());
-  //   std::uniform_real_distribution<double> distribution(0.0, grid.mindx);
-  //   double rand_shift[3] = {distribution(generator), distribution(generator), distribution(generator)};
-  //   grid.a[0] += rand_shift[0];
-  //   grid.a[1] += rand_shift[1];
-  //   grid.a[2] += rand_shift[2];
-  //   printf("randomly perturb grid by (%f,%f,%f)\n",rand_shift[0],rand_shift[1],rand_shift[2]);
-  // }
+  if(globgridperturb){
+    std::default_random_engine generator(globgridperturb);
+    std::uniform_real_distribution<double> distribution(0.0, grid.mindx);
+    double rand_shift[3] = {distribution(generator), distribution(generator), distribution(generator)};
+    grid.a[0] += rand_shift[0];
+    grid.a[1] += rand_shift[1];
+    grid.a[2] += rand_shift[2];
+    printf("randomly perturb grid by (%f,%f,%f)\n",rand_shift[0],rand_shift[1],rand_shift[2]);
+  }
 }
 
 
