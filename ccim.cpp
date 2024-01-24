@@ -2763,6 +2763,8 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                              D2jumpuxxcoef[m][n],yesD2[m][n],m,n,index,0,0,mid,S,grid);
       }
 
+
+
    for (r = 0; r < grid.dim; r++)
       rindex[r] = index[r];
    for (s = 0; s < grid.dim; s++)
@@ -2794,8 +2796,43 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                      getcim345D2udist(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
                                       D2uxxcoef[m][n],D2jumpuxxcoef[m][n],yesD2[m][n],
                                       m,n,index,r,sk,mid,S,grid);
-                  if (equal(index,eindex))
+
+                  // #ifdef FIXBANANA 
+                  //surgical fix for banana
+                  // if ( m==0 && n==2  && GRIDNUM==110 && SURFOPT==13 && index[0]==18 && (index[1]==54 || index[1]==56) && (index[2]==11||index[2]==99))
+                  if (globfixbanana)
                   {
+                        // printf("fix (%d,%d) plane at index(%d,%d,%d)\n",m,n,index[0],index[1],index[2]);
+                        // cout<<"fix "<<m<<" "<<n<<" at "<<index[0]<<","<<index[1]<<","<<index[2]<<endl;
+                        double D2ueItf = getD2u(index,m,n,r,sk,alpha[r][(sk+1)/2],thesign,grid);//exact D2u at interface
+                        vector<double***> D2ucoefvec;
+                        vector<double*> D2uxcoefvec, D2uxxcoefvec;
+                        vector<vector<int> > offsetvec;
+                        vector<double> err;
+                        bool yes = yescim5D2All(D2ucoefvec,D2uxcoefvec,D2uxxcoefvec,offsetvec,m,n,index,mid,S,grid);
+                        D2u[m][n] = 0;
+                        if(yes){
+                           for(int i = 0; i < D2ucoefvec.size(); i++){
+                              double D2uApx = evalcoef(D2u[m][n], D2ucoefvec[i],D2uxcoefvec[i],D2uxxcoefvec[i],index,0,0,0.0,mid,thesign,grid);
+                              err.push_back(abs(D2uApx - D2ueItf));
+                           }
+
+                           int minIdx = std::min_element(err.begin(),err.end()) - err.begin();
+                        
+                           copyMat(D2ucoef[m][n],D2ucoefvec[minIdx],N,N,N);
+                           copy(D2uxcoefvec[minIdx],D2uxcoefvec[minIdx]+3, D2uxcoef[m][n]);
+                           copy(D2uxxcoefvec[minIdx],D2uxxcoefvec[minIdx]+3, D2uxxcoef[m][n]);
+
+                        }
+                        
+                        for(int i = 0; i < D2ucoefvec.size(); i++){
+                           free_matrix(D2ucoefvec[i],N,N,N);
+                           delete [] D2uxcoefvec[i];
+                           delete [] D2uxxcoefvec[i];
+                        }
+                     }
+                  // #endif
+                  if (equal(index,eindex)){
                      cout <<"computed D2u in ("<< m<<","<<n<<") plane" << endl;
                      cout << " apprx = "
                           << evalcoef(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
@@ -2814,6 +2851,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
 // getting interface info
             getinterfaceinfo(alpha[r][(sk+1)/2],tangent,normal,S,index,rindex,grid);
             beta = 1.0-alpha[r][(sk+1)/2];
+
 // get derivatives
 //            cout << "getting Du" << endl;
             getcim345Du(D1u[r][(sk+1)/2],D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
@@ -3603,9 +3641,6 @@ char yescim5D2All(vector<double***> &D2ucoefvec, vector<double*> &D2uxcoefvec, v
          D2ucoefvec.push_back(D2ucoef);
          D2uxcoefvec.push_back(D2uxcoef);
          D2uxxcoefvec.push_back(D2uxxcoef);
-         free_matrix(D2ucoef,N,N,N);
-         delete [] D2uxcoef;
-         delete [] D2uxxcoef;
       }
 
 // looks for forward differencing possibility around node
@@ -3664,9 +3699,6 @@ char yescim5D2All(vector<double***> &D2ucoefvec, vector<double*> &D2uxcoefvec, v
          D2ucoefvec.push_back(D2ucoef);
          D2uxcoefvec.push_back(D2uxcoef);
          D2uxxcoefvec.push_back(D2uxxcoef);
-         free_matrix(D2ucoef,N,N,N);
-         delete [] D2uxcoef;
-         delete [] D2uxxcoef;
       }
    if (offsetvec.size() == 0){
       return 0;

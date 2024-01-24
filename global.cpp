@@ -75,8 +75,10 @@ int SURFOPT = 0;
 
 
 // #define FIXBANANA // surgical fix for banana shape at
+bool globfixbanana = false;
 bool globwritemx = false;//write coupling matrix for analysis
 bool globwriteerr = false;//write error in u and Du at each grid point
+
 
 
 // motion
@@ -118,7 +120,8 @@ static struct option long_options[] = {
       {"RADIUS", required_argument, 0, 'R'},
       {"globgridperturb", required_argument, 0, 'T'},
       {"tollinsolve", required_argument, 0, 'o'},
-      {"PROTEINFILE", required_argument, 0, 'f'}
+      {"PROTEINFILE", required_argument, 0, 'f'},
+      {"globfixbanana", required_argument, 0, 'b'}
     };
 
    int c;
@@ -210,6 +213,10 @@ static struct option long_options[] = {
          case 'f':
             PROTEINFILE = string(optarg);
          break;
+
+         case 'b':
+            globfixbanana = atoi(optarg);
+         break;
          
          default:
          // describe option here
@@ -234,7 +241,8 @@ static struct option long_options[] = {
                "-R --radius, radius of circle\n"
                "-T --globgridperturb, 0 = no shift, >0 = seed for random shift\n"
                "-o --tollinsolve, tolerance of linear system solver\n"
-               "-f --PROTEINFILE\n");
+               "-f --PROTEINFILE\n"
+               "-b --globfixbanana, 0 = no fix, 1 = fix banana\n");
                
              exit(-1);
       }
@@ -262,7 +270,7 @@ static struct option long_options[] = {
 
    printf("Motion: [globcheck = %d] [runStep = %d] [tfinal = %f] [globheatsmooth = %d]\n", globcheck, runStep, globtime, globheatsmooth);
 
-   printf("Debug: [eindex %d %d %d] [globwritemx = %d] \n", eindex[0] , eindex[1], eindex[2], globwritemx);
+   printf("Debug: [eindex %d %d %d] [globwritemx = %d] [globfixbanana = %d]\n", eindex[0] , eindex[1], eindex[2], globwritemx, globfixbanana);
 
 
    printf("Other options [globGSsmooth = %d] [globperturb = %d] [globdtdx2 = %d] [globheatsmoothtime = %f] [globbiasstat = %d]\n",

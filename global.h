@@ -68,6 +68,7 @@ extern int SURFOPT;
 
 
 // #define FIXBANANA // surgical fix for banana shape at
+extern bool globfixbanana;//surgical fix for banana
 extern bool globwritemx;//write coupling matrix for analysis
 extern bool globwriteerr;//write error in u and Du at each grid point
 
