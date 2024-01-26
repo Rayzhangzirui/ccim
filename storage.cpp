@@ -167,11 +167,18 @@ void checkDuStorage(double ***u, StorageStruct *Dusmall, int smallsize, double *
    double uint, Du[grid.dim];
    double alpha, thesign, tangent[grid.dim], normal[grid.dim];
    double tmperr;
-   double theerr[grid.dim];
+   
    int zindex[grid.dim][grid.dim];
 
-   for (t = 0; t < grid.dim; t++)
+   double theerr[grid.dim];
+   double inside_max_err[grid.dim];
+   double outside_max_err[grid.dim];
+
+   for (t = 0; t < grid.dim; t++){
       theerr[t] = 0.0;
+      inside_max_err[t] = 0.0;
+      outside_max_err[t] = 0.0;
+   }
 
    double uint2, Du2[grid.dim];
 
@@ -206,6 +213,14 @@ void checkDuStorage(double ***u, StorageStruct *Dusmall, int smallsize, double *
                      theerr[t] = tmperr;
                      for (m = 0; m < grid.dim; m++)
                         zindex[t][m] = tindex[m];
+                  }
+
+                  if (tmperr > inside_max_err[t] && thesign < 0.0){
+                     inside_max_err[t] = tmperr;
+                  }
+                     
+                  if (tmperr > outside_max_err[t] && thesign + 0.0){
+                     outside_max_err[t] = tmperr;
                   }
                }
 
@@ -244,6 +259,9 @@ void checkDuStorage(double ***u, StorageStruct *Dusmall, int smallsize, double *
       else
          cout << "." << endl;
    }
+
+   cout << "Inside max err is " << inside_max_err[0] << " " << inside_max_err[1] << " " << inside_max_err[2] << endl;
+   cout << "Outside max err is " << outside_max_err[0] << " " << outside_max_err[1] << " "<< outside_max_err[2] << endl;
 
 }
 

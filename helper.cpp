@@ -66,6 +66,8 @@ void print_surf(double ***S, array<int,3> ind, int m){
   print_surf(S, ind.data(), m);
 }
 
+// use cartesian coordinate, x go right, y go in, z go up
+// for char surface
 // print nbr of m around index, m = 1, 3x3x3 nbr, m = 2, 5x5x5 nbr, outside 1, inside 0
 void print_surf(char ***S, int* index, int m){
    for (int i = -m; i <= m; i ++){
@@ -78,10 +80,11 @@ void print_surf(char ***S, int* index, int m){
       }
    }
 }
-
 void print_surf(char ***S, array<int,3> ind, int m){
   print_surf(S, ind.data(), m);
 }
+
+
 
 void print_interface_info(double ***S, GridData &grid){
    // find the minimum distance to grid points

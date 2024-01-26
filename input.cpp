@@ -252,7 +252,7 @@ double getu(int *index, int rstar, int sstar, double alpha, double thesign, Grid
     return getu(x, thesign, grid);
 }
 
-
+// s-coord of Du
 double getDu(double *x, int s, double thesign, GridData &grid)
 {
    if (globtestnum == 0)
@@ -335,6 +335,7 @@ double getDu(double *x, int s, double thesign, GridData &grid)
    return 0.0;
 }
 
+// get s component of Du at rstart, sstart, alpha
 double getDu(int *index, int s, int rstar, int sstar, double alpha, double thesign, 
              GridData &grid)
 {
@@ -1294,6 +1295,12 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef,
    int i, s, tindex[grid.dim], sindex[grid.dim];
    double value = u0;
 
+   int signhere = 1;
+   if (evalarray(S,index) < 0.0){
+      signhere = -1;
+   }
+  
+
    for (s = 0; s < grid.dim; s++)
       sindex[s] = 0;
    while (sindex[0] < 5)
@@ -1315,24 +1322,16 @@ double evalcoef(double u0, double ***ucoef, double *uxcoef, double *uxxcoef,
    for (s = 0; s < grid.dim; s++)
       sindex[s] = 2;
 
-   if (evalarray(S,index) < 0.0)
-      for (s = 0; s < grid.dim; s++)
-         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,-1,grid);
-   else
-      for (s = 0; s < grid.dim; s++)
-         value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,1,grid);
-
-   if (evalarray(S,index) < 0.0)
-      for (s = 0; s < grid.dim; s++)
-         value += uxcoef[s]*getDu(index,s,0,0,0.0,-1,grid);
-   else
-      for (s = 0; s < grid.dim; s++)
-         value += uxcoef[s]*getDu(index,s,0,0,0.0,1,grid);
+   for (s = 0; s < grid.dim; s++)
+      value += uxxcoef[s]*getD2u(index,s,s,0,0,0.0,signhere,grid);
+   
+   for (s = 0; s < grid.dim; s++)
+         value += uxcoef[s]*getDu(index,s,0,0,0.0,signhere,grid);
 
    for (i = 0; i < grid.dim; i++)
       for (s = i; s < grid.dim; s++)
-         value += jumpuxxcoef[i][s]*(getD2u(index,i,s,rstar,sstar,alpha,1,grid)-
-                                     getD2u(index,i,s,rstar,sstar,alpha,-1,grid));
+         value += jumpuxxcoef[i][s]*(getD2u(index,i,s,rstar,sstar,alpha,-signhere,grid)-
+                                     getD2u(index,i,s,rstar,sstar,alpha,signhere,grid));
 
    return value;
 }

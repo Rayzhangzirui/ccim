@@ -780,6 +780,7 @@ void getcim345jumpux(double& u0, double ***ucoef, double *uxcoef, double *uxxcoe
    u0 = sigma/ethere*normal[rstar] + getdotprod(Dtau,tangent,grid.dim)*tangent[rstar];
 
    // recast Du-, [epsilon]/epsilonp dot(grad(Du-),n) n[star]
+   // thesign*(ethere-ehere): if thesign = 1, then epsm-epsp. if thesign = -1, then -1 (epsp-epsm), therefore awlays - (epsp-epsm) 
    for (s = 0; s < grid.dim; s++)
       sindex[s] = 0;
    while (sindex[0] <= N)
@@ -2697,19 +2698,11 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
 
    char yesD2[grid.dim][grid.dim];
    
+   // print geometry
    if (equal(index,eindex))
    {
       cout << "S" << endl;
-      for (t = -1; t <= 1; t++) 
-      {
-         for (s = 1; s >= -1; s--) 
-         {
-            for (r = -1; r <= 1; r++) 
-               printf("%4.16f ",S[index[0]+r][index[1]+s][index[2]+t]);
-            cout << endl;
-         }
-         cout << endl;
-      }
+      print_surf(S, index, 1);
       cout << "u" << endl;
       for (t = -1; t <= 1; t++) 
       {
@@ -2771,6 +2764,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
       sindex[s] = mid;
    for (r = 0; r < grid.dim; r++)
       for (sk = -1; sk <= 1; sk += 2)
+         // one row of couping metrix, if interface in r, s
          if (gamma[r][(sk+1)/2] == 1)
          {
             D1u[r][(sk+1)/2] = new double[grid.dim];
@@ -2833,6 +2827,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                      }
                   // #endif
                   if (equal(index,eindex)){
+                     // should be O(h) approximate, exact is at interface, approx is at grid
                      cout <<"computed D2u in ("<< m<<","<<n<<") plane" << endl;
                      cout << " apprx = "
                           << evalcoef(D2u[m][n],D2ucoef[m][n],D2uxcoef[m][n],
@@ -2859,12 +2854,13 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                         alpha[r][(sk+1)/2],thesign,D2u,D2ucoef,D2uxcoef,D2uxxcoef,
                         D2jumpuxxcoef,mid,grid);
             double rhs = 0.0;
+
             if (equal(index,eindex))
             {
-               cout << "computed Du" << endl;
+               cout <<endl<< "computed Du" << endl;
                for (m = 0; m < grid.dim; m++)
-                  cout<<"dim "<< m <<" apprx = " 
-                      << evalcoef(D1u[r][(sk+1)/2][m],D1ucoef[r][(sk+1)/2][m],
+                  cout<<"dim "<< m 
+                     <<" apprx = " << evalcoef(D1u[r][(sk+1)/2][m],D1ucoef[r][(sk+1)/2][m],
                                    D1uxcoef[r][(sk+1)/2][m],D1uxxcoef[r][(sk+1)/2][m],
                                    index,0,0,0.0,mid,thesign,grid) 
                       << ", exact ="
@@ -2896,37 +2892,37 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                double x[grid.dim];
                sub2coord(x,index,grid);
                x[r] += sk*alpha[r][(sk+1)/2]*grid.dx[r];
-               cout << "computed jump in D1u = "
-                    << evalcoef(jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef, 
-                                jumpD1jumpuxxcoef,index,0,0,0.0,S,grid) << " "
-                    <<", exact = "
-                    << getDu(index,r,r,sk,alpha[r][(sk+1)/2],1,grid)-
-                       getDu(index,r,r,sk,alpha[r][(sk+1)/2],-1,grid) 
-                    // << "another exact "
-                    // << -(pb.epsilonp-pb.epsilonm)/ethere*
-                    //     (getDu(index,0,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[0]+
-                    //      getDu(index,1,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[1]+
-                    //      getDu(index,2,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[2])*
-                    //     normal[r] << " "
-                    // << 2.0*x[r]*(1.0-pb.epsilonp/pb.epsilonm) 
-                    << " error =  "
-                    << evalcoef(jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef,
-                                jumpD1jumpuxxcoef,index,0,0,0.0,S,grid)-
-                       (getDu(index,r,r,sk,alpha[r][(sk+1)/2],1,grid)-
-                        getDu(index,r,r,sk,alpha[r][(sk+1)/2],-1,grid)) << endl;
 
-               rhs += -thesign*sk*beta*grid.dx[r]*
-                      evalcoef(jumpD1u,jumpD1ucoef,jumpD1uxcoef,jumpD1uxxcoef,
-                               jumpD1jumpuxxcoef,index,0,0,0.0,S,grid);
-               cout << "rhs 2 = " << rhs << " error =  "
+               double computed_jump = evalcoef(jumpD1u,jumpD1ucoef,jumpD1uxcoef,
+                                               jumpD1uxxcoef,jumpD1jumpuxxcoef,index,0,0,0.0,S,grid);
+               double exact_jump = getDu(index,r,r,sk,alpha[r][(sk+1)/2],1,grid)-
+                                   getDu(index,r,r,sk,alpha[r][(sk+1)/2],-1,grid);
+
+               cout<<endl;
+               cout << "computed jump in D1u = "
+                    << computed_jump
+                    << " "
+                    <<", exact = "
+                    << exact_jump 
+                    << "another exact "
+                  //   << -(pb.epsilonp-pb.epsilonm)/ethere*
+                  //       (getDu(index,0,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[0]+
+                  //        getDu(index,1,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[1]+
+                  //        getDu(index,2,r,sk,alpha[r][(sk+1)/2],thesign,grid)*normal[2])*
+                  //       normal[r] << " "
+                  //   << 2.0*x[r]*(1.0-pb.epsilonp/pb.epsilonm) 
+                    << " error =  "
+                    << computed_jump-exact_jump
+                    << endl;
+
+               rhs += -thesign*sk*beta*grid.dx[r]*computed_jump;
+               cout << "rhs 2 = " << rhs << " exact =  "
                     << sk*grid.dx[r]*getDu(index,r,r,sk,alpha[r][(sk+1)/2],thesign,grid)-
-                       thesign*sk*beta*grid.dx[r]*
-                        (getDu(index,r,r,sk,alpha[r][(sk+1)/2],1,grid)-
-                         getDu(index,r,r,sk,alpha[r][(sk+1)/2],-1,grid)) << endl; //rhs2 = h ux- + beta h [ux]
+                       thesign*sk*beta*grid.dx[r]*(exact_jump) << endl; //rhs2 = h ux- + beta h [ux], refer to eq 6 in ccim paper
             }
 //            cout << "getting jump D2u" << endl;
             
-            if(a){
+            // if(a){
               // if a is not nullptr
               getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
                              alpha[r][(sk+1)/2],thesign,normal,mid,a,D1u[r][(sk+1)/2],
@@ -2934,15 +2930,16 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                              D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,
                              D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
                              jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);
-            }else{
-              getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
-                             alpha[r][(sk+1)/2],thesign,normal,mid,D1u[r][(sk+1)/2],
-                             D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
-                             D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,
-                             D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
-                             jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);  
-            }
+            // }else{
+            //   getcim345jumpuxx(jumpD2u,jumpD2ucoef,jumpD2uxcoef,jumpD2uxxcoef,index,r,sk,
+            //                  alpha[r][(sk+1)/2],thesign,normal,mid,D1u[r][(sk+1)/2],
+            //                  D1ucoef[r][(sk+1)/2],D1uxcoef[r][(sk+1)/2],
+            //                  D1uxxcoef[r][(sk+1)/2],D1jumpuxxcoef,D2u,D2ucoef,D2uxcoef,
+            //                  D2uxxcoef,D2jumpuxxcoef,jumpD1u,jumpD1ucoef,jumpD1uxcoef,
+            //                  jumpD1uxxcoef,jumpD1jumpuxxcoef,S,pb,grid);  
+            // }
             
+            // error check
             if (equal(index,eindex))
             {
                cout << "computed jump in D2u = "
@@ -3035,12 +3032,17 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                        0.5*grid.dx[r]*grid.dx[r]*(beta*beta-alpha[r][(sk+1)/2]*
                                                             alpha[r][(sk+1)/2])*
                        getD2u(index,r,r,r,sk,alpha[r][(sk+1)/2],thesign,grid) << endl;
+               
+               double uhere = getu(index,0,0,0.0,thesign,grid);
+               double uthere = getu(index,r,sk,1.0,-thesign,grid);
                cout << "(at grid) u_here - u_there "
-                    << " = " << getu(index,0,0,0.0,thesign,grid) 
-                    << " - " << getu(index,r,sk,1.0,-thesign,grid)
-                    << " = "<<getu(index,0,0,0.0,thesign,grid) - getu(index,r,sk,1.0,-thesign,grid) << endl;
-               cout << "u jump = "
+                    << " = " << uhere 
+                    << " - " << uthere
+                    << " = "<<uhere - uthere << endl;
+               
+               cout << "u jump (u+ - u-) = "
                     << getu(index,r,sk,alpha[r][(sk+1)/2],1,grid) - getu(index,r,sk,alpha[r][(sk+1)/2],-1,grid) << endl;
+               
                double x[grid.dim];
                sub2coord(x,index,grid);
                x[r] += sk*alpha[r][(sk+1)/2]*grid.dx[r];
@@ -3147,8 +3149,10 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                                                     sk*D1uxcoef[r][(sk+1)/2][r][m]/
                                                     grid.dx[r];// coeff of u_x from [u_xx] [u_x]
             
+            // check r-th row of G
             if (equal(index,eindex))
-            {
+            {  
+               cout<<endl<<"check r-th row of G"<<endl;
                exactres = exactd[grid.dim*(sk+1)/2+r];
                for (m = 0; m < 2*grid.dim; m++)
                   if (m < grid.dim)
@@ -3182,6 +3186,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
                     << "uzz = "<<getD2u(index,2,2,0,0,0.0,thesign,grid) << " "
                     << "ehere = "<<ehere 
                     << endl;
+
                double x[grid.dim];
                sub2coord(x,index,grid);
                x[r] += sk*alpha[r][(sk+1)/2]*grid.dx[r];
@@ -3220,17 +3225,18 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
             setvalarray(dcoef[grid.dim*(sk+1)/2+r],sindex,1.0/(grid.dx[r]*grid.dx[r]));
             sindex[r] = mid;
 
+            // compute exact rhs
             if (equal(index,eindex))
             {
-            exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
+               exactd[grid.dim*(sk+1)/2+r] += -1.0/(grid.dx[r]*grid.dx[r])*
                                            getu(index,0,0,0.0,thesign,grid);
-            exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
+               exactd[grid.dim*(sk+1)/2+r] += 1.0/(grid.dx[r]*grid.dx[r])*
                                            getu(index,r,sk,1.0,thesign,grid);
             }
             
          }
 
-   // print G matrix, exact rhs
+   // print coupling matrix, exact rhs
    if (equal(index,eindex))
    {
       cout<<endl<<"G matrix"<<endl;
@@ -3246,7 +3252,7 @@ void gmatrix(double **G, double** LU, int PLR[], int PLC[],
       gecp0(LU,PLR,PLC,G,2*grid.dim-1,2*grid.dim-1);
       forwardbacksub0(exactd,exactd,LU,PLR,PLC,2*grid.dim-1);
 
-      cout<<"solved | exact"<<endl;
+      cout<<"solved var with exact rhs | exact var "<<endl;
       for (m = 0; m < 2*grid.dim; m++)
       {
          cout  << exactd[m] << " | ";

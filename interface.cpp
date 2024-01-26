@@ -81,6 +81,7 @@ char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***
    rindex[rstar] = index[rstar]+sstar;
    return getinterfaceinfo(alpha,tangent,normal,S,index,rindex,grid);
 }
+
 // index1 = index of current point, index2 = index across interface, 
 // tangent is projection of (index2-index1) to normal
 char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***S,
@@ -129,6 +130,8 @@ char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***
          rindex1[r] = index1[r];
          rindex2[r] = index2[r];
       }
+
+      //normalization of normal vector
       length = 0.0;
       for (r = 0; r < grid.dim; r++)
          length += normal[r]*normal[r];
@@ -141,21 +144,23 @@ char getinterfaceinfo(double &alpha, double *tangent, double *normal, double ***
 
       for (r = 0; r < grid.dim; r++)
          tangent[r] = index2[r]-index1[r];
-      project(tangent,normal,tangent,grid.dim); //tangent is projection of unit vector crossing interface to normal
+      project(tangent,normal,tangent,grid.dim); //tangent is projection of u(nit vector crossing interface) to the plane with normal
+      
       length = 0.0;
       for (r = 0; r < grid.dim; r++)
          length += tangent[r]*tangent[r];
       length = sqrt(length);
+      
       if (length > tol)
          for (r = 0; r < grid.dim; r++)
             tangent[r] /= length;
       else
          for (r = 0; r < grid.dim; r++){
             tangent[r] = 0.0; 
-            // if(abs(normal[r])<tol) {// if tangent = 0, that means normal is parallel to tindex2-index1, make no differece as long as tk ek = 0 in cim2
-            //   tangent[r] = 1.0;
-            //   break;
-            // }
+            if(abs(normal[r])<tol) {// if tangent = 0, that means normal is parallel to tindex2-index1, make no differece as long as tk ek = 0 in cim2
+              tangent[r] = 1.0;
+              break;
+            }
          }
       return 1;
    }
